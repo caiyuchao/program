@@ -1,0 +1,1008 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="Content-Type">
+  <title>problem of thread creation</title>
+  <script type="text/javascript"
+ src="https://apis.google.com/js/plusone.js"></script>
+</head>
+<body>
+<small><a href="../technical_documents.html">Go back to previous page</a><br>
+<a href="../index.html">Go back to home page</a></small><br>
+<br>
+<small><small><span style="text-decoration: underline;">Author</span>:
+R. Koucha<br>
+<span style="text-decoration: underline;">Last update</span>:
+28-Apr-2011<br>
+</small></small>
+<h1 style="text-align: center;">Why a thread creation could fail ?<br>
+</h1>
+<br>
+<br>
+<table
+ style="text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(153, 255, 255);">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe
+ src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fproblem_of_thread_creation.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80"
+ style="border: medium none ; overflow: hidden; width: 450px; height: 80px;"
+ allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fproblem_of_thread_creation.html&amp;subject=Problem%20of%20thread%20creation"><img
+ alt="s" src="../send_to_a_friend.gif"
+ style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<br>
+<a href="#Introduction">Introduction</a><br>
+<a href="#Creation_of_a_thread">Creation of a thread</a><br>
+<a href="#The_2.5_versus_2.8_version_of_the_C">The&nbsp;2.5 versus 2.8
+version of the C library</a><br>
+<a href="#Why_pthread_create_could_fail_">Why pthread_create() could
+fail ?</a><br>
+<a href="#Solution">Solution</a><br>
+<a href="#Problem_of_symbol_version">Problem of symbol version</a><br>
+<a href="#Conclusion">Conclusion</a><br>
+<a href="#About_the_author">About the author</a><br>
+<br>
+<br>
+<br>
+<h2><a name="Introduction"></a>Introduction</h2>
+The <span style="font-style: italic;">pthread_create()</span> service
+from the <span style="font-weight: bold;">pthread</span> (<span
+ style="font-weight: bold;">NPTL</span>) library, may fail returning
+the <span style="font-weight: bold;">ENOMEM</span> or <span
+ style="font-weight: bold;">EAGAIN</span> error. This papers
+focuses on the reason why this could happen and how to solve the
+problem.<br>
+<br>
+<h2><a name="Creation_of_a_thread"></a>Creation of a thread</h2>
+The creation of a thread involves the following steps (output of the <span
+ style="font-style: italic;">strace</span> tool):<br>
+<br>
+<span style="font-family: monospace;">mmap(NULL, 8388608,
+PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x350dc000</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">mprotect(0x350dc000, 4096,
+PROT_NONE)&nbsp;&nbsp; = 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">clone(child_stack=0x358db030,
+flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID,
+parent_tidptr=0x358db4f8,
+tls=0x358e2930,
+child_tidptr=0x358db4f8)=
+6927</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">sched_setscheduler(6927,
+SCHED_OTHER, { 0 }) = 0</span><br style="font-family: monospace;">
+<br>
+In the preceding output:<br>
+<ul>
+  <li>The <span style="font-style: italic;">mmap()</span> call
+reserves a memory zone for the thread's stack and its <span
+ style="font-weight: bold;">TCB</span>. The default stack size in the <span
+ style="font-style: italic;">pthread</span> library is got
+from&nbsp;the <span style="font-style: italic;">getrlimit()</span>
+system call with the resource's name <span style="font-weight: bold;">RLIMIT_STACK</span>.
+In
+our
+environment,
+this
+value
+is
+8
+MB.
+The
+returned
+address is 0x350dc000<br>
+  </li>
+  <li>The call to <span style="font-style: italic;">mprotect()</span>
+protects a page of memory (4KB long) from the address 0x350dc000 to
+detect the stack overflows: this is the
+red zone which triggers a <span style="font-weight: bold;">SIGSEGV</span>
+if it is accessed for reading or writing.</li>
+  <li>The call to <span style="font-style: italic;">clone()</span>
+creates the thread. It is passed the address of the stack as first
+parameter : 0x358db030. The stacks grows from the upper addresses to
+the lower ones. The space between 0x358db030 and 0x358dc000 is for the
+thread's control block (<span style="font-weight: bold;">TCB</span>)
+and the thread's local storage (<span style="font-weight: bold;">TLS</span>).<br>
+  </li>
+</ul>
+<br>
+From a virtual memory point of view, the mapping can be seen from <span
+ style="font-style: italic;">/proc/&lt;pid&gt;/smaps</span>:<br>
+<br>
+<span style="font-family: monospace;">350dc000-350dd000 ---p 350dc000
+00:00 0 <span style="font-weight: bold; color: red;">--------&gt; Red
+zone<span style="font-family: monospace; color: red;"> </span></span></span><span
+ style="font-weight: bold; font-family: monospace; color: red;">which
+ends the stack to detect stack overflows</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Size:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Rss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Pss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Referenced:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Swap:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">350dd000-358dc000 rw-p 350dd000
+00:00 0 <span style="font-weight: bold; color: red;">--------&gt;
+Stack which grows from the upper to the lower addresses</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Size:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8188
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Rss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Pss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Referenced:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br>
+<br>
+The layout of the thread's stack is:<br>
+<br>
+<div style="text-align: center;"><img
+ style="width: 645px; height: 716px;" alt="figure_1"
+ src="potc_figure_1.gif"><small><small><span
+ style="text-decoration: underline;"></span></small></small><br>
+<br>
+<small><span style="text-decoration: underline;">Figure 1</span>:
+Layout of the thread's stack</small><br>
+<br>
+<br>
+</div>
+<h2 style="text-align: left;"><a
+ name="The_2.5_versus_2.8_version_of_the_C"></a>The&nbsp;2.5 versus 2.8
+version of the C library</h2>
+The
+study of the sources related to <span style="font-style: italic;">pthread_create()</span>
+in the GLIBC 2.5 and 2.8 libraries points out that the service <span
+ style="font-style: italic;"></span>does not return the same error when
+<span style="font-style: italic;">mmap()</span> fails with
+the error code <span style="font-weight: bold;">ENOMEM</span>.<br>
+<br>
+In 2.5, the code related to the stack allocation of the thread is in <span
+ style="font-style: italic;">.../nptl/allocatestack.c</span>:<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp; mem =
+mmap (NULL, size, prot,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MAP_PRIVATE |
+MAP_ANONYMOUS | ARCH_MAP_FLAGS, -1, 0);</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp; if
+(__builtin_expect (mem == MAP_FAILED, 0))</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">#ifdef ARCH_RETRY_MMAP</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mem = ARCH_RETRY_MMAP (size);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (__builtin_expect (mem == MAP_FAILED,
+0))</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">#endif</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace; color: red; font-weight: bold;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+return
+errno;</span><br
+ style="font-family: monospace; color: red; font-weight: bold;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+<br>
+In 2.8, the code related to the stack allocation of the thread is in <span
+ style="font-style: italic;">.../nptl/allocatestack.c</span>:<br>
+<br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp; mem =
+mmap (NULL, size, prot,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MAP_PRIVATE |
+MAP_ANONYMOUS | ARCH_MAP_FLAGS, -1, 0);</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp; if
+(__builtin_expect (mem == MAP_FAILED, 0))</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">#ifdef ARCH_RETRY_MMAP</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mem = ARCH_RETRY_MMAP (size, prot);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (__builtin_expect (mem == MAP_FAILED,
+0))</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">#endif</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace; color: red; font-weight: bold;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+if
+(errno
+==
+ENOMEM)</span><br
+ style="font-family: monospace; color: red; font-weight: bold;">
+<span style="font-family: monospace; color: red; font-weight: bold;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+errno
+=
+EAGAIN;</span><br
+ style="font-family: monospace; color: red; font-weight: bold;">
+<br style="font-family: monospace; color: red; font-weight: bold;">
+<span style="font-family: monospace; color: red; font-weight: bold;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+return
+errno;</span><br
+ style="font-family: monospace; color: red; font-weight: bold;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+<br>
+As
+shown in the previous snippets of code, in 2.5, <span
+ style="font-style: italic;">pthread_create()</span> merely
+returns the error code from <span style="font-style: italic;">mmap()</span>
+whereas in 2.8, if the error code is
+<span style="font-weight: bold;">ENOMEM</span>,&nbsp;<span
+ style="font-style: italic;">pthread_create()</span> translates it into
+<span style="font-weight: bold;">EAGAIN</span>.<br>
+<h2><a name="Why_pthread_create_could_fail_"></a>Why pthread_create()
+could fail ?</h2>
+<span style="font-style: italic;">pthread_create()</span> can fail with
+the <span style="font-weight: bold;">ENOMEM</span> errno (<span
+ style="font-weight: bold;">GLIBC v2.5</span>) or <span
+ style="font-weight: bold;">EAGAIN</span>
+(<span style="font-weight: bold;">GLIBC 2.8</span>) when the number of
+running threads is getting too big. This
+makes the cumulated memory space allocated to the embedding process
+(e.g. the stacks) too high and so, the&nbsp;<span
+ style="font-style: italic;">mmap()</span> system call fails.<br>
+<br>
+For example, here is the memory map of a process from <span
+ style="font-style: italic;">/proc/&lt;pid&gt;/smaps</span>:<br>
+<br>
+<br>
+<span style="font-family: monospace;">[...]<br>
+7eb3d000-7f33c000 rw-p 7eb3d000 00:00 0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Size:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8188
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Rss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+12
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Pss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+12
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+12
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Referenced:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+12
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Swap:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">7f8f5000-7f90a000 rw-p 7ffeb000
+00:00 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [stack]</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">Size:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+84
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Rss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+16
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Pss:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+16
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Shared_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Private_Dirty:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+16
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Referenced:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+16
+kB</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Swap:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0
+kB</span><br style="font-family: monospace;">
+<br>
+<span style="font-weight: bold;">The available virtual memory space is</span>
+the space between the last memory segment and the one tagged as <span
+ style="font-style: italic;">[stack]</span>:
+0x7F8F5000 - 0x7F33C000 = 0x5B9000 = 6000640 bytes (i.e. ~ 6MB). In
+this configuration it is no more possible to create any new thread
+with a stack of 8MB.<br>
+<h2><a name="Solution"></a>Solution</h2>
+As the default size of 8MB for the thread's stack is often too big, it
+is advised to use the <span style="font-style: italic;">pthread_attr_setstacksize()</span>
+service to set a shorter stack as shown in the following snippet of
+code:<br>
+<br>
+<span style="font-family: monospace;">//
+----------------------------------------------------------------------------</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">// Name&nbsp;&nbsp; : create_thd</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">// Usage&nbsp; : Create a thread</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">// Return : 0, if OK</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-1,
+if
+error
+(errno
+is
+set)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">//
+----------------------------------------------------------------------------</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">static int create_thd(</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+void&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*thd_par,&nbsp;
+//
+Thread
+parameters</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+size_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+stack_sz,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+void&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*(*entry)(void
+*),</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+pthread_t&nbsp;
+*pThreadId
+//
+Thread
+identifier</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">{</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">pthread_attr_t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+attr;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+rc
+=
+0;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+err_sav;</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; // Check the parameters</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (!pThreadId)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "NULL thread id\n");</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno = EINVAL;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; memset(&amp;attr, 0,
+sizeof(attr));</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno =
+pthread_attr_init(&amp;attr);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (0 != errno)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; err_sav =
+errno;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "pthread_attr_init() failed (errno = %d)\n", errno);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno =
+err_sav;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno =
+pthread_attr_setscope(&amp;attr, PTHREAD_SCOPE_SYSTEM);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (0 != errno)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; err_sav =
+errno;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "pthread_attr_setscope() failed (errno = %d)\n", errno);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno =
+err_sav;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; rc = -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; goto err;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno =
+pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (0 != errno)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; err_sav =
+errno;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "pthread_attr_setdetachstate() failed (errno = %d)\n",
+errno);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno =
+err_sav;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; rc = -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; goto err;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;
+//
+Set
+the
+stack
+size</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;
+errno
+=
+pthread_attr_setstacksize(&amp;attr,
+stack_sz);</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;
+if
+(0
+!=
+errno)</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;
+{</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;&nbsp;&nbsp;
+err_sav
+=
+errno;</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr,
+"Error
+%d
+on
+pthread_attr_setstacksize()\n",
+errno);</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;&nbsp;&nbsp;
+errno
+=
+err_sav;</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;&nbsp;&nbsp;
+rc
+=
+-1;</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;&nbsp;&nbsp;
+goto
+err;</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<span
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">&nbsp;
+}</span><br
+ style="font-family: monospace; color: rgb(255, 0, 0); font-weight: bold;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; // Thread creation</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno =
+pthread_create(pThreadId,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&amp;attr,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+entry,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+thd_par);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (0 != errno)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; err_sav =
+errno;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "pthread_create() failed (errno = %m - %d)\n", errno);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno =
+err_sav;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; rc = -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; goto err;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; goto ok;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">err:</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">ok:</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; // The following calls
+will alter errno</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; err_sav = errno;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno =
+pthread_attr_destroy(&amp;attr);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (0 != errno)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+fprintf(stderr, "pthread_attr_destroy() failed (errno = %d)\n", errno);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; rc = -1;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; errno = err_sav;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; return rc;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">} // create_thd</span><span
+ style="font-weight: bold;"><br>
+</span>
+<h2><a name="Problem_of_symbol_version"></a>Problem of symbol version</h2>
+We noticed that moving the call to <span style="font-style: italic;">pthread_create()</span>
+from the main program to a shared library <span
+ style="font-style: italic;"></span>introduced a symbol versioning
+problem.<br>
+<br>
+When the call to <span style="font-style: italic;">pthread_create()</span>
+is located into the main program, the symbol's linking information is:<br>
+<br>
+<span style="font-family: monospace;">&gt; nm program | grep pthread</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_cond_destroy@@GLIBC_2.3.2</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_cond_init@@GLIBC_2.3.2</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_cond_signal@@GLIBC_2.3.2</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_cond_wait@@GLIBC_2.3.2</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="font-weight: bold; color: red;">U pthread_create@@GLIBC_2.1</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_destroy@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_init@@GLIBC_2.0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_lock@@GLIBC_2.0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_trylock@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_unlock@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_self@@GLIBC_2.0</span><br style="font-family: monospace;">
+<br>
+When the call to <span style="font-style: italic;">pthread_create()</span>
+is located into a shared library<span style="font-style: italic;"></span>,
+the
+symbol's
+linking
+information
+is:<br>
+<br>
+<span style="font-family: monospace;">&gt; nm library.so | grep pthread</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+__pthread_register_cancel</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+__pthread_unregister_cancel</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+w
+__pthread_unwind_next</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_destroy@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_getstacksize</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_init@@GLIBC_2.1</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_setdetachstate@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_setinheritsched@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_setscope@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_attr_setstacksize</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<span style="color: red; font-weight: bold;">U pthread_create</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_lock@@GLIBC_2.0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_mutex_unlock@@GLIBC_2.0</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+U
+pthread_self@@GLIBC_2.0</span><br>
+<br>
+In the first case, <span style="font-style: italic;">pthread_create()</span>
+is associated to the function <span style="font-style: italic;">__pthread_create_2_1()</span>
+in the <span style="font-weight: bold;">GLIBC</span> library which is
+the latest one whereas in the second case <span
+ style="font-style: italic;">pthread_create()</span> is associated to
+the function <span style="font-style: italic;">__pthread_create_2_0()</span>
+which first resets the stack size specified in the thread attributes
+before calling&nbsp;<span style="font-style: italic;">__pthread_create_2_1()</span>.
+As
+a
+consequence,
+the
+"stack
+size"
+attribute
+is
+not
+taken
+into
+account
+and
+so,
+this is always the default stack size (8 MB) which is used!
+Here is the code snippet from the C library source <span
+ style="font-style: italic;">.../nptl/pthread_create.c</span>:<br>
+<br>
+<span style="font-family: monospace;">int</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">__pthread_create_2_0 (newthread,
+attr, start_routine, arg)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+pthread_t *newthread;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; const
+pthread_attr_t *attr;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; void
+*(*start_routine) (void *);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; void
+*arg;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">{</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; /* The ATTR attribute is
+not really of type `pthread_attr_t *'.&nbsp; It has</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; the old
+size and access to the new members might crash the program.</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; We
+convert the struct now.&nbsp; */</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; struct pthread_attr
+new_attr;</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; <span
+ style="font-weight: bold; color: red;">if (attr != NULL)</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+struct pthread_attr *iattr = (struct pthread_attr *) attr;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+size_t ps = __getpagesize ();</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*
+Copy values from the user-provided attributes.&nbsp; */</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.schedparam = iattr-&gt;schedparam;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.schedpolicy = iattr-&gt;schedpolicy;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.flags = iattr-&gt;flags;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*
+Fill in default values for the fields not present in the old</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;implementation.&nbsp; */</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.guardsize = ps;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span
+ style="font-weight: bold; color: red;">new_attr.stackaddr = NULL;</span></span><br
+ style="font-family: monospace; font-weight: bold; color: red;">
+<span style="font-family: monospace; font-weight: bold; color: red;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.stacksize
+=
+0;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+new_attr.cpuset = NULL;</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /*
+We will pass this value on to the real implementation.&nbsp; */</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+attr = (pthread_attr_t *) &amp;new_attr;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; <span
+ style="font-weight: bold; color: red;">return __pthread_create_2_1
+(newthread, attr, start_routine, arg);</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br>
+<br>
+<br>
+To solve this problem, we force the use of the symbol <span
+ style="font-style: italic;">pthread_create()</span> in version <span
+ style="font-weight: bold;">GLIBC_2.1</span> thanks to the service <span
+ style="font-style: italic;">dlvsym()</span>:<br>
+<br>
+<span style="font-family: monospace;">typedef int
+(*lxb_pcreate_t)(pthread_t *thread, const pthread_attr_t *attr, void
+*(*start_routine)(void*), void *arg);<br>
+<br>
+static lxb_pcreate_t lxb_pthread_create;<br>
+[...]<br>
+void&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*pSym;</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; // Get the version
+GLIBC_2.1 of pthread_create() symbol</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; <span
+ style="font-weight: bold; color: red;">pSym = dlvsym(RTLD_DEFAULT,
+"pthread_create", "GLIBC_2.1");</span></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (NULL == pSym)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+lxb_pthread_create = pthread_create;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; else</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+lxb_pthread_create = (lxb_pcreate_t)pSym;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; if (pSym !=
+(void *)pthread_create)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LXB_PRINTF("Unexpected version of pthread_create() symbol ==&gt; Forced
+to GLIBC_2.1\n");</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br>
+<br>
+<h2><a name="Conclusion"></a>Conclusion</h2>
+The analysis of the failure of thread creation pointed out two problems:<br>
+<ul>
+  <li>When we are getting out of virtual memory space, it is not
+possible to create all the needed threads</li>
+  <li>When located in a separate shared library, the symbol <span
+ style="font-style: italic;">pthread_create()</span> refers to a old
+version which does not take into account the stack size specified in
+the thread attributes</li>
+</ul>
+We solve those problems by:<br>
+<ul>
+  <li>Making <span style="font-style: italic;">pthread_create()</span>
+symbol refer to the expected version in the C library</li>
+  <li>Specifying smaller default stack sizes at thread creation time</li>
+</ul>
+<h2><a name="About_the_author"></a>About the
+author</h2>
+The author is an engineer in computer sciences located in France. He
+can be contacted <a
+ href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have
+a look at his <a href="http://rachid.koucha.free.fr/">WEB
+home page</a>.<br>
+<br>
+<table
+ style="text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(153, 255, 255);">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<div style="text-align: right;"><small><a
+ href="../technical_documents.html">Go back to previous page</a></small><br>
+<small><a href="../index.html">Go back to home page</a></small><br>
+</div>
+<br>
+<br>
+<br>
+</body>
+</html>

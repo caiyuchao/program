@@ -1,0 +1,10 @@
+# add -lpthread to compile
+env = Environment()
+ccflag = env.ParseFlags("-lpthread")
+env.MergeFlags(ccflag)
+
+# list all files
+srcfiles = env.Glob('*.c')
+for src in srcfiles:
+	env.Program(src)
+

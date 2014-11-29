@@ -1,0 +1,3414 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>Design of an API for FTP clients, ROOF</title>
+  
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="author" content="rachid koucha">
+  <meta name="Category" content="FTP, file transfer protocol, ROOF, RFC959, FUSE">
+  <meta name="language" content="en">
+  <meta http-equiv="Content-Language" content="en">
+  <meta name="description" content="This is an introduction to the FTP protocol along with the description of the ROOF source code.">
+  <meta name="keywords" content="FTP, file transfer protocol, ROOF, RFC959, fuse, linux">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+-->
+  </style>
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script></head><body>
+<small><small><span style="text-decoration: underline;">Author</span>:
+R. Koucha<br>
+<span style="text-decoration: underline;">Last update</span>:
+02-Jan-2009</small></small><br>
+<br>
+<small><a href="../index.html">Back to main page</a><br>
+<a href="../technical_documents.html">Back to previous page</a></small><br>
+<h1 style="text-align: center;">Design of an API for FTP
+clients</h1>
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fftp_api.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fftp_api.html&amp;subject=Design%20of%20an%20API%20for%20FTP%20clients"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<a href="#Foreword">Foreword</a><br>
+<a href="#Introduction">Introduction</a><br>
+<a href="#1._Overview_of_the_recommendation">1. Overview
+of the recommendation</a><br>
+<div style="margin-left: 40px;"><a href="#1.1._The_client-server_model">1.1.
+The
+client-server
+model</a><br>
+<a href="#1.2._The_communication_channels">1.2. The
+communication channels</a><br>
+<a href="#1.3._Active_and_passive_modes">1.3. Active and
+passive modes</a><br>
+<a href="#1.4._The_commands">1.4. The commands</a><br>
+<a href="#1.5._The_answers">1.5. The answers</a><br>
+</div>
+<a href="#2._The_API">2. The API</a><br>
+<div style="margin-left: 40px;"><a href="#2.1._Installation_of_ROOF">2.1.
+Installation
+of
+ROOF</a><br>
+<a href="#2.2._Initialization">2.2. Initialization</a></div>
+<div style="margin-left: 40px;"><a href="#2.3._The_context">2.3. The
+context</a><br>
+<a href="#2.4._ReadWrite_on_the_network">2.4. Read/Write
+on the network</a><br>
+<a href="#2.5._Command_sending">2.5. Command sending</a><br>
+<a href="#2.6._Reception_of_the_responses">2.6. Reception
+of the responses</a><br>
+<a href="#2.7._Connection_to_the_server">2.7. Connection
+to the server</a><br>
+<a href="#2.8._Diagram_number_1">2.8. Diagram number 1</a><br>
+<a href="#2.9._Diagram_number_2">2.9. Diagram number 2</a><br>
+<a href="#2.10._Diagram_number_3">2.10. Diagram number 3</a><br>
+</div>
+<a href="#3._Example_based_on_the_API">3. Example based on
+the API</a><br>
+<a href="#Conclusion">Conclusion</a><br>
+<a href="#Resources">Resources</a><br>
+<a href="#About_the_author">About the author</a><br>
+<br>
+<h2><a name="Foreword"></a>Foreword</h2>
+A french version of this article has been published in <a href="http://www.unixgarden.com/index.php/gnu-linux-magazine/developpement-d-une-api-pour-clients-ftp"><img alt="glmf_logo" src="../glmf_logo.jpg" style="border: 0px solid ; width: 100px; height: 30px;"></a><font face="Arial, sans-serif"><font size="2"> issue 103.</font></font><br>
+
+<h2><a name="Introduction"></a>Introduction</h2>
+<br>
+Lots of software need to download or upload files remotely. One of the
+oldest but still widely used protocols is File Transfer Protocol (FTP).
+After an overview of the recommendation, this paper focuses on the
+design of a FTP API written in C language to ease the integration of a
+FTP client module in software.<br>
+<br>
+<h2><a name="1._Overview_of_the_recommendation"></a>1.
+Overview of the recommendation</h2>
+<h3><a name="1.1._The_client-server_model"></a>1.1.
+The client-server model</h3>
+The FTP protocol&nbsp;specified in the <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>
+recommendation has been designed to:<br>
+<ol>
+  <li>Ease the sharing of files</li>
+  <li>Promote the use of remote machines</li>
+  <li>Shield a user from variations in file storage systems among
+hosts</li>
+  <li>Transfer data reliably and efficiently</li>
+</ol>
+This is a client-server model based on TCP/IP protocol as shown in <a href="#Figure_1">figure 1</a>.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_1"></a>Figure 1</span>:
+Architecture of a FTP client-server<br>
+</small></div>
+<br>
+<div style="text-align: center;"><img style="width: 776px; height: 509px;" alt="figure_1" src="ftp_api_figure_1.jpg"><br>
+</div>
+<br>
+<h3><a name="1.2._The_communication_channels"></a>1.2.
+The communication channels</h3>
+On the client side, the establishment of a FTP connection consists to
+open a control channel. Then a data channel may be opened. The control
+channel is used for the transfer of the commands, the responses to the
+commands and the spontaneous messages. The data channel is established
+only if the commands trigger data transfers.<br>
+The communication on the control channel is bidirectionnal and complies
+with the <a href="http://www.ietf.org/rfc/rfc854.txt">TELNET</a>
+protocol. In practice, TELNET is used very basically. The dialog is
+alternated since the client sends a command to which the server answers
+with one or more messages. Each command has a predefined list of
+responses. The server may eventually send spontaneous messages to
+provide various information such as "The system is going down in 15
+minutes" or "The connection delay has expired".<br>
+The communication on the data channel is unidirectionnal. The direction
+depends on the command type being executed.<br>
+A channel is actually a TCP connection as depicted in <a href="#Figure_2">figure 2</a>.<br>
+<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_2"></a>Figure 2</span>: The
+communication channels</small><br>
+</div>
+<br>
+<div style="text-align: center;"><img style="width: 984px; height: 237px;" alt="figure_2" src="ftp_api_figure_2.jpg"><br>
+</div>
+<br>
+<h3><a name="1.3._Active_and_passive_modes"></a>1.3.
+Active and passive modes</h3>
+By default,<span style="font-weight: bold;"></span>
+the client
+requests the opening of the control channel on the TCP port number 21
+on the server machine. This supposes that the server is listening on
+this port. The default values of the ports &nbsp;for both channels
+are
+listed in the file <span style="font-style: italic;">/etc/services</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">$
+cat /etc/services | grep ftp</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">ftp-data 20/tcp</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">ftp 21/tcp</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">tftp
+69/udp</font> <br>
+      <font style="font-size: 9pt;" size="2">sftp
+115/tcp</font> <br>
+      <font style="font-size: 9pt;" size="2">ftps-data
+989/tcp # FTP over SSL (data)</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">$</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The establishment of the data channel depends on the functionning mode:
+active or passive.<br>
+In <span style="text-decoration: underline;">active mode</span>,
+the server establishes the data channel on the client
+TCP port which is by default, the port used by the client for the
+control connection. The client has the ability to specify another port
+through the PORT command. In practice, the active mode is not used
+because it is rarely supported by the clients. Moreover, if the machine
+on which the client runs is protected by a firewall, it may be
+impossible for the server to establish a connection to the client.<br>
+In <span style="text-decoration: underline;">passive mode</span>,
+the client establishes the data channel using the <span style="font-style: italic;">PASV</span>
+command to get a TCP port from the server&nbsp;on which the
+connection will
+be done. This mode simplifies the design of the client and it will be
+the one used by the API presented in this article.<br>
+<h3><a name="1.4._The_commands"></a>1.4. The
+commands</h3>
+The commands are lines of ASCII data with the following format:<br>
+<br>
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="background-color: rgb(204, 255, 255);"><small>command
+parameter1 parameter2... CRLF</small></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The command is a word of at most 4 upper or lower case characters long.
+Parameters are optional.<br>
+The more currently used commands are described in <a href="#Table_1">table
+1</a>
+(the parameters inside brackets are optional and the commands marked
+with a star are part of the minimum set of commands that a server
+should provide to be considered compliant with the recommendation).<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Table_1"></a>Table 1</span>: List of
+mostly used FTP commands <br>
+</small>
+<div style="text-align: left;"><br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <th style="text-align: center; font-family: monospace;">Command
+&nbsp;name</th>
+      <th style="text-align: center; font-family: monospace;">Parameters</th>
+      <th style="text-align: center; font-family: monospace;">Description</th>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">USER (*)</td>
+      <td style="font-family: monospace;">user_name</td>
+      <td style="font-family: monospace;">It is the first
+command sent to the server to identify the user.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">PASS</td>
+      <td style="font-family: monospace;">password</td>
+      <td style="font-family: monospace;">Send a password
+to the server
+if the name specified by the USER command needs one. By the way, we can
+note that the password is sent without any encryption. This is
+frequently considered as a security weakness of the FTP protocol.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">CWD</td>
+      <td style="font-family: monospace;">directory</td>
+      <td style="font-family: monospace;">Change working
+directory (i.e. current directory).</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">CDUP</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">This is the
+shortcut of the
+CWD command to go to the upper directory. On Unix, this is the same as
+"cd .." but on other systems this may be something else. Hence this
+command to ignore the system specificities.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">QUIT (*)</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Disconnect
+current user and close control channel.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">REIN</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Disconnect
+current user but
+the control channel stays opened to accept a subsequent USER command in
+order to connect another user.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">PORT (*)</td>
+      <td style="font-family: monospace;">TCP_port</td>
+      <td style="font-family: monospace;">The client
+specifies to the server the TCP port number on which it waits for a
+data connection: the server is in active mode.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">PASV</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">This is the
+opposite of PORT
+command. The client requests to the server a TCP port on which it will
+establish a data connection: the server is in passive mode.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">TYPE (*)</td>
+      <td style="font-family: monospace;">type</td>
+      <td style="font-family: monospace;">Specify the type
+of the
+information on the data channel. Among the multiple choices, the mostly
+used and often the only ones supported by the servers are ASCII (type
+= A) and BINARY (type = I).</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">STRU (*)</td>
+      <td style="font-family: monospace;">structure</td>
+      <td style="font-family: monospace;">This was used in
+the past by
+servers which organized their data into pages and records for
+efficiency reasons. This command is also used for the data recovery
+upon errors. The default structure is FILE (structure = F).</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">MODE (*)</td>
+      <td style="font-family: monospace;">mode</td>
+      <td style="font-family: monospace;">Specifies the
+data transfer
+mode. This command is also used for the data recovery upon errors. The
+default mode is STREAM (mode = S).</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">RETR (*)</td>
+      <td style="font-family: monospace;">file</td>
+      <td style="font-family: monospace;">Request the
+transfer of file from the server to the client.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">STOR (*)</td>
+      <td style="font-family: monospace;">file</td>
+      <td style="font-family: monospace;">Request the
+transfer of file from the client to the server.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">RNFR</td>
+      <td style="font-family: monospace;">file</td>
+      <td style="font-family: monospace;">Request the
+renaming of a
+file on the server. This command specifies the source file name and is
+followed by the RNTO command to specify the destination file name. </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">RNTO</td>
+      <td style="font-family: monospace;">file</td>
+      <td style="font-family: monospace;">Cf. RNFR</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">ABOR</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Stop the running
+command. If a data channel is opened, it is closed by the server.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">DELE</td>
+      <td style="font-family: monospace;">file</td>
+      <td style="font-family: monospace;">Request the
+destruction of a file on the server.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">RMD</td>
+      <td style="font-family: monospace;">directory</td>
+      <td style="font-family: monospace;">Request the
+destruction of a directory on the server.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">MKD</td>
+      <td style="font-family: monospace;">directory</td>
+      <td style="font-family: monospace;">Request the
+creation of a directory on the server.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">PWD</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Request to the
+server the name of the current directory.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">LIST</td>
+      <td style="font-family: monospace;">[directory] or
+[file]</td>
+      <td style="font-family: monospace;">Request to the
+server
+information about a given file name or all the files of a given
+directory name (name, access rights, creation date, size...). By
+default, the information concern the files of the current directory. On
+Unix, it is normally the result of the "ls -l" command but on other
+systems, this can be something else.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">NLST</td>
+      <td style="font-family: monospace;">[directory] or
+[file]</td>
+      <td style="font-family: monospace;">This command is
+the same as
+LIST but provides only the name of the files. Compared to LIST, this
+command has the advantage to be portable as it returns the same result
+no matter which kind of&nbsp;operating system that the server is
+running on.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">SYST</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Request to the
+server to identify its operating system.</td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">NOOP (*)</td>
+      <td style="font-family: monospace;"><br>
+      </td>
+      <td style="font-family: monospace;">Do not trigger
+any action
+except to request the server to answer OK. This can be used to maintain
+a minimum traffic with the server which may implement an inactivity
+connection
+timeout.</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+</div>
+</div>
+<h3><a name="1.5._The_answers"></a>1.5. The
+answers</h3>
+An answer is coded as follow:<br>
+<ul>
+  <li>The first line begins with a 3-digit code xyz immediately
+followed by a minus sign eventually followed by a text&nbsp;and it
+is
+terminated by <span style="font-style: italic;">CR</span>
+and <span style="font-style: italic;">LF</span>. </li>
+  <li>The following lines contains any text and are terminated by <span style="font-style: italic;">CR</span> and <span style="font-style: italic;">LF</span>.</li>
+  <li>The last line begins by the 3-digit code of the first line
+followed by a space
+eventually followed by a text&nbsp;and it is terminated by <span style="font-style: italic;">CR</span> and <span style="font-style: italic;">LF</span>.
+If the answer is composed of a single line, it follows this last rule.</li>
+</ul>
+xyz are three digits which specify the advancement of the current
+command. The coding principle goes from the general to the particular:
+the first digit gives an information which is detailed by the following
+digits. The <a href="#Table_2">table 2</a> gives
+the possible values
+for the first digit. The recommendation specifies a list of possible
+values for the following digits, but it is not necessary to describe
+them here because we will see in the API that it is possible to
+implement the protocol only based on the value of the first digit.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Table_2"></a>Table 2</span>: The values of
+the first digit of the answers</small><br>
+</div>
+<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255); width: 1410px; height: 217px;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <th style="text-align: center; font-family: monospace;">Value</th>
+      <th style="text-align: center; font-family: monospace;">Description</th>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">1yz</td>
+      <td style="font-family: monospace;">
+      <pre>Positive Preliminary reply.<br>The command has been accepted.</pre>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">2yz</td>
+      <td style="font-family: monospace;">
+      <pre>Positive Completion reply.<br>The requested action has been successfully completed. A new request may be initiated.</pre>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">3yz</td>
+      <td style="font-family: monospace;">
+      <pre>Positive Intermediate reply.<br>The command has been accepted, but the requested action is being held in abeyance, pending receipt of further information. The user should send another command specifying this information. This reply is used in command sequence groups.</pre>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">4yz</td>
+      <td style="font-family: monospace;">
+      <pre>Transient Negative Completion reply.<br>The command was not accepted and the requested action did not take place, but the error condition is temporary and the action may be requested again.</pre>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;">5yz</td>
+      <td style="font-family: monospace; background-color: rgb(204, 255, 255);">
+      <pre>Permanent Negative Completion reply.<br>The command was not accepted and the requested action did not take place. The user&nbsp;is discouraged from repeating the exact request (in the same sequence).</pre>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+The &nbsp;text which follows the digits in the &nbsp;responses
+&nbsp;is
+optional and most of the time it is for information purposes except for
+some commands like <span style="font-style: italic;">PASV</span>
+which need a formatted answer.<br>
+Most of the time the answers are single line. Here is, for example, an
+answer from the server when it expects a password:<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;">331
+Password required for foo.</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+In this case, the code number 3 specifies that the server accepted the
+previous command and it is waiting for additional information: the
+password.<br>
+The multiline answers are mostly used for connection banners (content
+of the file <span style="font-style: italic;">/etc/ftpwelcome</span>).
+For example, here is a banner sent by a
+Linux server after the user identification commands. The code followed
+by a minus sign is displayed on each lines but according to the
+recommendation it is not mandatory. Only the first and last line are
+supposed to begin with the 3-digit code:<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255); font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">230-</font></font>
+Linux toto-host 2.6.22-14-generic #1 SMP Tue Dec 18 08:02:57 UTC 2007
+i686</font><br>
+      <font style="font-size: 9pt;" size="2">230-</font><br>
+      <font style="font-size: 9pt;" size="2">230-
+The programs included with the Ubuntu system are free software;</font><br>
+      <font style="font-size: 9pt;" size="2">230-
+the exact distribution terms for each program are described in the</font><br>
+      <font style="font-size: 9pt;" size="2">230-
+individual files in /usr/share/doc/*/copyright.</font><br>
+      <font style="font-size: 9pt;" size="2">230-</font><br>
+      <font style="font-size: 9pt;" size="2">230-
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by</font><br>
+      <font style="font-size: 9pt;" size="2">230-
+applicable law.</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">230 </font></font><font style="font-size: 9pt;" size="2">User
+foo logged in.</font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+In the preceding example, the code number 2 specifies that the command
+has been accepted and a new command can be launched.<br>
+<br>
+<h2><a name="2._The_API"></a>2. The API</h2>
+After the overview of the FTP recommendation, it is now possible to
+describe the API which permits to design FTP clients. In the layered
+approach of the FTP model, the API is located under the client as shown
+in <a href="#Figure_3">figure 3</a>.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_3"></a>Figure 3</span>: The API in
+the FTP model</small><br>
+</div>
+<br>
+<div style="text-align: center;"><img style="width: 776px; height: 472px;" alt="figure_3" src="ftp_api_figure_3.jpg"><br>
+</div>
+<br>
+<br>
+The name of this API is ROOF (<span style="font-weight: bold;">R</span>emote
+<span style="font-weight: bold;">O</span>peration <span style="font-weight: bold;">O</span>n <span style="font-weight: bold;">F</span>iles).
+This
+is
+shared&nbsp;library
+available
+in
+open
+source
+on <a href="http://roof.sourceforge.net/">sourceforge</a>.<br>
+&nbsp;<br>
+<h3><a name="2.1._Installation_of_ROOF"></a>2.1.
+Installation of ROOF</h3>
+Download the <span style="font-style: italic;">.tgz</span>
+file from <a href="http://roof.sourceforge.net/">sourceforge</a>
+and uncompress it with the following command:<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><small>$ tar xvfz roofxxx.tgz</small></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The resulting source tree is depicted in <a href="#Figure_4">figure
+4</a>.<br>
+<br>
+<br>
+<div style="text-align: center;"><small><span style="text-decoration: underline; font-weight: bold;"><a name="Figure_4"></a>Figure 4</span>: Source tree
+of the API<br>
+</small>
+<div style="text-align: left;"><br>
+<div style="text-align: center;">
+<div style="text-align: center;">
+<div style="text-align: center;"><img style="width: 530px; height: 288px;" alt="figure_4" src="ftp_api_figure_4.jpg"><br>
+</div>
+<br>
+</div>
+<div style="text-align: left;">The <span style="font-style: italic;">include</span>
+directory
+contains the file
+<span style="font-style: italic;">roof.h</span> in
+which are defined the public services and data structures.
+This file must be included by any user of the library.<br>
+The <span style="font-style: italic;">lib</span>
+directory contains the implementation of the <span style="font-style: italic;">libroof.so</span> library
+which will be dynamically linked with the user program. The files
+are <span style="font-style: italic;">roof.c</span>
+for the API and <span style="font-style: italic;">roof_p.h</span>
+for the internal definitions.<br>
+The <span style="font-style: italic;">client</span>
+directory contains an example of FTP client based on the API: <span style="font-style: italic;">roof</span>.<br>
+The <span style="font-style: italic;">fs</span>
+directory contains the implementation of a file system based on <a href="http://fuse.sourceforge.net/">FUSE</a> and ROOF
+as an alternative to file systems like NFS.<br>
+The <span style="font-style: italic;">man</span>
+directory contains the online manuals of the library and the
+client. The manual is spreaded in the section 1 (<span style="font-style: italic;">roof</span> command), 3
+(API)
+and 7 (general description).<br>
+The build process uses a script called <span style="font-style: italic;">roof_install.sh</span>
+based on <a href="http://rachid.koucha.free.fr/tech_corner/cmake_manual.html">cmake</a>
+which must be installed on the system. Here we show how to build and
+install directly with <span style="font-style: italic;">cmake</span>
+command in the default directory <span style="font-style: italic;">/usr/local</span>
+(the
+installation requires the super user rights):<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">$ <font color="#ff0000"><font style="font-size: 9pt;" size="2">cd
+roofxxx</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">$ <font color="#ff0000"><font style="font-size: 9pt;" size="2">cmake
+.</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">--
+Check for working C compiler: /usr/bin/gcc</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">--
+Build files have been written to: [...]</font> <br>
+      <font style="font-size: 9pt;" size="2">$ <font color="#ff0000"><font style="font-size: 9pt;" size="2">make</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">Linking
+C executable roof</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">$ <font color="#ff0000"><font style="font-size: 9pt;" size="2">sudo
+make install</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">Linking
+C executable CMakeFiles/CMakeRelink.dir/roof</font> <br>
+      <font style="font-size: 9pt;" size="2">Install
+the project...</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+To check that the installation succeeded, read the online manual of
+<span style="font-style: italic;">roof</span> (this
+may need to update the environment variable <span style="font-style: italic;">MANPATH</span> with
+<span style="font-style: italic;">/usr/local/man</span>):<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">$
+man 3 roof</font></font> <br>
+      <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">ROOF(3) Linux
+Programmer&#8217;s Manual ROOF(3)</font></font> <br>
+      <br>
+      <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">NAME</font></font> <br>
+      <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">roof
+- API for Remote Operations On Files</font></font> <br>
+      <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">[...]</font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+It is possible to test the <span style="font-style: italic;">roof</span>
+executable (this may need to update the
+<span style="font-style: italic;">LD_LIBRARY_PATH</span>
+environment variable with <span style="font-style: italic;">/usr/local/lib</span>
+or to call
+"<span style="font-style: italic;">ldconfig -n
+/usr/local/lib</span>" if the dynamic linking with <span style="font-style: italic;">libroof.so</span>
+fails):<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">$
+roof</font> <br>
+      <font style="font-size: 9pt;" size="2">roof
+1.5</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">Type
+'help' or '?' for the list of available commands.</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">ftp&gt;
+quit</font> <br>
+      <font style="font-size: 9pt;" size="2">$</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+In the following chapters of this article, we describe the main parts
+of the library to understand in delail the step from the&nbsp;<a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>&nbsp;recommendation
+to
+the
+implementation.
+The
+code
+snippets
+are summaries to make this
+article as short as possible. The reader is advised to download the
+sources from <a href="http://roof.sourceforge.net/">sourceforge</a>
+to get the complete implementation.<br>
+<h3><a name="2.2._Initialization"></a>2.2.
+Initialization</h3>
+To be easy to use and robust, an API is supposed to be
+reentrant&nbsp;to run multiple instances concurrently. This
+precaution
+is very
+important if the software which uses it, is multithreaded (multiple
+thread running in parallel may use the library concurrently). A mutex
+is created and initialized in the entry point of the library. To be
+identified by the dynamic linker at loading time, the entry point is
+declared as follow (cf. this <a href="http://tldp.org/HOWTO/Program-Library-HOWTO/miscellaneous.html#INIT-AND-CLEANUP">page</a>
+for more details about dynamic libraries entry and exit points):<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">void
+__attribute__ ((constructor)) roof_initialize(void);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">void
+roof_initialize(void)</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+rc;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">//
+Creation of the mutex (unlocked)</font> <br>
+      <font style="font-size: 9pt;" size="2">rc
+= pthread_mutex_init(&amp;roof_mtx, NULL);</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_initialize</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Two macros are defined to lock and unlock the mutex:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">#define
+ROOF_LOCK() (pthread_mutex_lock(&amp;roof_mtx))</font> <br>
+      <font style="font-size: 9pt;" size="2">#define
+ROOF_UNLOCK() (pthread_mutex_unlock(&amp;roof_mtx))</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="2.3._The_context"></a>2.3. The
+context</h3>
+The context is a data structure which identifies an instance. There is
+one context of type <span style="font-style: italic;">roof_ctx_t</span>
+per user:<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">typedef
+struct</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+void
+*ctx; &nbsp; &nbsp; &nbsp; &nbsp; // User context</font><br>
+      <font style="font-size: 9pt;" size="2">}
+roof_ctx_t;</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The field <span style="font-style: italic;">ctx</span>
+points on the
+user's private data. The library does not do anything with this field.
+This only makes possible to associate arbitrary data to the user
+context. In the internals of the library, the user context is stored in
+the field <span style="font-style: italic;">ctx</span>
+of the structure <span style="font-style: italic;">roof_context_t</span>
+defined in <span style="font-style: italic;">roof_p.h</span>
+as follow:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">typedef
+struct</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+unsigned
+int &nbsp;debug_level; &nbsp; &nbsp;// Niveau de debug</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+char &nbsp; &nbsp; &nbsp; &nbsp; *iobuf; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;// Buffer d'E/S</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+unsigned
+int &nbsp;l_iobuf; &nbsp; &nbsp; &nbsp; &nbsp;//
+Taille du buffer d'E/S</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+void &nbsp; &nbsp; &nbsp; &nbsp; *ctx; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;// Données
+utilisateur</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+int &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; busy;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // 1, si
+contexte occupé</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+int &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+internal_iobuf; // 1, si buffer d'E/S alloué en
+interne</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+int &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; ctrl; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; // Socket
+de la cnx de contrôle</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+unsigned
+int &nbsp;timeout_ms; &nbsp; &nbsp; // Timeout avec le
+serveur en ms</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+char &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;type;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Type pour la
+commande TYPE</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+char &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;code;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // Code pour la
+commande TYPE</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+roof_context_t;</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+If this structure was in the file <span style="font-style: italic;">roof.h</span>,
+the
+users
+of
+the
+library
+would
+be
+tempted to use the fields of the structure in their code. This
+would make their programs incompatible with future versions of the
+library
+(if the fields are renamed or disappear) and it may cause the library
+to fail (if the fields are&nbsp;modified by the user without
+calling&nbsp;the
+services of the API).<br>
+In this article, <span style="font-style: italic;">roof_ctx_t</span>
+will be called "external context" (the one seen by the user) and <span style="font-style: italic;">roof_context_t</span> will
+be called "internal context" (the one seen by the library). To get the
+latter from the first, the library uses the macro <span style="font-style: italic;">ROOF_CTX()</span> which
+retrieves the address of the internal context from the address of the
+external context and the offset of the field <span style="font-style: italic;">ctx</span> in the
+structure <span style="font-style: italic;">roof_context_t</span>:<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2">#define
+ROOF_CTX(p) ((roof_context_t *) ((char
+*)p - offsetof(roof_context_t, ctx)))</font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Conversely, the external context is retrieved from the internal context
+through the macro <span style="font-style: italic;">ROOF_EXT_CTX()
+</span>which merely returns the address of the field <span style="font-style: italic;">ctx</span> in <span style="font-style: italic;">roof_context_t</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">#define
+ROOF_EXT_CTX(p) ((roof_ctx_t *)&amp;(p-&gt;ctx))</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The library defines a maximum number of contexts with the constant <span style="font-style: italic;">ROOF_NB_MAX_CTX</span>
+which is the dimension of the table of contexts <span style="font-style: italic;">roof_context[]</span> in <span style="font-style: italic;">roof.c</span>.<br>
+The first thing that the user must do, is to allocate a context by
+calling <span style="font-style: italic;">roof_new()</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">roof_ctx_t
+*roof_new(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;unsigned
+int &nbsp;timeout_ms, // Timeout (ms) to interact with the server</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;//
+0 = Infinite wait</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;char &nbsp; &nbsp;
+&nbsp; &nbsp; *iobuf, &nbsp; &nbsp; &nbsp;// I/O
+buffer (default if NULL)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;unsigned
+int &nbsp;l_iobuf, &nbsp; &nbsp;// Lenght of the I/O buffer
+(default if 0)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;void &nbsp; &nbsp;
+&nbsp; &nbsp; *ctx &nbsp; &nbsp; &nbsp; &nbsp;
+// User context</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; )</font><br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">unsigned
+int i;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; ROOF_LOCK();</font></font></font>
+      <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; <span style="color: rgb(255, 0, 0);"><span style="color: rgb(0, 0, 0);">// </span>Look
+for
+a
+free
+context</span></font><span style="color: rgb(255, 0, 0);"> </span><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+for
+(i = 0; i &lt; ROOF_NB_MAX_CTX; i ++)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+(0 == roof_context[i].busy)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; roof_context[i].busy
+= 1;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; break;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+// End for</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; ROOF_UNLOCK();</font></font></font>
+      <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(i &gt;= ROOF_NB_MAX_CTX)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= ENOSPC;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+NULL;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+roof_context[i].debug_level
+= 0;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// <font color="#ff0000"><font style="font-size: 9pt;" size="2">If the
+buffer has been allocated by the user</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(iobuf &amp;&amp; l_iobuf)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; [...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].iobuf
+= iobuf;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].l_iobuf
+= l_iobuf;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].internal_iobuf
+= 0;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+else
+// <font color="#ff0000"><font style="font-size: 9pt;" size="2">Buffer
+allocated internally</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].iobuf
+= (char *)malloc(ROOF_IO_BUF_SIZE);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; [...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].l_iobuf
+= ROOF_IO_BUF_SIZE;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; roof_context[i].internal_iobuf
+= 1;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+roof_context[i].ctrl = -1;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+roof_context[i].timeout_ms
+= timeout_ms;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+roof_context[i].ctx = ctx;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; return
+(roof_ctx_t *)&amp;(roof_context[i].ctx);</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_new</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+A free context (<span style="font-style: italic;">busy</span>
+field = 0) is looked for in the table of contexts. The search is done
+in a critical section protected by the mutex (<span style="font-style: italic;">ROOF_LOCK()/ROOF_UNLOCK()</span>)
+to be reentrant. The found context is initialized with the parameters
+passed by the user. The first parameter <span style="font-style: italic;">timeout_ms</span> is the
+maximum time
+in milliseconds to wait for a answer from the server. It is advised to
+set it to some seconds to avoid to have a program hanging when the
+server does not answer. The following parameters (<span style="font-style: italic;">iobuf</span> and <span style="font-style: italic;">l_iobuf</span>) are
+respectively the address and the length of the I/O buffer to interact
+with the server. If the caller passes <span style="font-style: italic;">NULL</span>
+for the
+address or 0 for the length, the buffer is allocated internally with <span style="font-style: italic;">ROOF_IO_BUF_SIZE</span>
+bytes as default length (this is defined in <span style="font-style: italic;">roof_p.h</span>). The
+service returns <span style="font-style: italic;">NULL</span>
+on error or the address of the external context if OK (this is the
+address of the field <span style="font-style: italic;">ctx</span>
+in the structure <span style="font-style: italic;">roof_context_t</span>
+in the table <span style="font-style: italic;">roof_context[]</span>).
+From the user point of view, this context is an identifier that he will
+pass to all the subsequent calls to the library in order to identify
+its instance.<br>
+When the user does no longer need the context, he calls <span style="font-style: italic;">roof_delete()</span> to
+free the resources:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">void
+roof_delete(roof_ctx_t *pContext) // external context</font><br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">roof_context_t
+*<font color="#ff0000"><font style="font-size: 9pt;" size="2">pCtx
+= ROOF_CTX(pContext);</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// <span style="color: rgb(255, 0, 0);">Deallocation of
+the I/O buffer if allocated internally</span></font><span style="color: rgb(255, 0, 0);"> </span><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(pCtx-&gt;<font color="#ff0000"><font style="font-size: 9pt;" size="2">internal_iobuf</font></font>)</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; free(pCtx-&gt;iobuf);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//&nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">Close
+the
+control
+socket
+if
+opened</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(pCtx-&gt;<font style="font-size: 9pt;" size="2">ctrl</font>
+&gt;= 0)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; shutdown</font></font>(pCtx-&gt;ctrl,
+SHUT_RDWR);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; close(pCtx-&gt;ctrl);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+ROOF_LOCK();</font> <br>
+      <br>
+&nbsp; // <span style="color: rgb(255, 0, 0);">Free
+the context</span><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; pCtx-&gt;busy
+= 0;</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+ROOF_UNLOCK();</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_delete</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+This function is the counterpart of <span style="font-style: italic;">roof_new()</span>.
+The
+I/O
+buffer
+is
+freed
+if
+it
+has been allocated internally (field <span style="font-style: italic;">internal_iobuf</span>
+!=
+0), the control socket is closed properly with a call to <span style="font-style: italic;">shutdown()</span> then <span style="font-style: italic;">close()</span> if it is
+opened and finally, the field <span style="font-style: italic;">busy</span>
+is reset to mark the context as being free.<br>
+<br>
+<h3><a name="2.4._ReadWrite_on_the_network"></a>2.4.
+Read/Write on the network</h3>
+The communication on the network uses the TCP/IP protocol through the
+socket library of Linux. This makes possible to receive and send data
+over the network via a file descriptor using the <span style="font-style: italic;">read()</span> and <span style="font-style: italic;">write()</span>
+system calls as if we were writing or reading a file (this is the
+application of the famous concept of Unix: "everything is file").<br>
+In the library, two functions <span style="font-style: italic;">roof_read()</span>
+and <span style="font-style: italic;">roof_write()</span>
+encapsulate the <span style="font-style: italic;">read()</span>
+and <span style="font-style: italic;">write()</span>
+system calls to mainly use the context concept where are located useful
+information like the debug level and to handle the <span style="font-style: italic;">EINTR</span>
+error code. As signals are asynchronous, they can be received at any
+moment&nbsp;interrupting the running code to trigger a handler that
+the
+user may have defined. Under Linux, most of the system calls return in
+error (e.g. the value -1) and set the global variable <span style="font-style: italic;">errno</span> to <span style="font-style: italic;">EINTR</span> if they are
+interrupted by a signal. So, <span style="font-style: italic;">roof_read()</span>
+and <span style="font-style: italic;">roof_write()</span>
+check this error code to relaunch the system calls.<br>
+Here is the <span style="font-style: italic;">roof_write()</span>
+function:<br>
+&nbsp;<br>
+<table style="text-align: left; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="background-color: rgb(204, 255, 255);"> <font style="font-size: 9pt;" size="2">static
+int roof_write(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; roof_context_t
+*pCtx, // Internal context</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; int &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; fd, &nbsp; // Output
+file descriptor</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; const
+void &nbsp; &nbsp; *buf, &nbsp;// Writing buffer</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; size_t &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;len &nbsp; // Number of
+bytes to write</font> <br>
+      <font style="font-size: 9pt;" size="2">)</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;rc;</font> <br>
+      <font style="font-size: 9pt;" size="2">unsigned
+int l;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+l
+= len;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+do</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">write</font></font>(fd,
+((const
+char
+*)buf)
++
+(len
+-
+l), l);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+(rc &lt; 0)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(<font color="#ff0000"><font style="font-size: 9pt;" size="2">EINTR</font></font>
+== errno)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; //
+Reiterate the read()</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; rc
+= 0;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+(rc &gt; 0)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; assert(l
+&gt;= (unsigned)rc);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; l
+-= rc;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+while (l &amp;&amp; (rc &gt;= 0));</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(-1 == rc)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; int
+saved_errno = errno;</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Error '%s' (%d) on write()\n",</font> <font style="font-size: 9pt;" size="2">strerror(errno),
+errno);</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; errno
+= saved_errno;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+else</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= len;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+rc;</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_write</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Here is the <span style="font-style: italic;">roof_read()</span>
+function:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">static
+int roof_read(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;roof_context_t
+*pCtx, // Internal context</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;int &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; fd, &nbsp; // Input
+descriptor</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;char &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; *buf, &nbsp;// Read buffer</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;unsigned
+int &nbsp; &nbsp;len &nbsp; // Maximum number of bytes to
+read</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; )</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">int
+rc;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+saved_errno;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+do</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">read</font></font>(fd,
+buf,
+len);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+(-1 == rc)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(<font color="#ff0000"><font style="font-size: 9pt;" size="2">EINTR</font></font>
+== errno)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; continue;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; saved_errno
+= errno;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Error '%s' (%d) on read(%d)\n",</font> <font style="font-size: 9pt;" size="2">strerror(errno),
+errno, fd);</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; errno
+= saved_errno</font></font></font>;<br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+while (rc &lt; 0);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+rc;</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_read</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+In the preceding examples, the <span style="font-style: italic;">errno</span>
+variable is saved before the calls to the macros displaying the error
+messages and it is restored after because we need to preserve the error
+value at the return of <span style="font-style: italic;">roof_read()</span>
+and <span style="font-style: italic;">roof_write()</span>.
+The saving is mandatory because the error macro calls functions from
+the C library like <span style="font-style: italic;">printf()</span>
+which may alter the value of <span style="font-style: italic;">errno</span>.
+This
+is
+advised
+by
+the
+online
+manual of <span style="font-style: italic;">errno</span>
+(<span style="font-style: italic;">man 3 errno</span>).<br>
+Those functions merely could use the address of the I/O buffers stored
+in the internal context instead of receiving the address as parameter.
+But in some cases, those functions are used with a buffer which is not
+from the context or with an address at a given offset in the I/O buffer.<br>
+<h3><a name="2.5._Command_sending"></a>2.5.
+Command sending</h3>
+One of the main functions of the client is to send commands to the
+server. As seen in the § <a href="#1.4._The_commands">1.4</a>,
+the commands are composed with a keyword eventually followed by a
+parameter and are terminated by the end of line characters <span style="font-style: italic;">CR</span> and <span style="font-style: italic;">LF</span>. The commands
+are sent by the client on the control channel. It is the work of the <span style="font-style: italic;">roof_send_cmd()</span>
+function:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">static
+int roof_send_cmd(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;roof_context_t
+*pCtx, &nbsp; // Internal context</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;const
+char &nbsp; &nbsp; *<font color="#ff0000"><font style="font-size: 9pt;" size="2">format</font></font>,
+// Command to send</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;...</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; )</font><br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; rc = 0;</font><br>
+      <font style="font-size: 9pt;" size="2">va_list
+args_list;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; sz;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+va_start(args_list,
+format);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+sz
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">vsnprintf</font></font>(pCtx-&gt;iobuf,
+pCtx-&gt;l_iobuf,
+format,
+args_list);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+va_end(args_list);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_write(pCtx, pCtx-&gt;ctrl, pCtx-&gt;iobuf, sz);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return 0;</font><br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_send_cmd</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The function is passed a command described with a format and a variable
+number of arguments like <span style="font-style: italic;">printf()</span>.
+<span style="font-style: italic;">vsnprintf()</span>
+is used to decode the parameters. This interface makes the function
+generic enough to be able to send any FTP command (with or without
+parameters). For example, to send a parameter less command like <span style="font-style: italic;">PASV</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">rc
+= roof_send_cmd(pCtx, "PASV\r\n");</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+And to send a command with parameters like <span style="font-style: italic;">TYPE</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">rc
+= roof_send_cmd(pCtx, "TYPE %c %c\r\n", type, code);</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br style="font-family: monospace;">
+<h3><a name="2.6._Reception_of_the_responses"></a>2.6.
+Reception of the responses</h3>
+The other main function of the client is to receive the responses from
+th server. As specified in § <a href="#1.5._The_answers">1.5</a>,
+the answers are formatted and may
+contain one or multiple lines. This is the work of the <span style="font-style: italic;">roof_get_reply()</span>
+function:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">int
+roof_get_reply(</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;roof_ctx_t &nbsp;*pContext, //
+External context</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;const
+char **reply &nbsp; &nbsp; // Response</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; )</font><br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">roof_context_t
+*pCtx = ROOF_CTX(pContext);</font><br>
+      <font style="font-size: 9pt;" size="2">fd_set
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fdset;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rc;</font><br>
+      <font style="font-size: 9pt;" size="2">struct
+timeval &nbsp;to;</font><br>
+      <font style="font-size: 9pt;" size="2">unsigned
+int &nbsp; &nbsp;i;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; first
+= 1;</font><br>
+      <font style="font-size: 9pt;" size="2">unsigned
+int &nbsp; &nbsp;offset = 0;</font><br>
+      <font style="font-size: 9pt;" size="2">unsigned
+int &nbsp; &nbsp;lreply;</font><br>
+      <font style="font-size: 9pt;" size="2">char
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;code[4];</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+*reply
+= NULL;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+lreply
+= pCtx-&gt;l_iobuf;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">one_more_time:</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+FD_ZERO(&amp;fdset);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+FD_SET(pCtx-&gt;ctrl,
+&amp;fdset);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(pCtx-&gt;timeout_ms)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; to.tv_sec
+= pCtx-&gt;timeout_ms / 1000;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; to.tv_usec
+= (pCtx-&gt;timeout_ms % 1000) * 1000;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">select</font></font>(pCtx-&gt;ctrl
++
+1,
+&amp;fdset,
+NULL,
+NULL,
+&amp;to);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+else</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">select</font></font>(pCtx-&gt;ctrl
++
+1,
+&amp;fdset,
+NULL,
+NULL,
+NULL);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+switch(rc)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; case
+-1: // Error or signal</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(EINTR == errno)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font><font style="font-size: 9pt;" size="2"><br>
+&nbsp; &nbsp; &nbsp; &nbsp; goto
+one_more_time;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Error '%s' (%d) on select()\n", strerror(errno), errno);</font><span style="font-family: mon;"><br>
+&nbsp; &nbsp; &nbsp; </span><font style="font-size: 9pt;" size="2">return
+-1;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; case
+0: // Timeout</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Timeout on read\n");</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= ETIMEDOUT;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font> <br>
+      <font style="font-size: 9pt;" size="2"><br>
+&nbsp; &nbsp; case
+1 : // Data from the connection</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; char
+*p;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_read_line(</font></font>pCtx,
+pCtx-&gt;ctrl,
+pCtx-&gt;iobuf
++
+offset,
+lreply);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; [...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; // If the connection is closed</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(0 == rc)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; // Overwrite the buffer with a dummy
+code</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; strcpy(pCtx-&gt;iobuf,
+"600");</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; lreply
+= pCtx-&gt;l_iobuf - 3;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; // Add additional information if
+enough room</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; strncat(pCtx-&gt;iobuf,
+" End of connection", lreply);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp;
+pCtx-&gt;iobuf[pCtx-&gt;l_iobuf
+- 1] = '\0';</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; *reply
+= pCtx-&gt;iobuf;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; [...]</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; // Look for the end of line</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; p
+= pCtx-&gt;iobuf + offset;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; i
+= 0;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; while
+(p &lt; (pCtx-&gt;iobuf + offset + rc))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; if
+(('\r' == *p) &amp;&amp; ('\n' == *(p + 1)))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; //&nbsp;This is the first line</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; if
+(first)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; // We must have 3 digits at the beginning of the
+line</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; [...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; for
+(i = 0; i &lt; 3; i ++)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; [...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+code[i]
+= pCtx-&gt;iobuf[i];</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+// End for</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // <font color="#ff0000"><font style="font-size: 9pt;" size="2">Is it a multipline answer ?</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+('-' == pCtx-&gt;iobuf[i])</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; first
+= 0;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Remaining space in the input buffer</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+lreply
+-= rc;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+New beginning of buffer when the response</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // is
+multiline</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+offset
++= rc;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; [...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Read the following line</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; goto
+one_more_time;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //&nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">This is a single line response</font></font></font>
+      <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Terminate the line by overwriting the last &lt;CR&gt; with NUL</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; *p
+= '\0';</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; *reply
+= pCtx-&gt;iobuf;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return
+0;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; else <font color="#ff0000"><font style="font-size: 9pt;" size="2">//&nbsp;This is a new line of a
+multiline
+response</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // According to
+the specification, a line may begin with a<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+number.</font> <font style="font-size: 9pt;" size="2">So,
+to check if it is the last line, we </font>check<br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; // the code value</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+((rc &gt; 3) &amp;&amp;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; ('
+' == ((pCtx-&gt;iobuf + offset)[3])) &amp;&amp;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; (code[0]
+== (pCtx-&gt;iobuf + offset)[0]) &amp;&amp;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; (code[1]
+== (pCtx-&gt;iobuf + offset)[1]) &amp;&amp;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; (code[2]
+== (pCtx-&gt;iobuf + offset)[2]))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; //&nbsp;End of multiline answer</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Terminate the line by&nbsp;</font><font style="font-size: 9pt;" size="2">overwriting
+the
+last
+&lt;CR&gt;
+with
+NUL</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; *p
+= '\0';</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+*reply
+= pCtx-&gt;iobuf;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+return
+0;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; else <font color="#ff0000"><font style="font-size: 9pt;" size="2">//&nbsp;This is not the end of a
+multiline
+response</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Remaining space in the input buffer</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+lreply
+-= rc;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+New beginning of buffer for a multiline response</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+offset
++= rc;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; //&nbsp;Read the following line</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; goto
+one_more_time;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; }</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; i
+++;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; p
+++;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }
+// End while</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; [...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; default
+: // Impossible ???!!!???</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+// End switch</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_get_reply</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Although quite big, the function is straightforward. It is based on
+the <span style="font-style: italic;">select()</span>
+system call to wait for data from the server on the control socket (<span style="font-style: italic;">ctrl</span>
+field in the internal context). By the way we can notice the use of the
+timeout if it has been specified by the user in roof_new() call (cf.
+§ <a href="#2.3._The_context">2.3</a>). This avoids
+to wait for a
+response which would not come if the server is out of service. The
+function is able to read responses of one or more lines by testing the
+presence of the minus sign behind the 3-digit code. To read the data
+lines from the server, the internal function <span style="font-style: italic;">roof_read_line()</span> is
+called to get the input characters up to the apparition of the
+characters <span style="font-style: italic;">CR</span>
+and <span style="font-style: italic;">LF</span>.
+This is not useful to describe it in detail.<br>
+<span style="font-style: italic;">roof_get_reply()</span>
+is part of
+the API because not only it is used internally but also it is used
+externally by the user to get the spontaneous messages from the server.
+That is why it is passed an external context instead of an internal
+context as parameter.<br>
+We will see in the following functions that the responses are handled
+by checking the first digit of the 3-digit code because it is
+sufficient to know which action to trigger (cf. § 4.2 of <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>).<br>
+<br>
+<h3><a name="2.7._Connection_to_the_server"></a>2.7.
+Connection to the server</h3>
+The connection to the server consists before all to establish the
+control channel as specified at the beginning of the § 5.4 of the <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>:
+the channel is opened and the server sends a response with a code equal
+to 220 to specify that it is ready. If the server is not ready to
+receive commands, it sends a response with a code equal to 120 and the
+client is supposed to wait until it receives a code equal to 220.<br>
+The establishment of the control channel is done by <span style="font-style: italic;">roof_open_ctrl()</span>
+which is passed the address of the server (name or IP address) and the
+TCP port number. If the server is listening on the standard port
+(general situation), the caller can pass the constant <span style="font-style: italic;">ROOF_DEF_PORT</span>
+instead of the hardcoded value 21. The return code of this service is
+the socket descriptor of the connection or -1 if an error occured. The <span style="font-style: italic;">ctrl</span> field of the
+internal context stores the value of this socket. We can note the use
+of the <span style="font-style: italic;">SO_LINGER</span>
+socket option to make the TCP protocol wait for the remote side to get
+all the pending data at disconnection time.<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">int
+roof_open_ctrl(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;roof_ctx_t &nbsp; *pContext, //
+External context</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;const
+char &nbsp; *<font color="#ff0000"><font style="font-size: 9pt;" size="2">host</font></font>,
+&nbsp; &nbsp; // Server's address (name or IP address)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;unsigned
+int &nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">port</font></font>
+&nbsp; &nbsp; &nbsp;// Server's port number</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; )</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">roof_context_t
+&nbsp; &nbsp; *pCtx = ROOF_CTX(pContext);</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; rc;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; sd = -1;</font><br>
+      <font style="font-size: 9pt;" size="2">struct
+sockaddr_in &nbsp;addr;</font><br>
+      <font style="font-size: 9pt;" size="2">struct
+hostent &nbsp; &nbsp; *pHost;</font><br>
+      <font style="font-size: 9pt;" size="2">char
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; *code;</font><br>
+      <font style="font-size: 9pt;" size="2">struct
+linger &nbsp; &nbsp; &nbsp; opt_linger;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; err_sav;</font><br>
+      <font style="font-size: 9pt;" size="2">[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// <span style="font-family: monospace;">Get a TCP socket
+descriptor</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+sd
+= socket(PF_INET, <font color="#ff0000"><font style="font-size: 9pt;" size="2">SOCK_STREAM</font></font>,
+0);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Set SO_LINGER option to make the caller of </font><font style="font-size: 9pt;" size="2">close() on
+the&nbsp;socket<br>
+&nbsp; // <span style="font-family: monospace;">wait
+until the remote part has got all its data</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+opt_linger.l_onoff = 1; &nbsp;// Activate the LINGER</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+opt_linger.l_linger
+= 2; // Persistence time in 100ms units</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= setsockopt(sd, SOL_SOCKET, <font color="#ff0000"><font style="font-size: 9pt;" size="2">SO_LINGER</font></font>,</font> <font style="font-size: 9pt;" size="2">&amp;opt_linger,
+sizeof(opt_linger));</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Translate the hostname into address</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+pHost
+= gethostbyname(host);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...<span style="font-family: monospace;">]</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Populate the address</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+memset(&amp;addr,
+0, sizeof(addr));</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_family = AF_INET;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_port = htons(port);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_addr.s_addr
+= (in_addr_t)(*(unsigned long *)(pHost-&gt;h_addr_list[0]));</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// <font color="#ff0000"><font style="font-size: 9pt;" size="2">Connection
+to
+the
+remote
+host</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= connect(sd, (struct sockaddr *)&amp;addr, sizeof(addr));</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//
+We populate the context right now bacause roof_get_reply() need the
+ctrl field</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; pCtx-&gt;ctrl
+= sd;</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// <font color="#ff0000"><font style="font-size: 9pt;" size="2">Loop
+until we receive a 2yz response or timeout</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+do</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; // Wait for a response from the server</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; rc
+= roof_get_reply(pContext, &amp;code);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; [...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+((code[0] != '1') &amp;&amp;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; (code[0]
+!= '2'))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Negative reply code '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; rc
+= -1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; goto
+error;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+while (code[0] != '2');</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= sd;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+goto
+end;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">error:</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+err_sav
+= errno;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(sd &gt;= 0)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; close(sd);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; sd
+= -1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+pCtx-&gt;ctrl
+= -1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+errno
+= err_sav;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">end:</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+rc;</font><br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_open_ctrl</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The second and last step of the connection is the identification
+procedure. The <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>
+proposes a diagram reproduced in <a href="#Figure_5">figure
+5</a> (with some adaptations). The diagram shows that depending
+on the server, the identification may consist only of a <span style="font-style: italic;">USER</span> command or <span style="font-style: italic;">USER</span> followed by <span style="font-style: italic;">PASS</span> or <span style="font-style: italic;">USER</span> followed by <span style="font-style: italic;">PASS</span> and <span style="font-style: italic;">ACCT</span>. In practice,
+the procedure consists most of the time of <span style="font-style: italic;">USER</span> followed by <span style="font-style: italic;">PASS</span>.<br>
+<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_5"></a>Figure 5</span>:
+Identification diagram</small><br>
+</div>
+<br>
+<div style="text-align: center;"><img style="width: 681px; height: 606px;" alt="figure_5" src="ftp_api_figure_5.jpg"><br>
+</div>
+<br>
+The identification diagram is run by the <span style="font-style: italic;">roof_service()</span>
+service. We describe this service to show that the commands are sent by
+the <span style="font-style: italic;">roof_send_cmd()</span>
+internal routine&nbsp;introduced above, the responses are received
+by <span style="font-style: italic;">roof_get_reply()</span>
+introduced above and the diagrams&nbsp;are implemented with a suite
+of <span style="font-style: italic;">switch/case</span>
+to test the values of the responses and <span style="font-style: italic;">goto</span> to change the
+states.<br>
+<br>
+<table style="text-align: left; background-color: rgb(204, 255, 255); font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">int
+roof_login(</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;roof_ctx_t
+*pContext, // External context</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;const
+char *login, &nbsp; &nbsp;// Login name</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;const
+char *passwd, &nbsp; // Password</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;const
+char *account &nbsp; // Account information</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; )</font><br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">roof_context_t
+*pCtx = ROOF_CTX(pContext);</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rc;</font><br>
+      <font style="font-size: 9pt;" size="2">const
+char &nbsp; &nbsp; *code;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(NULL
+!= pCtx);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(pCtx-&gt;busy);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(!login || !(login[0]))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"NULL login parameter\n");</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EINVAL;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_send_cmd</font></font>(pCtx,
+"USER
+%s\r\n",
+login);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_get_reply</font></font>(ROOF_EXT_CTX(pCtx),
+&amp;code);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; switch</font></font>(code[0])</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'1'</font></font> : // Preliminary positive response</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'4'</font></font> : // Transient negative completion</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'5'</font></font> : // Permanent negative completion</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Error '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'3'</font></font> : // Intermediate positive reponse</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; goto
+send_passwd;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'2'</font></font> : // Positive completion</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; goto
+end;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; default
+: // Normally impossible</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Unexpected reply code '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+// End switch</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">send_passwd:</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(!passwd || !(passwd[0]))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Password parameter is required by server\n");</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EINVAL;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_send_cmd</font></font>(pCtx,
+"PASS
+%s\r\n",
+passwd);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_get_reply</font></font>(ROOF_EXT_CTX(pCtx),
+&amp;code);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; switch</font></font>(code[0])</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'1'</font></font> : // Positive Preliminary reply</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'4'</font></font> : // Transient negative completion</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'5'</font></font> : // Permanent negative </font>completion<br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Error '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'3'</font></font> : // Intermediate positive response</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; goto
+send_account;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'2'</font></font> : // Positive termination</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; goto
+end;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; default
+: // Normally impossible</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Unexpected reply code '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+// End switch</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">send_account:</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(!account || !(account[0]))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Account parameter is required by server\n");</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EINVAL;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_send_cmd</font></font>(pCtx,
+"ACCT
+%s\r\n",
+account);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_get_reply</font></font>(ROOF_EXT_CTX(pCtx),
+&amp;code);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; switch(</font></font>code[0])</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'1'</font></font> : // Positive preliminary reply</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'3'</font></font> : // Intermediate positive response</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'4'</font></font> : // Transient negative completion</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'5'</font></font> : // Permanent negative completion</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Error '%s'\n", pCtx-&gt;iobuf)<span style="font-family: monospace;">;</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; case
+'2'</font></font> : // Positive completion</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; goto
+end;</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; default
+: // Normally impossible</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; ROOF_ERR(pCtx,
+"Unexpected reply code '%s'\n", pCtx-&gt;iobuf);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; break;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}
+// End switch</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">end:</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_login</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="2.8._Diagram_number_1"></a>2.8.
+Diagram number 1</h3>
+The diagram in <a href="#Figure_6">figure 6</a> is
+the first one presented in the § 6 of the <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>
+recommendation. It concerns the commands <span style="font-style: italic;">ABOR, ALLO, DELE, CWD, CDUP,
+SMNT, HELP, MODE, NOOP, PASV, QUIT, SITE, PORT, SYST, STAT, RMD, MKD,
+PWD, STRU</span> and <span style="font-style: italic;">TYPE</span>.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_6"></a>Figure 6</span>: Diagram
+number 1</small><br>
+</div>
+<br>
+<div style="text-align: center;"><img style="width: 417px; height: 473px;" alt="figure_6" src="ftp_api_figure_6.jpg"><br style="font-family: monospace;">
+</div>
+<br style="font-family: monospace;">
+<h3><a name="2.9._Diagram_number_2"></a>2.9.
+Diagram number 2</h3>
+The diagram in <a href="#Figure_7">figure 7</a> is
+the second one presented in the § 6 of the <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>
+recommendation. It concerns the data transfer commands <span style="font-style: italic;">APPE, LIST, NLST, REIN, RETR,
+STOR</span> and <span style="font-style: italic;">STOU</span>.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_7"></a>Figure 7</span>: Diagram
+number 2</small><br>
+</div>
+<br>
+<div style="text-align: center;">
+<div style="text-align: center;"><img style="width: 826px; height: 492px;" alt="figure_7" src="ftp_api_figure_7.jpg"><br>
+</div>
+<div style="text-align: left;"><br>
+This diagram introduces the&nbsp;<span style="font-style: italic;">roof_open_data()</span>
+function which opens
+the data channel in order to transfer the content of the files and
+directories:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">static
+int roof_open_data(roof_context_t *pCtx) // Internal context</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; rc;</font><br>
+      <font style="font-size: 9pt;" size="2">const
+char &nbsp; &nbsp; &nbsp; &nbsp; *code;</font><br>
+      <font style="font-size: 9pt;" size="2">char
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; *p;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; port_lsb, port_msb, port;</font><br>
+      <font style="font-size: 9pt;" size="2">struct
+sockaddr_in &nbsp;addr;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; data;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; err_sav;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_send_cmd</font></font>(pCtx,
+"<font color="#ff0000"><font style="font-size: 9pt;" size="2">PASV</font></font>\r\n")<span style="font-family: monospace;">;</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">roof_get_reply</font></font>(ROOF_EXT_CTX(pCtx),
+&amp;code);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Make sure the response is OK</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(<font color="#ff0000"><font style="font-size: 9pt;" size="2">code[0]
+!= '2'</font></font>)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Error '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; //
+Parsing of the response from the server to get the port number as<br>
+&nbsp; // well as the server's address</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+p
+= pCtx-&gt;iobuf;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+while
+(*p &amp;&amp; (*p != ')'))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; p
+++;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(*p != ')')</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Expected a terminating ')' in '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+*p
+= '\0';</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+while
+((p != pCtx-&gt;iobuf) &amp;&amp; (*p != ','))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; p
+--;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+((*p != ',') &amp;&amp; (!isdigit(*(p+1))))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Expected a ',' followed by a digit in '%s'\n",
+pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp; <span style="font-family: monospace;">}</span></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+*p
+= '\0';</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+port_lsb
+= atoi(p+1);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+while
+((p != pCtx-&gt;iobuf) &amp;&amp; (*p != ','))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; p
+--;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+((*p != ',') &amp;&amp; (!isdigit(*(p+1))))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Expected a ',' followed by a digit in '%s'\n",
+pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+*p
+= '\0';</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+port_msb
+= atoi(p+1);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; port
+= (port_msb &lt;&lt; 8) | port_lsb;</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; //
+Convert the address into dotted notation</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+p--;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+while
+((p != pCtx-&gt;iobuf) &amp;&amp; (*p != '('))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; if
+(',' == *p)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; *p
+= '.';</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; <span style="font-family: monospace;">}</span></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; else</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(!isdigit(*p))</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; {</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; ROOF_ERR(pCtx,
+"Expected a digit in the server's address'%s'\n",</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; }</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; p
+--;</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(*p != '(')</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; ROOF_ERR(pCtx,
+"Expected a '(' in '%s'\n", pCtx-&gt;iobuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; errno
+= EIO;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+-1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Populate the server's address</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+memset(&amp;addr,
+0, sizeof(addr));</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_family = AF_INET;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_port = htons(port);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+addr.sin_addr.s_addr
+= inet_addr(p+1);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; //
+Creation of the socket for the data channel</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+data
+= socket(PF_INET, SOCK_STREAM, 0);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; //
+Connection to the server</font></font></font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= connect(data, (struct sockaddr *)&amp;addr, sizeof(addr));</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+[...]</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+data;</font> <br>
+      <font style="font-size: 9pt;" size="2">}
+// roof_open_data</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The PASV command is sent to the server to make it switch into passive
+mode. The server answers by a response code "2" like "227 Entering
+Passive Mode (127,0,0,1,128,87) to give the port number on which it
+will wait for the data connection. The numbers inside parenthesis
+and separated by commas are specified in <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>.
+They represent from left to right, the IP address (the first four
+fields: 127.0.0.1), the most significant byte and the less significant
+byte of the 16-bit port number (128 * 256 + 87 = 32855). Once those
+information are received by the client, a socket is created to
+establish the data channel to the server. The function returns the
+socket descriptor of the data channel or -1 if an error occured.<br>
+We will not describe the functions which implement the commands based
+on the diagram number 2 because they follow the same principle as <span style="font-style: italic;">roof_login()</span> seen
+above.<br>
+<br>
+<h3><a name="2.10._Diagram_number_3"></a>2.10.
+Diagram number 3</h3>
+The diagram of the <a href="#Figure_8">figure 8</a>
+is the third described in the § 6 of the <a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a>
+recommendation. It concerns the renaming commands <span style="font-style: italic;">RNFR</span> and <span style="font-style: italic;">RNTO</span>. This diagram
+is implemented in the function <span style="font-style: italic;">roof_mv()</span>.<br>
+<br>
+<div style="text-align: center;"><small><span style="font-weight: bold; text-decoration: underline;"><a name="Figure_8"></a>Figure 8</span>: Diagram
+number 3</small><br>
+</div>
+<br>
+<div style="text-align: center;">
+<div style="text-align: center;"><img style="width: 700px; height: 322px;" alt="figure_8" src="ftp_api_figure_8.jpg"><br>
+</div>
+<div style="text-align: left;"><br>
+<h2><a name="3._Example_based_on_the_API"></a>3.
+Example based on the API</h2>
+For a complete example, the reader can look at the source code of the <span style="font-style: italic;">roof</span> or <span style="font-style: italic;">ftpfs</span> commands in
+the <span style="font-style: italic;">client</span>
+and <span style="font-style: italic;">fs</span>
+sub-directories <span style="font-style: italic;"></span>of
+the source tree.<br>
+Here we present a tiny program called <span style="font-style: italic;">test_ftp</span>
+which sets
+up a FTP
+connection to a server, displays the remote system's type, displays the
+name and the content of the working directory:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;libgen.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;assert.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;unistd.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">// By
+default installed in '/usr/local/include'</font><br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;roof.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">//
+Callback to display the content of the director<span style="font-family: monospace;">y</span></font><br>
+      <font style="font-size: 9pt;" size="2">//</font><br>
+      <font style="font-size: 9pt;" size="2">//
+Parameters: ctx = parameter 'ctx' passed to roof_list()</font><br>
+      <font style="font-size: 9pt;" size="2">//
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; buf =
+Directory's data</font><br>
+      <font style="font-size: 9pt;" size="2">//
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; lbuf
+= Size of the data in 'buf'</font><br>
+      <font style="font-size: 9pt;" size="2">static
+int display(roof_ctx_t *ctx, const char *buf, unsigned int lbuf)</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">{</font><br>
+      <font style="font-size: 9pt;" size="2">int
+rc;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+(void)ctx; // Unused parameter (suppress compiler's warning)</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= write(1, buf, lbuf);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(lbuf
+== (unsigned)rc);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//
+Return OK to the library</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+lbuf;</font><br>
+      <font style="font-size: 9pt;" size="2">}
+// affiche</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">//
+Program's entry point</font> <br>
+      <font style="font-size: 9pt;" size="2">//</font><br>
+      <font style="font-size: 9pt;" size="2">//
+Parameters: av[1] = destination host</font><br>
+      <font style="font-size: 9pt;" size="2">//
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; av[2]
+= login name</font> <br>
+      <font style="font-size: 9pt;" size="2">//
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; av[3]
+= password</font><br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">roof_ctx_t
+*pCtx; //&nbsp;ROOF object</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; ctrl; // Socket on control
+channel</font><br>
+      <font style="font-size: 9pt;" size="2">char
+&nbsp; &nbsp; &nbsp; *p;</font><br>
+      <font style="font-size: 9pt;" size="2">int
+&nbsp; &nbsp; &nbsp; &nbsp; rc;</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Check the parameters passed to the program</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+if
+(ac != 4)</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+{</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; fprintf(stderr,
+"Usage: %s host login passwd\n", basename(av[0]));</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; return
+1;</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+}</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//
+Create the ROOF object:</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// . Timeout 10 seconds</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// . Allocation of I/O buffer by the library</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// . No user context</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+pCtx
+= roof_new(10000, NULL, 0, NULL);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(pCtx);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Open the control channel</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+ctrl
+= roof_open_ctrl(pCtx, av[1], ROOF_DEF_PORT);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(ctrl
+&gt;= 0);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//
+Authentication on remote host</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_login(pCtx, av[2], av[3], NULL);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(0
+== rc);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Display the remote system's type</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_syst(pCtx, &amp;p);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(0
+== rc);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+printf("Remote system's type: %s\n", p);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Display the pathname of the working directory</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_pwd(pCtx, &amp;p);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(0
+== rc);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+printf("Working directory: %s\n", p);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Display the content of the working directory</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+printf("Content of working directory:\n");</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_list(pCtx, NULL, display);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(0
+== rc);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+// Close the control channel</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+rc
+= roof_close_ctrl(pCtx);</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+assert(0
+== rc);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+//
+Deallocation of the ROOF object</font><br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+roof_delete(pCtx);</font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+return
+0;</font><br>
+      <font style="font-size: 9pt;" size="2">}
+// main</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+The program can be built as follow:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">$
+gcc test_ftp.c -o test_ftp -lroof</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Here is an example of execution of the program with a local connection (<span style="font-style: italic;">localhost</span>), with
+the login name <span style="font-style: italic;">foo</span>
+and the password <span style="font-style: italic;">bar</span>:<br>
+<br>
+<table style="text-align: left; font-family: monospace; background-color: rgb(204, 255, 255);" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> <font style="font-size: 9pt;" size="2">$
+./test_ftp localhost foo bar</font> <br>
+      <font style="font-size: 9pt;" size="2">Remote
+system's type: 215 UNIX Type: L8 (Linux)</font> <br>
+      <font style="font-size: 9pt;" size="2">Working
+directory: 257 "/home/foo" is current
+directory.</font> <br>
+      <font style="font-size: 9pt;" size="2">Content
+of working directory:</font> <br>
+      <font style="font-size: 9pt;" size="2">total
+2256</font> <br>
+      <font style="font-size: 9pt;" size="2">-rw-r--r--
+1 foo foo 60 &nbsp; Jan 16 08:55 file1</font> <br>
+      <font style="font-size: 9pt;" size="2">-rw-------
+1 foo foo 203 &nbsp;Jan 16 08:55 file2</font> <br>
+      <font style="font-size: 9pt;" size="2">drwx------
+2 foo foo 4096 Mar 11 2007 &nbsp;directory</font> <br>
+      <font style="font-size: 9pt;" size="2">$</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="Conclusion"></a>Conclusion</h2>
+<br>
+After an overview of the FTP recommendation, it has been possible to
+develop an API called ROOF. It is very simple to set up and can
+be used in any application needing file transfer features with a
+standard protocol.<br>
+The source package comes with two application examples:<br>
+<ul>
+  <li>A command line FTP client called <span style="font-style: italic;">roof</span>.</li>
+  <li>A remote file system based on <a href="http://fuse.sourceforge.net/">FUSE</a> as an
+alternative to NFS. It is called <span style="font-style: italic;">ftpfs</span>.</li>
+</ul>
+It is also planed to make a graphical client based on Qt4.<br>
+<br>
+To go farther, the reader can have a look at the evolutions of the FTP
+protocol: SFTP ("FTP over SSH" not to be confused with "Simple FTP") or
+FTPS ("FTP over SSL").<br>
+<br>
+<h2><a name="Resources"></a>Resources</h2>
+<ul>
+  <li>Remote Operations On Files at <a href="http://roof.sourceforge.net/">sourceforge</a></li>
+  <li><a href="http://www.ietf.org/rfc/rfc959.txt">RFC959</a></li>
+  <li><a href="http://fuse.sourceforge.net/">FUSE</a></li>
+  <li><a href="http://rachid.koucha.free.fr/tech_corner/cmake_manual.html">CMAKE</a></li>
+</ul>
+<h2><a name="About_the_author"></a>About the
+author</h2>
+The author is an engineer in computer sciences located in France. He
+can be contacted <a href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have
+a look at his <a href="http://rachid.koucha.free.fr/">WEB
+home page</a>.<br>
+<br>
+<br>
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<small><br>
+</small>
+<div style="text-align: right;"><small><a href="../index.html">Back to
+main page</a></small><br>
+<small><a href="../technical_documents.html">Back to previous page</a></small><br>
+</div>
+<br>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<br>
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"></span>
+
+</body></html>Back to
+main page</a></small><br>
+<small><a href="../technical_documents.html">Back to previous page</a></small><br>
+</div>
+<br>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<br>
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"></span>
+</body>
+</html>

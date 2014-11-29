@@ -1,0 +1,7 @@
+obj-m += chardev.o
+
+hostprogs-y += ioctl
+
+always := $(hostprogs-y)
+
+HOSTCFLAGS_ioctl.o += -I$(objtree)/usr/include

@@ -1,0 +1,469 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+  
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>Thread's stack memory consumption</title>
+  
+
+  
+  
+  <meta name="description" content="This paper focuses on the nonnull GCC attribute.">
+
+  
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+  
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script></head><body>
+<small><a href="../technical_documents.html">Go back to previous page</a><br>
+<a href="../index.html">Go back to home page</a></small><br>
+
+<br>
+
+<small><small><span style="text-decoration: underline;">Last update</span>:
+25-Dec-2013<br>
+<span style="text-decoration: underline;">Author</span>: R. Koucha</small></small><br>
+
+<h1 style="text-align: center;"><span style="font-style: italic;"></span>Thread's
+stack memory consumption<br>
+</h1>
+
+<br>
+
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fstack_consumption.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fstack_consumption.html&amp;subject=Thread%27s%20stack%20memory%20consumption"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<h2>Introduction</h2>
+
+This paper focuses on the virtual memory consumed by the stack of the
+threads inside a Linux process even when threads are terminated.<span style="font-weight: bold;"></span>
+<h2>Example of multi-threaded process<br>
+</h2>
+
+<span style="font-weight: bold;"></span>The following program creates
+or terminates a thread each time the operator enters respectively "c"
+or "t":<br>
+
+<br>
+
+<table style="text-align: left; font-family: monospace; margin-left: auto; margin-right: auto;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; background-color: rgb(153, 255, 153);">#include
+&lt;stdio.h&gt;<br>
+#include &lt;pthread.h&gt;<br>
+      <br>
+#define NB_MAX_THD 50<br>
+      <br>
+static pthread_t tid[NB_MAX_THD];<br>
+static unsigned int idx_create;<br>
+static unsigned int idx_terminate;<br>
+      <br>
+      <br>
+static void *thd(void *p)<br>
+{<br>
+&nbsp; pause();<br>
+      <br>
+&nbsp; return NULL;<br>
+} // thd<br>
+      <br>
+      <br>
+static void create_thd(void)<br>
+{<br>
+int rc;<br>
+      <br>
+&nbsp; if (0 == tid[idx_create])<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; rc = pthread_create(&amp;(tid[idx_create]), NULL,
+thd, NULL);<br>
+&nbsp;&nbsp;&nbsp; if (0 == rc)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; printf("Created thread %p\n", (void
+*)(tid[idx_create]));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; idx_create = (idx_create + 1) %
+NB_MAX_THD;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp; }<br>
+&nbsp; else<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; fprintf(stderr, "Too many threads\n");<br>
+&nbsp; }<br>
+      <br>
+} // create_thd<br>
+      <br>
+      <br>
+static void terminate_thd(void)<br>
+{<br>
+int rc;<br>
+      <br>
+&nbsp; if (tid[idx_terminate])<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; rc = pthread_cancel(tid[idx_terminate]);<br>
+&nbsp;&nbsp;&nbsp; if (0 == rc)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; rc = pthread_join(tid[idx_terminate],
+NULL);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (0 == rc)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; printf("Terminated thread
+%p\n", (void *)(tid[idx_terminate]));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tid[idx_terminate] = 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; idx_terminate =
+(idx_terminate + 1) % NB_MAX_THD;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fprintf(stderr, "Unable to
+join thread %p\n", (void *)(tid[idx_terminate]));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; else<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fprintf(stderr, "Unable to cancel thread
+%p\n", (void *)(tid[idx_terminate]));<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp; }<br>
+&nbsp; else<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; fprintf(stderr, "No running threads\n");<br>
+&nbsp; }<br>
+      <br>
+} // terminate_thd<br>
+      <br>
+      <br>
+      <br>
+int main(void)<br>
+{<br>
+int c;<br>
+      <br>
+&nbsp; while(1)<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; c = fgetc(stdin);<br>
+&nbsp;&nbsp;&nbsp; switch(c)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 'c' :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; create_thd();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; case 't' :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; terminate_thd();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp; }<br>
+      <br>
+&nbsp; return 0;<br>
+} // main<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+Here is an example of compilation and execution of the preceding
+program:<br>
+
+<br>
+
+<table style="text-align: left; background-color: black; color: white; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">$ gcc thd.c -lpthread<br>
+$ ./a.out<br>
+c<br>
+Created thread 0x7f5e45b72700<br>
+c<br>
+Created thread 0x7f5e45371700<br>
+c<br>
+Created thread 0x7f5e44b70700<br>
+t<br>
+Terminated thread 0x7f5e45b72700<br>
+t<br>
+Terminated thread 0x7f5e45371700<br>
+c<br>
+Created thread 0x7f5e45371700<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+Between each thread creation and termination, we display the memory map
+of the process (through "cat /proc/&lt;pid&gt;/maps). <br>
+
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; background-color: black;"><span style="font-weight: bold; font-family: monospace; color: white;">Startup</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7fff7afcf000-7fff7aff0000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <br style="font-family: monospace; color: white;">
+      <span style="font-weight: bold; font-family: monospace; color: white;">After
+creation of first thread: 0x7f5e45b72700</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45372000-7f5e45373000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45373000-7f5e45b73000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3649]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <br style="font-family: monospace; color: white;">
+      <span style="font-weight: bold; font-family: monospace; color: white;">After
+creation of second thread: 0x7f5e45371700</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b71000-7f5e44b72000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b72000-7f5e45372000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3651]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45372000-7f5e45373000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45373000-7f5e45b73000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3649]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <br style="font-family: monospace; color: white;">
+      <span style="font-weight: bold; font-family: monospace; color: white;">After
+creation of third thread: 0x7f5e44b70700</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44370000-7f5e44371000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44371000-7f5e44b71000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3653]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b71000-7f5e44b72000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b72000-7f5e45372000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3651]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45372000-7f5e45373000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45373000-7f5e45b73000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3649]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; font-weight: bold; color: white;">After
+termination of first thread: 0x7f5e45b72700</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44370000-7f5e44371000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44371000-7f5e44b71000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3653]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b71000-7f5e44b72000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b72000-7f5e45372000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3651]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45372000-7f5e45373000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45373000-7f5e45b73000
+rw-p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">[...]</span><br style="font-family: monospace; color: white;">
+      <br style="color: white;">
+      <span style="font-family: monospace; font-weight: bold; color: white;">After
+termination of second thread: 0x7f5e45371700<br>
+      </span><span style="font-family: monospace; color: white;">[...]</span><span style="font-family: monospace; font-weight: bold; color: white;"><br>
+      </span><span style="font-family: monospace; color: white;">7f5e44370000-7f5e44371000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44371000-7f5e44b71000
+rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3653]</span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b71000-7f5e44b72000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e44b72000-7f5e45372000
+rw-p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;">7f5e45372000-7f5e45373000
+---p 00000000 00:00 0 </span><br style="font-family: monospace; color: white;">
+      <span style="font-family: monospace; color: white;"><span style="font-family: monospace;">7f5e45373000-7f5e45b73000 rw-p
+00000000 00:00 0</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[...]</span><br>
+      <br>
+      <span style="font-weight: bold;">After creation of fourth thread:
+0x7f5e45371700</span><br>
+[...]<br>
+7f5e44370000-7f5e44371000 ---p 00000000 00:00 0 <br>
+7f5e44371000-7f5e44b71000 rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3653]<br>
+7f5e44b71000-7f5e44b72000 ---p 00000000 00:00 0 <br>
+7f5e44b72000-7f5e45372000 rw-p 00000000 00:00
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[stack:3720]<br>
+7f5e45372000-7f5e45373000 ---p 00000000 00:00 0 <br>
+7f5e45373000-7f5e45b73000 rw-p 00000000 00:00 0 <br>
+[...]</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+For each created thread, two lines appear (memory zones): one for the
+stack and TCB
+space and the other one for the red zone on top of the stack used to
+detect the stack overflows. For example, the first thread has the
+following allocated memory spaces:<br>
+
+<ul>
+
+  <li>7f5e45372000-7f5e45373000: 4 KB red zone memory page protected
+against reads and writes<br>
+  </li>
+  <li>7f5e45373000-7f5e45b73000: Stack and TCB space. The thread
+identifier (0x7f5e45b72700) is located into this zone as it is the
+TCB's address<span style="font-weight: bold; font-family: monospace;"><br>
+    </span></li>
+</ul>
+
+<br>
+The memory map also points out the fact that the termination of a
+thread
+does not free the virtual memory space belonging to it: the stack as
+well as the red zone are still present after the end of the thread.<br>
+
+<br>
+
+Moreover,&nbsp; when threads are created after some terminated threads,
+the new threads get the memory spaces of the previously terminated
+thread if any. For example, the fourth thread with TCB 0x7f5e45371700
+got the memory spaces of the terminated second thread (hence the same
+TCB value!).
+<h2>Behaviour of the GLIBC<br>
+</h2>
+
+When we look at the sources of the pthread library in the GLIBC, we can
+see that a 40 MB stack cache is kept. At process startup, this cache is
+empty. Then it is filled with the stacks of the terminated threads
+during the process life. The management of this cache can be found in <span style="font-style: italic;">.../nptl/allocatestack.c</span>.<br>
+
+<br>
+
+The size of the cache is configured as follow:<br>
+
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; background-color: rgb(153, 255, 153);"><span style="font-family: monospace;">/* Maximum size in kB of cache.&nbsp;
+*/</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">static size_t
+stack_cache_maxsize = 40 * 1024 * 1024; /* 40MiBi by default.&nbsp; */</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<h2>About the
+author</h2>
+
+The author is an engineer in computer sciences located in France. He
+can be contacted <a href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have
+a look at his <a href="http://rachid.koucha.free.fr/">WEB
+home page</a>.<br>
+
+<br>
+
+<br>
+
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<div style="text-align: right;"><small><a href="../technical_documents.html">Go back to previous page</a></small><br>
+<small><a href="../index.html">Go back to home page</a></small><br>
+</div>
+
+<br>
+
+<br>
+
+</body></html>

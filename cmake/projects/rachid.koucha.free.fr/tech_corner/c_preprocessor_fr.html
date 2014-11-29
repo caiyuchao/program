@@ -1,0 +1,1826 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Utilisation du preprocesseur C</title>
+  
+  <meta name="author" content="rachid koucha">
+  <meta name="Category" content="langage C, programmation defensive, debug, preprocesseur C, __FUNCTION__, __LINE__, __GNUC__, __VA_ARGS__">
+  <meta name="language" content="fr">
+  <meta http-equiv="Content-Language" content="fr">
+  <meta name="description" content="Utilisation avancee du preprocesseur du langage C (en particulier CPP de GCC) pour avoir des programmes plus robustes.">
+  <meta name="keywords" content="langage C, programmation defensive, debug, preprocesseur C, __FUNCTION__, __LINE__, __GNUC__, __VA_ARGS__">
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  
+  <meta name="GENERATOR" content="OpenOffice.org 2.4 (Linux)">
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js">
+  {lang: 'fr'}
+  </script>
+<style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+H1.western { font-family: "Tahoma", sans-serif; font-size: 16pt; font-weight: medium }
+H1.cjk { font-family: "Lucida Sans Unicode" }
+H1.ctl { font-family: "Tahoma" }
+H2.western { font-family: "Tahoma", sans-serif; font-size: 14pt; font-weight: medium }
+H2.cjk { font-family: "Lucida Sans Unicode" }
+H2.ctl { font-family: "Tahoma" }
+-->
+</style></head><body>
+<small><small><span style="text-decoration: underline;">Author</span>:
+R.
+Koucha<br>
+<span style="text-decoration: underline;">Last update</span>:
+19-Mar-2011<br>
+<br>
+</small></small><small><a href="http://rachid.koucha.free.fr/index.html">Page
+principale</a><br>
+<a href="../documents_techniques.html">Page précédente</a></small><br>
+<br>
+<p style="margin-top: 0.42cm; margin-bottom: 0.5cm; page-break-after: avoid; text-align: center;"><font face="Arial Black, sans-serif"><font size="6"><b>Mieux
+connaître
+et utiliser le préprocesseur du langage C</b></font></font></p>
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fc_preprocessor_fr.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fc_preprocessor_fr.html&amp;subject=Mieux%20connaitre%20le%20preprocesseur%20du%20langage%20C"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-bottom: 0cm;" align="right"><font face="Arial, sans-serif"><font style="font-size: 8pt;" size="1"><b><br>
+</b></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b>En
+langage C, le «&nbsp;preprocessing&nbsp;» est
+l'étape préalable
+à la compilation. C'est un mécanisme puissant qui permet
+entre
+autres la compilation conditionnelle, l'inclusion de fichiers et la
+définition de macro-instructions. Bien que très simples
+au premier
+abord, ces facilités doivent être utilisées avec
+précautions pour
+éviter les erreurs de compilation ou pire, les
+dysfonctionnements
+des programmes. De plus, le préprocesseur de GCC recèle
+des
+fonctionnalités supplémentaires qui peuvent
+s'avérer très utiles.</b></i></font></font></p>
+<a href="#Avant_propos"><span class="western">Avant propos</span></a><br>
+<a href="#1._Une_d%E9faillance_peu_connue_du">1. Une défaillance
+peu connue du
+compilateur</a><br>
+<a href="#2._Terminaison_de_macro">2. Terminaison de macro</a><br>
+<a href="#3._Regrouper_les_instructions">3. Regrouper les instructions</a><br>
+<a href="#4._Parenth%E9ser_les_param%E8tres">4. Parenthéser les
+paramètres</a><br>
+<a href="#5._Parenth%E9ser_les_expressions">5. Parenthéser les
+expressions</a><br>
+<a href="#6._Eviter_les_expressions_en_param%E8tres">6. Eviter les
+expressions en paramètres</a><br>
+<a href="#7._Nombre_variable_darguments">7. Nombre variable d'arguments</a><br>
+<a href="#8._Les_macros_sp%E9ciales">8. Les macros spéciales
+</a><br>
+<div style="margin-left: 40px;"><a href="#8.1.___GNUC__">8.1. __GNUC__</a><br>
+<a href="#8.2.___LINE_____FILE___et___FUNCTION__">8.2. __LINE__,
+__FILE__ et __FUNCTION__</a><br>
+<a href="#8.3._Lop%E9rateur_%AB__%BB">8.3. L'opérateur
+«&nbsp;#&nbsp;»
+</a><br>
+<a href="#8.4._Lop%E9rateur_%AB__%BB">8.4. L'opérateur
+«&nbsp;##&nbsp;»
+</a><br>
+</div>
+<a href="#9._Comment_%E9liminer_les_attributs_de_GCC">9. Comment
+éliminer les attributs de
+GCC
+</a><br>
+<a href="#10._Inclusions_conditionnelles">10. Inclusions conditionnelles</a><br>
+<a href="#11._Conclusion">11. Conclusion
+</a><br>
+<a href="#Liens">Liens</a><br>
+<a href="#R%E9f%E9rences">Références</a><br>
+<a href="#A_propos_de_lauteur">A
+propos de l'auteur</a>
+<h2><a name="Avant_propos"></a><span class="western">Avant propos</span></h2>
+<font face="Arial, sans-serif"><font size="2">Cet
+article a été publié dans&nbsp; <a href="http://www.unixgarden.com/index.php/programmation/mieux-connaitre-et-utiliser-le-preprocesseur-du-langage-c"><span style="text-decoration: underline;"><img alt="glmf_logo" src="../glmf_logo.jpg" style="border: 0px solid ; width: 100px; height: 30px;"></span></a> numéro 105.<br>
+</font></font>
+<h1 class="western"><a name="1._Une_défaillance_peu_connue_du"></a>1.
+Une défaillance peu connue du
+compilateur</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Grâce
+au macro
+processeur du langage C, il est possible de définir et utiliser
+des
+constantes de la manière suivante&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1 &nbsp;#include
+&lt;stdio.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">2</font> <br>
+      <font style="font-size: 9pt;" size="2">3 &nbsp;#define
+CONSTANTE_1 (0x3d+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">4 &nbsp;#define
+CONSTANTE_2 (0x3e+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">5 &nbsp;#define
+CONSTANTE_3 (0x3f+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">6</font> <br>
+      <font style="font-size: 9pt;" size="2">7 &nbsp;int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">8 &nbsp;{</font> <br>
+      <font style="font-size: 9pt;" size="2">9
+&nbsp; &nbsp;printf("%u\n", CONSTANTE_1);</font> <br>
+      <font style="font-size: 9pt;" size="2">10
+&nbsp; printf("%u\n", CONSTANTE_2);</font> <br>
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; printf("%u\n", CONSTANTE_3);</font> <br>
+      <font style="font-size: 9pt;" size="2">12 }</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<font face="Arial, sans-serif"><font size="2">Si
+on compile ce
+programme, on obtient une erreur inattendue&nbsp;:<br>
+</font></font>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c </font> <br>
+      <font style="font-size: 9pt;" size="2">main.c:10:18:
+erreur: suffixe « +20 » invalide pour une constante
+entière</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+compilateur détecte
+une erreur à la ligne 10, colonne 18 c'est-à-dire au
+niveau de la
+macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANTE_2</b></font></font>.
+Cela est une défaillance du compilateur qui croit avoir à
+faire à
+une constante entière dénotée par
+«&nbsp;0x3&nbsp;» avec un
+exposant positif dénoté par
+«&nbsp;e+20&nbsp;» : 0x3 multiplié par 10
+élevé à
+la puissance 20. Ce n'est pas une notation légale en langage C
+car
+les exposants ne sont pas autorisés pour les constantes
+hexadécimales.
+Pour se
+sortir de cette chausse-trappe, il faut réécrire <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANTE_2</b></font></font>
+en séparant «&nbsp;e&nbsp;» et
+«&nbsp;+&nbsp;» par un
+caractère
+espace&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">#define
+CONSTANTE_2 (0x3e + 20)</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Ainsi
+la compilation et
+l'exécution peuvent se réaliser&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c </font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out</font> <br>
+      <font style="font-size: 9pt;" size="2">81</font> <br>
+      <font style="font-size: 9pt;" size="2">82</font> <br>
+      <font style="font-size: 9pt;" size="2">83</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Il
+est donc conseillé de
+systématiquement mettre un espace de part et d'autre des
+opérateurs
+«&nbsp;+&nbsp;» et «&nbsp;&#8211;&nbsp;» quand on
+définit une
+macro
+avec le chiffre hexadécimal «&nbsp;e&nbsp;».</font></font></p>
+<h1 class="western"><a name="2._Terminaison_de_macro"></a>2.
+Terminaison de macro</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Il
+n'est pas recommandé
+de terminer une macro par un «&nbsp;;&nbsp;» comme dans
+l'exemple
+suivant&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1
+&nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+ADD(a,
+b)
+a
++
+b;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">2 </font> <br>
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;int main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">4
+&nbsp;{</font> <br>
+      <font style="font-size: 9pt;" size="2">5
+&nbsp;int r = ac;</font> <br>
+      <font style="font-size: 9pt;" size="2">6 </font> <br>
+      <font style="font-size: 9pt;" size="2">7 &nbsp; &nbsp;if (r)</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">8 &nbsp; &nbsp;r =
+ADD(4, 5);</font> <br>
+      <font style="font-size: 9pt;" size="2">9 &nbsp; &nbsp;else</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">10 &nbsp; &nbsp;r =
+ADD(5, 6);</font> <br>
+      <font style="font-size: 9pt;" size="2">11 </font> <br>
+      <font style="font-size: 9pt;" size="2">12 &nbsp; return 0;</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">13
+}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2">En
+effet, cela mène à
+une erreur de compilation&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c</font> <br>
+      <font style="font-size: 9pt;" size="2">main.c:
+In function «main":</font> <br>
+      <font style="font-size: 9pt;" size="2">main.c:9:
+erreur: <font color="#ff0000"><font style="font-size: 9pt;" size="2">expected
+expression
+before
+«else"</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+ligne 9 contient deux
+instructions du fait de l'ajout du «&nbsp;;&nbsp;»
+derrière
+l'appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ADD()</b></font></font>.
+Le résultat du préprocesseur le montre bien&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc -E main.c</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">if
+(r)</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">r
+= 4 + 5;;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">else</font> <br>
+      <font style="font-size: 9pt;" size="2">r
+= 5 + 6;;</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">L'instruction
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>else</b></font></font>
+se retrouve orpheline car le <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>if</b></font></font>
+auquel elle est sensée se rapporter contient plus d'une
+instruction
+qui ne sont pas regroupées par des accolades&nbsp;:
+«&nbsp;r =
+4 +
+5;&nbsp;» et l'instruction vide «&nbsp;;&nbsp;» .</font></font></p>
+<h1 class="western"><a name="3._Regrouper_les_instructions"></a>3.
+Regrouper les instructions</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Quand
+une macro contient
+plusieurs instructions comme par exemple&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;printf("=
+%d\n", c);</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">On
+peut se retrouver
+confronté à l'erreur de compilation évoquée
+au <a href="#2._Terminaison_de_macro">§ 2</a> si elle est
+utilisée dans une instruction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>if</b></font></font>
+car l'utilisateur de la macro peut ne pas mettre d'accolades de part
+et d'autre de l'appel. Ou alors la macro pouvait ne contenir à
+l'origine qu'une seule instruction et était logiquement
+utilisée
+dans les instructions <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>if</b></font></font>
+sans être entourée d'accolades mais une évolution
+du logiciel a
+rendu nécessaire l'ajout d'instructions supplémentaires
+dans
+celle-ci. Dans ce dernier cas, on risque d'introduire des
+dysfonctionnements sournois du logiciel si, par exemple, la macro est
+utilisée dans une instruction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>while</b></font></font>
+sans accolades&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; printf("=
+%d\n", c);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+i = 0;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+r = 0;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; while
+(av[i++])</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; ADD(r,
+1, r);</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">On
+s'attend à ce que
+toutes les instructions regroupées dans <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ADD()</b></font></font>
+soient exécutées à chaque itérations de la
+boucle.
+Malheureusement, le préprocesseur va générer une
+suite
+d'instructions sans accolades donc à chaque itérations,
+seule la
+première instruction «&nbsp;printf("%d + %d ", a,
+b)&nbsp;»
+sera exécutée. Pour éviter ce genre d'erreurs, il
+est conseillé
+de regrouper les instructions dans un
+«&nbsp;do-while&nbsp;»
+non
+suivie de «&nbsp;;&nbsp;» (règle du <a href="#2._Terminaison_de_macro">§ 2</a>) afin de faire
+apparaître
+la macro multi-instruction comme une seule instruction&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) <font color="#ff0000"><font style="font-size: 9pt;" size="2">do
+{</font></font> \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+printf("=
+%d\n", c); \</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+compilateur ne
+génèrera pas de boucle vu que la condition
+d'itération est
+toujours fausse&nbsp;: <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>while(0)</b></font></font>.
+Il ne faut surtout pas se contenter d'accolades car on ferait
+apparaître le problème du <a href="#2._Terminaison_de_macro">§ 2</a> si la macro était
+utilisée dans un
+«&nbsp;if-else&nbsp;» du fait du
+«&nbsp;;&nbsp;» qui
+risque de
+suivre l'appel dans le corps du <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>if</b></font></font>.
+Avec la boucle non suivie de «&nbsp;;&nbsp;», l'utilisateur
+est
+obligé de mettre un point virgule après l'appel à
+la macro sous
+peine d'erreur de compilation mais il n'aura qu'une
+instruction&nbsp;:
+la boucle «&nbsp;do-while&nbsp;».</font></font></p>
+<h1 class="western"><a name="4._Parenthéser_les_paramètres"></a>4.
+Parenthéser les paramètres</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Considérons
+le petit
+programme suivant qui définit et utilise une macro effectuant
+une
+division entière&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+DIV(a, b, c) do { \</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; printf("%d
+/ %d ", a, b); \</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; c
+= a / b; \</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; printf("=
+%d\n", c); \</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+r = 5;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+v1 = 12;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+v2 = 6;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; DIV(v1,
+v2, r);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; DIV(v1
++ 6, v2, r);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">A
+l'exécution on
+s'attend à l'affichage du résultat 2 pour la
+première division (12
+/ 6) et du résultat 3 pour la deuxième division ((12 + 6)
+/ 6).
+Mais on obtient le résultat erroné suivant&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+./a.out </font> <br>
+      <font style="font-size: 9pt;" size="2">12
+/ 6 = 2</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">18
+/ 6 = 13</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Comme
+d'habitude, lorsque
+l'on a un doute avec les macros, il faut visualiser la sortie du
+préprocesseur&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+r = 5;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+v1 = 12;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+v2 = 6;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; do
+{ printf("%d / %d ", v1, v2);</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;r
+= v1 / v2; </font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;printf("=
+%d\n", r);</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;}
+while(0);</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; do
+{ printf("%d / %d ", v1 + 6, v2);</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;r
+= v1 + 6 / v2;</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;printf("=
+%d\n", r);</font></font></font> <br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;}
+while(0);</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">On
+constate que l'on se
+retrouve confronté à un problème de
+priorité des opérateurs au
+niveau du deuxième appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DIV()</b></font></font>.
+En effet, dans l'expression «&nbsp;r = v1 + 6 / v2&nbsp;»,
+l'opérateur «&nbsp;/&nbsp;» est plus prioritaire que
+l'opérateur
+«&nbsp;+&nbsp;». Le compilateur génère donc
+l'équivalent de
+l'opération mathématique «&nbsp;r = v1 + ( 6 / v2
+)&nbsp;».
+D'où
+le résultat 13 quand <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>v1</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>v2</b></font></font>
+valent respectivement 12 et 6. La parade consiste à
+systématiquement
+parenthéser toutes les occurrences des paramètres dans
+une
+macro&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+DIV(a, b, c) do { \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;printf("%d
+/ %d ", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>a<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>,
+
+
+
+
+
+
+
+
+
+
+
+
+      <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>b<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>);
+\</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; (</font></font>c<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>a<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>
+/ <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>b<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>;
+\</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;printf("=
+%d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>c<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>);
+\</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+deuxième appel à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DIV()</b></font></font>
+dans le programme précédent donne maintenant le
+résultat correct
+en sortie du préprocesseur&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">do
+{ printf("%d / %d ", (v1 + 6), (v2));</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;(r)
+= (v1 + 6) / (v2);</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+&nbsp;printf("=
+%d\n", (r));</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;}
+while(0);</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="5._Parenthéser_les_expressions"></a>5.
+Parenthéser les expressions</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Considérons
+la constante
+définie sous la forme de la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANTE</b></font></font>
+et utilisée comme suit&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+BASE 2000</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+CONSTANTE BASE + 2</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; printf("%d\n",
+CONSTANTE / 2);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">L'affichage
+espéré
+est
+le
+résultat
+de
+l'opération
+«&nbsp;2002
+/
+2&nbsp;»,
+soit
+1001.
+Et
+pourtant
+on
+obtient
+2001.
+La
+sortie du préprocesseur montre que
+le
+programme génère un problème de priorité
+des opérateurs comme on
+l'a vu au <a href="#4._Parenth%E9ser_les_param%E8tres">§ 4</a>&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">printf("%d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">2000
++ 2 / 2</font></font>);</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><br>
+</b></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">D'une
+manière générale,
+si une macro consiste en une expression (constante, test,
+opérateur
+ternaire...), il est prudent de la parenthéser. D'où la
+correction
+de l'exemple&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+BASE <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>2000<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font></font>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+CONSTANTE <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>BASE
++
+2<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font></font>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western"><a name="6._Eviter_les_expressions_en_paramètres"></a>6.
+Eviter
+les
+expressions
+en
+paramètres</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">On
+a souvent tendance à
+utiliser une macro comme si c'était une fonction ou alors des
+évolutions de code peuvent mener au fait qu'une fonction
+deviennent
+une macro pour des raisons de lisibilité ou d'optimisation.
+Voici un
+exemple de programme qui définit et utilise la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK(c)</b></font></font>
+qui retourne vrai si le paramètre est un caractère blanc
+(espace ou
+tabulation)&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ((c) == '\t' || (c) == ' ')</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(*(p++)))</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", (p - 1) - av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Ce
+programme est sensé
+afficher les indices des caractères blancs dans son nom.
+Pourtant
+l'indice affiché est erroné ou certains blancs ne sont
+pas
+détectés&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c -o "nom avec espaces"</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./nom\&nbsp;avec\&nbsp;espaces </font> <br>
+      <font style="font-size: 9pt;" size="2">Blanc
+à l'indice 5</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+seul blanc détecté
+est indiqué à l'indice 5 alors que dans la chaîne
+de caractères
+«&nbsp;./nom&nbsp;avec&nbsp;espaces&nbsp;», il y a des
+blancs aux
+indices 5 et 10. Ceci est du au fait que le paramètre <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>c</b></font></font>
+est évalué deux fois dans la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>&nbsp;:
+la
+première
+fois
+pour
+être
+comparé
+à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>'\t'
+</b></font></font>et la seconde pour être comparé à<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>
+'&nbsp;'</b></font></font>. Or, le programme
+passe <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>*(p++)
+</b></font></font>à la macro. Ce qui donne en sortie
+du
+préprocesseur&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">if
+(((*(p++)) == '\t' || (*(p++)) == ' '))</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><br>
+</b></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">En
+d'autres termes, la
+première comparaison se fait avec le caractère
+pointé par <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>
+étant ensuite incrémenté
+(post-incrémentation), la seconde
+comparaison se fait avec le caractère suivant. En retour de
+macro, <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>
+est de nouveau incrémenté. La bonne écriture pour
+le programme est
+donc d'éviter de passer une expression en paramètre de la
+macro&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ((c) == '\t' || (c) == ' ')</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(<font color="#ff0000"><font style="font-size: 9pt;" size="2">*p</font></font>))</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">p</font></font>
+- av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; p
+++;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Il
+n'est pas toujours
+évident de respecter cette règle surtout si <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>
+était une fonction et après évolution du code
+source, la fonction
+est devenue une macro. En effet, une telle modification implique
+qu'une revue complète du code soit faite. Ce n'est pas facile
+voire
+impossible si la macro est définie dans un fichier
+d'entête qui est
+déjà utilisé dans nombre de programmes à
+travers le monde.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Une
+extension spécifique
+à GCC, donc pas forcément conforme à l'ANSI C,
+offre l'opportunité
+de transformer des blocs d'instructions (instructions encadrées
+par
+des accolades) en expression (cf. <a href="http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html">[1]</a>).
+Comme
+il
+est
+par
+ailleurs
+possible
+de
+déclarer
+des
+variables
+locales
+à
+un
+bloc, la
+macro
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>
+peut être réécrite comme suit&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ({char _c = c; </font></font>((<font color="#ff0000"><font style="font-size: 9pt;" size="2">_c</font></font>)
+== '\t' || (<font color="#ff0000"><font style="font-size: 9pt;" size="2">_c</font></font>)
+==
+'
+');<font color="#ff0000"><font style="font-size: 9pt;" size="2">})</font></font></font>
+      <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(<font color="#ff0000"><font style="font-size: 9pt;" size="2">*(p++)</font></font>))</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(p
+- 1)</font></font> - av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+variable locale <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>_c</b></font></font>
+a été définie à l'intérieur du bloc
+de la macro pour stocker la
+valeur du paramètre. Ainsi, ce dernier n'est
+évalué plus qu'une
+seule fois&nbsp;: au moment de l'affectation de la variable locale.</font></font></p>
+<h1 class="western"><a name="7._Nombre_variable_darguments"></a>7.
+Nombre variable d'arguments</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+norme ISO C99 permet
+de définir des macros avec un nombre variable d'arguments. Il
+existe
+deux notations&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1
+&nbsp;#include &lt;stdio.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">2</font> <br>
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;#define DEBUG(fmt, <font color="#ff0000"><font style="font-size: 9pt;" size="2">...</font></font>)
+\</font> <br>
+      <font style="font-size: 9pt;" size="2">4
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fprintf(stderr, fmt
+"\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">__VA_ARGS__</font></font>)</font> <br>
+      <font style="font-size: 9pt;" size="2">5</font> <br>
+      <font style="font-size: 9pt;" size="2">6
+&nbsp;#define DEBUG2(fmt, <font color="#ff0000"><font style="font-size: 9pt;" size="2">args...</font></font>)
+\</font> <br>
+      <font style="font-size: 9pt;" size="2">7
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fprintf(stderr, fmt
+"\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">args</font></font>)</font> <br>
+      <font style="font-size: 9pt;" size="2">8</font> <br>
+      <font style="font-size: 9pt;" size="2">9
+&nbsp;int main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">10
+{</font> <br>
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; DEBUG("Nom du programme = %s", av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2">12
+&nbsp; DEBUG("Message sans arguments");</font> <br>
+      <font style="font-size: 9pt;" size="2">13</font> <br>
+      <font style="font-size: 9pt;" size="2">14
+&nbsp; DEBUG2("Nom du programme = %s", av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2">15
+&nbsp; DEBUG2("Message sans arguments");</font> <br>
+      <font style="font-size: 9pt;" size="2">16</font> <br>
+      <font style="font-size: 9pt;" size="2">17 &nbsp; return 0;</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">18
+}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG()</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG2()</b></font></font>
+sont des surcharges de la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fprintf()</b></font></font>
+pour afficher un message d'erreur formaté. Le paramètre <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fmt</b></font></font>
+concaténé à des chaînes de caractères
+est le format passé en
+premier argument de la fonction d'affichage. Les notations
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__VA_ARGS__</b></font></font>
+ou «&nbsp;args&nbsp;» représentent tous les
+arguments en nombre
+variable avec les virgules qui les séparent. La seconde notation
+est
+souvent préférée à la première dans
+la mesure où elle permet de
+nommer les arguments (par exemple ici avec <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>args</b></font></font>)
+au lieu d'utiliser l'identifiant générique <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__VA_ARGS__</b></font></font>.
+La seconde notation était d'ailleurs spécifique à
+GCC avant que
+les macros à nombre variable d'arguments ne soient
+normalisées. Sur
+d'anciennes versions de GCC, c'est donc la seule notation
+supportée.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Bien
+que très pratique,
+ces écritures présentent un inconvénient de
+taille&nbsp;: elles
+n'autorisent pas l'appel sans arguments. Voici le résultat de la
+compilation suivie de la sortie du préprocesseur pour le
+programme
+précédent&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c </font> <br>
+      <font style="font-size: 9pt;" size="2">main.c:
+In function «main":</font> <br>
+      <font style="font-size: 9pt;" size="2">main.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">12:
+erreur: expected expression before «)" token</font></font></font>
+      <br>
+      <font style="font-size: 9pt;" size="2">main.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">15:
+erreur: expected expression before «)" token</font></font></font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc -E main.c</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Nom du programme = %s" "\n", 11, av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Message sans arguments" "\n", 12, );</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Nom du programme = %s" "\n", 14, av[0]);</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Message sans arguments" "\n", 15, );</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Les
+erreurs de
+compilation viennent de la virgule qui précède la liste
+vide des
+arguments variables au deuxième et quatrième appel
+à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fprintf()</b></font></font>.
+GCC propose une extension très utile à travers la
+notation
+«&nbsp;##&nbsp;»
+pour supprimer la virgule quand la liste des arguments qui la
+succède
+est vide. D'où la réécriture suivante des
+macros&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+DEBUG(fmt, ...) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+fmt "\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">##</font></font>
+__VA_ARGS__)</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+DEBUG2(fmt, args...) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+fmt "\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">##</font></font>
+args)</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western"><a name="8._Les_macros_spéciales"></a>8. Les macros
+spéciales</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Il
+existe de nombreuses
+macros et notations ayant un rôle particulier pour le
+préprocesseur.
+Dans ce paragraphe, seuls sont cités les plus utiles ou tout au
+moins les plus usitées.</font></font></p>
+<h2 class="western"><a name="8.1.___GNUC__"></a>8.1. __GNUC__</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__GNUC__</b></font></font>
+est toujours définie lorsqu'on utilise la chaîne de
+compilation
+GCC. C'est donc conseillé pour faire de la compilation
+conditionnelle quand un programme utilise des extensions
+spécifiques
+à GCC mais qui est susceptible d'être compilé par
+d'autres chaînes
+de compilation (cf. <a href="#9._Comment_%E9liminer_les_attributs_de_GCC">§ 9</a> pour
+un exemple d'utilisation).</font></font></p>
+<h2 class="western"><a name="8.2.___LINE_____FILE___et___FUNCTION__"></a>8.2.
+__LINE__,
+__FILE__
+et
+__FUNCTION__</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Les
+macros <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__LINE__</b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FILE__</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FUNCTION__</b></font></font>
+sont respectivement remplacées par le numéro de ligne, le
+nom de
+fichier et le nom de la fonction dans lesquelles elles
+apparaîssent.
+Ces facilités sont en général utilisées
+pour la génération de
+traces et d'erreurs pour aider à la mise au point. Pour
+illustrer,
+voici un petit programme affichant ses arguments à l'aide de la
+macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG()</b></font></font>
+dont la valeur ajoutée est d'imprimer le nom de fichier, le nom
+de
+la fonction et le numéro de ligne d'où elle est
+appelée&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+DEBUG(fmt, args...) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+"%s(%s)#%d : " fmt , \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; __FILE__,
+__FUNCTION__, __LINE__, ## args)</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+i;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; for
+(i = 0; i &lt; ac; i ++)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; DEBUG("Param
+%d is : %s\n", i, av[i]);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc debug.c</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out param1 param2</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 0 is : ./a.out</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 1 is : param1</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 2 is : param2</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">On
+notera que
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FUNCTION__</b></font></font>
+est spécifique à GCC. Le standard C est arrivé
+après avec la
+définition <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__func__</b></font></font>.
+Bien que donnant un résultat identique, ces deux notations avait
+une
+différence de taille&nbsp;: la première s'expansait en
+une chaîne
+de caractères constante tandis que l'autre se comportait comme
+si en
+début de chaque fonction, un tableau local de nom
+«&nbsp;__func__&nbsp;»
+était défini et initialisé avec la chaîne de
+caractères
+constante qui contient le nom de la fonction. Donc d'un coté, on
+avait une constante qui pouvait être concaténée au
+moment de la
+compilation à d'autres chaînes de caractères alors
+que de l'autre
+on avait une variable. Mais depuis la version 3.4 du compilateur GCC,
+ces deux notations sont identiques et se comportent toutes deux comme
+des variables.</font></font></p>
+<h2 class="western"><a name="8.3._Lopérateur_«__»"></a>8.3.
+L'opérateur
+«&nbsp;#&nbsp;»</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">La
+notation «&nbsp;#&nbsp;»
+permet de convertir un paramètre de macro en chaîne de
+caractères.
+Par exemple, voici une fonction qui affiche un numéro de signal
+Linux gràce à la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CASE_SIG()</b></font></font>&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;signal.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">#include
+&lt;stdlib.h&gt;</font> <br>
+      <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+CASE_SIG(s) case (s) : printf("%s\n", "SIGNAL_" <font color="#ff0000"><font style="font-size: 9pt;" size="2">#s</font></font>);
+break</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">void
+signum(int sig)</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; switch(sig)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGINT);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGTERM);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGKILL);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGTRAP);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGSEGV);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGCHLD);</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; [...]</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; default
+: printf("???\n");</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; if
+(ac &gt; 1)</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+signum(atoi(av[1]));</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc signal.c</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out 5</font> <br>
+      <font style="font-size: 9pt;" size="2">SIGNAL_SIGTRAP</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="8.4._Lopérateur_«__»"></a>8.4.
+L'opérateur
+«&nbsp;##&nbsp;»</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">On
+a déjà eu une forme
+d'utilisation de «&nbsp;##&nbsp;» dans le <a href="#7._Nombre_variable_darguments">§ 7</a>. Mais il existe
+une
+autre forme d'utilisation où cette directive concatène
+les éléments
+lexicaux qui l'entourent pour former une nouvelle unité
+lexicale.
+Dans l'exemple suivant les mots <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTA</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>NTE</b></font></font>
+sont concaténés pour former le nom <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANTE</b></font></font>
+qui s'avère être une macro définissant la constante
+233&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+CONSTANTE 233</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+CONCAT(a, b) a##b</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; printf("%d\n",
+CONCAT(CONSTA, NTE));</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc concat.c</font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out</font> <br>
+      <font style="font-size: 9pt;" size="2">233</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="9._Comment_éliminer_les_attributs_de_GCC"></a>9.
+Comment
+éliminer
+les
+attributs
+de
+GCC</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Les
+attributs sont des
+extensions spécifiques à GCC pour augmenter les
+contrôles et
+contribuer à l'optimisation du code généré.
+Considérons
+l'exemple suivant où est décrit l'attribut
+«&nbsp;format&nbsp;»
+(pour de plus amples informations sur les attributs de GCC, cf. <a href="http://www.unixwiz.net/techtips/gnu-c-attributes.html">[4]</a>).
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>funct()</b></font></font>
+fait appel à deux fonctions effectuant de l'affichage
+formaté à la
+manière de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>printf()</b></font></font>&nbsp;:
+le premier paramètre contient une description du format d'une
+chaîne
+de caractères et la liste variable des paramètres qui
+suivent est
+utilisée pour construire la chaîne à afficher. A
+l'appel de ces
+fonctions d'affichage, il y a une erreur classique de
+programmation&nbsp;:
+le format nécessite l'adresse d'une chaîne de
+caractères et un
+entier signé mais la liste des aguments ne contient qu'un entier
+signé.</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1
+&nbsp;extern void my_printf1 (const char *fmt, ...);</font> <br>
+      <font style="font-size: 9pt;" size="2">2 </font> <br>
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;extern void my_printf2 (const char *fmt, ...)</font> <br>
+      <font style="font-size: 9pt;" size="2">4 &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">__attribute__
+((format (printf, 1, 2)))</font></font>;</font> <br>
+      <font style="font-size: 9pt;" size="2">5 </font> <br>
+      <font style="font-size: 9pt;" size="2">6 </font> <br>
+      <font style="font-size: 9pt;" size="2">7
+&nbsp;void funct(void)</font> <br>
+      <font style="font-size: 9pt;" size="2">8
+&nbsp;{</font> <br>
+      <font style="font-size: 9pt;" size="2">9
+&nbsp; &nbsp;my_printf1(<font color="#ff0000"><font style="font-size: 9pt;" size="2">"Affichage
+de %s suivi de %d\n", 46</font></font>);</font> <br>
+      <font style="font-size: 9pt;" size="2">10 </font> <br>
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; my_printf2(<font color="#ff0000"><font style="font-size: 9pt;" size="2">"Affichage
+de %s suivi de %d\n", 46</font></font>);</font> <br>
+      <font style="font-size: 9pt;" size="2">12
+}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+compilation de ce
+programme avec l'option <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>-Wall</b></font></font>
+va signaler l'erreur de programmation (sous la forme d'un
+«&nbsp;warning&nbsp;») pour la ligne 11 mais pas pour la
+ligne
+9.
+En effet, en ligne 11, on utilise la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>my_printf2()</b></font></font>
+qui est définie avec l'attribut <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>format</b></font></font>
+pour indiquer que c'est une fonction
+«&nbsp;printf-like&nbsp;»
+qui
+utilise un format en argument 1 et que la liste variable des
+arguments commence au deuxième paramètre&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc -c -Wall attribute.c </font> <br>
+      <font style="font-size: 9pt;" size="2">attribute.c:
+In function «funct":</font> <br>
+      <font style="font-size: 9pt;" size="2">attribute.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">11:
+attention : format «%s" expects type «char *", but
+argument 2 has type «int"</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">attribute.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">11:
+attention : trop peu d'arguments dans le format</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Si
+la notion d'attribut
+est pratique et puissante, elle peut poser problème lorsque le
+compilateur utilisé n'est pas GCC. Comme la directive <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__attribute__</b></font></font>
+est définie avec un seul paramètre (d'où le double
+parenthésage
+lorsqu'on lui passe plusieurs paramètres de sorte à ce
+qu'ils
+n'apparaîssent que sous la forme d'un seul), il est possible
+d'utiliser le principe de la compilation conditionnelle pour
+redéfinir <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__attribute__</b></font></font>
+à rien lorsque le compilateur utilisé n'est pas GCC&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#ifndef
+__GNUC__</font> <br>
+      <font style="font-size: 9pt;" size="2">#define
+__attribute__(p) // Rien</font> <br>
+      <font style="font-size: 9pt;" size="2">#endif
+// __GNUC__</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Dans
+cet exemple, la
+condition de compilation utilise le drapeau <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__GNUC__</b></font></font>
+qui n'est défini par défaut que lorsque GCC est
+utilisé (cf. §
+<a href="#8.1.___GNUC__">8.1</a>).</font></font></p>
+<h1 class="western"><a name="10._Inclusions_conditionnelles"></a>10.
+Inclusions conditionnelles</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Un
+fichier d'entête est
+inclus dans un fichier source à l'aide de la directive
+«&nbsp;#include&nbsp;».
+Ces fichiers contiennent la plupart du temps des déclarations
+externes de variables ou fonctions, des définitions de types et
+de
+macros. Un fichier d'entête peut lui-même inclure d'autres
+fichiers
+d'entête car une règle de base en programmation C est de
+rendre un
+fichier d'entête indépendant. En d'autres termes, si un
+fichier
+d'entête utilise un type, une macro, une fonction ou une
+variable,
+il est recommandé que soit inclus dans ce fichier, le fichier
+d'entête où se trouve la définition correspondante.
+Dans l'exemple
+de la <a href="#Figure_1">figure 1</a>, le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+inclut les fichiers d'entête <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>
+qui définissent respectivement le type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str_t</b></font></font>
+et la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fonc()</b></font></font>.
+Ces deux derniers incluent le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+pour la définition du type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER</b></font></font>.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><a name="Figure_1"></a>Figure
+1&nbsp;:
+Inclusions multiples</i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;"><font face="Arial Narrow, sans-serif"><font size="2"><i><img style="width: 1058px; height: 794px;" alt="figure_1" src="c_preprocessor_fr_figure_1.jpg"></i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+compilation de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+donne les erreurs suivantes&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc -c main.c </font> <br>
+      <font style="font-size: 9pt;" size="2">In
+file included from fct.h:1,</font> <br>
+      <font style="font-size: 9pt;" size="2">from
+main.c:2:</font> <br>
+      <font style="font-size: 9pt;" size="2">entier.h:1:
+erreur: redefinition of typedef «ENTIER"</font> <br>
+      <font style="font-size: 9pt;" size="2">entier.h:1:
+erreur: previous declaration of «ENTIER" was here</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+compilateur remonte le
+fait que le type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER</b></font></font>
+est défini deux fois. La première définition
+provient du fichier
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et la seconde du fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>
+qui incluent tout deux le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>.
+Cela donne comme résultat que le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+inclut le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+deux fois. Pour résoudre ce problème on peut utiliser la
+compilation conditionnelle de sorte à inclure un fichier
+d'entête
+seulement si une définition qui lui est propre n'est pas
+déjà
+définie. Cette définition est généralement
+faite à partir du nom
+du fichier. Afin d'illustrer le propos, voici comment le fichier
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+est modifié pour être inclus qu'à la condition que <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER_H</b></font></font>
+ne soit pas déjà défini&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#ifndef
+ENTIER_H</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+ENTIER_H</font></font></font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">typedef
+int ENTIER;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#endif
+// ENTIER_H</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Cela
+permet de compiler
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+car <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER_H</b></font></font>
+est défini par l'inclusion de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+dans <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et cela va donc empêcher la deuxième inclusion de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+via <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>.
+D'une manière générale, il est conseillé
+d'appliquer le principe
+de l'inclusion conditionnelle à tout fichier d'entête. La <a href="#Figure_2">figure 2</a>
+est une version revue et corrigée de la <a href="#Figure_1">figure
+1</a> à laquelle a été
+appliqué ce principe.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><a name="Figure_2"></a>Figure
+2&nbsp;:
+Inclusions conditionnelles</i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;"><font face="Arial Narrow, sans-serif"><font size="2"><i><img style="width: 1058px; height: 794px;" alt="figure_2" src="c_preprocessor_fr_figure_2.jpg"></i></font></font></p>
+<h1 class="western"><a name="11._Conclusion"></a>11. Conclusion</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Cet
+article a présenté
+de nombreuses règles et astuces pour tirer parti au mieux des
+facilités du préprocesseur C de sorte à contribuer
+à la
+robustesse, la portabilité et la facilité de mise au
+point des
+programmes. Ce ne sont là qu'un sous-ensemble des
+possibilités
+offertes. Le lecteur pourra consulter les <a href="#Liens">liens</a>
+et
+<a href="#R%E9f%E9rences">références</a> de
+cet article pour aller plus loin. </font></font>
+</p>
+<h1 class="western"><a name="Liens"></a>Liens</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[1]
+Extensions de GCC&nbsp;:
+<a href="http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html">http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[2]
+Le préprocesseur C&nbsp;:
+<a href="http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221">http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[3]
+Le préprocesseur C&nbsp;:
+<a href="http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html">http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[4]
+Attributs de GCC&nbsp;:
+<a href="http://www.unixwiz.net/techtips/gnu-c-attributes.html">http://www.unixwiz.net/techtips/gnu-c-attributes.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[5]
+Manuels de GCC&nbsp;:
+<a href="http://gcc.gnu.org/onlinedocs/">http://gcc.gnu.org/onlinedocs/</a></font></font></p>
+<h1 class="western"><a name="Références"></a>Références</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[6]
+Boulay (Nicolas),
+«&nbsp;Le C n'est pas portable&nbsp;», GLMF 102,
+Février 2008</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[7]
+Boulay (Nicolas),
+«&nbsp;Le processus de compilation C&nbsp;», GLMF 103, Mars
+2008</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[8]
+Kernighan, Brian.W. &amp;
+Ritchie, Dennis.M., «&nbsp;Le langage C&nbsp;», 2ème
+édition,
+Masson, 1990</font></font></p>
+<h1 class="western"><a name="A_propos_de_lauteur"></a>A
+propos de l'auteur</h1>
+<font face="Arial, sans-serif"><font size="2">L'auteur
+est un ingénieur en informatique travaillant en France. Il peut
+être
+contacté <a href="http://rachid.koucha.free.fr/contact/contact.html">ici</a>
+ou vous pouvez
+consulter son site <a href="http://rachid.koucha.free.fr/">WEB</a>.<br>
+<br>
+</font></font><font face="Arial, sans-serif"><font size="2"><br>
+</font></font>
+<font face="Arial, sans-serif"><font size="2">
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</font></font>
+<div style="text-align: right;"><small><a href="http://rachid.koucha.free.fr/index.html">Page principale</a></small><br>
+<small>&nbsp; <a href="../documents_techniques.html">Page
+précédente</a></small></div>
+<br>
+<br>
+
+</body></html>>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="justify">
+<font face="Arial, sans-serif"><font size="2">Cet
+article a pr&eacute;sent&eacute;
+de nombreuses r&egrave;gles et astuces pour tirer parti au mieux des
+facilit&eacute;s du pr&eacute;processeur C de sorte &agrave; contribuer
+&agrave; la
+robustesse, la portabilit&eacute; et la facilit&eacute; de mise au
+point des
+programmes. Ce ne sont l&agrave; qu'un sous-ensemble des
+possibilit&eacute;s
+offertes. Le lecteur pourra consulter les <a href="#Liens">liens</a>
+et
+<a href="#R%E9f%E9rences">r&eacute;f&eacute;rences</a> de
+cet article pour aller plus loin. </font></font>
+</p>
+<h1 class="western"><a name="Liens"></a>Liens</h1>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="left">
+<font face="Arial, sans-serif"><font size="2">[1]
+Extensions de GCC&nbsp;:
+<a
+ href="http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html">http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html</a></font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="left">
+<font face="Arial, sans-serif"><font size="2">[2]
+Le pr&eacute;processeur C&nbsp;:
+<a
+ href="http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221">http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221</a></font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="left">
+<font face="Arial, sans-serif"><font size="2">[3]
+Le pr&eacute;processeur C&nbsp;:
+<a
+ href="http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html">http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html</a></font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="left">
+<font face="Arial, sans-serif"><font size="2">[4]
+Attributs de GCC&nbsp;:
+<a href="http://www.unixwiz.net/techtips/gnu-c-attributes.html">http://www.unixwiz.net/techtips/gnu-c-attributes.html</a></font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"
+ align="left">
+<font face="Arial, sans-serif"><font size="2">[5]
+Manuels de GCC&nbsp;:
+<a href="http://gcc.gnu.org/onlinedocs/">http://gcc.gnu.org/onlinedocs/</a></font></font></p>
+<h1 class="western"><a name="R&eacute;f&eacute;rences"></a>R&eacute;f&eacute;rences</h1>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[6]
+Boulay (Nicolas),
+&laquo;&nbsp;Le C n'est pas portable&nbsp;&raquo;, GLMF 102,
+F&eacute;vrier 2008</font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[7]
+Boulay (Nicolas),
+&laquo;&nbsp;Le processus de compilation C&nbsp;&raquo;, GLMF 103, Mars
+2008</font></font></p>
+<p
+ style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[8]
+Kernighan, Brian.W. &amp;
+Ritchie, Dennis.M., &laquo;&nbsp;Le langage C&nbsp;&raquo;, 2&egrave;me
+&eacute;dition,
+Masson, 1990</font></font></p>
+<h1 class="western"><a name="A_propos_de_lauteur"></a>A
+propos de l'auteur</h1>
+<font face="Arial, sans-serif"><font size="2">L'auteur
+est un ing&eacute;nieur en informatique travaillant en France. Il peut
+&ecirc;tre
+contact&eacute; <a
+ href="http://rachid.koucha.free.fr/contact/contact.html">ici</a>
+ou vous pouvez
+consulter son site <a href="http://rachid.koucha.free.fr/">WEB</a>.<br>
+<br>
+</font></font><font face="Arial, sans-serif"><font size="2"><br>
+</font></font>
+<font face="Arial, sans-serif"><font size="2">
+<table
+ style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</font></font>
+<div style="text-align: right;"><small><a
+ href="http://rachid.koucha.free.fr/index.html">Page principale</a></small><br>
+<small>&nbsp; <a href="../documents_techniques.html">Page
+pr&eacute;c&eacute;dente</a></small></div>
+<br>
+<br>
+</body>
+</html>

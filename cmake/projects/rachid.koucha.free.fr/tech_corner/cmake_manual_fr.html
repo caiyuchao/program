@@ -1,0 +1,3496 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Comment utiliser cmake</title>
+  <meta name="author" content="rachid koucha">
+  <meta name="Category"
+ content="cmake, linux, gcc, freeware, build, make">
+  <meta name="language" content="fr">
+  <meta http-equiv="Content-Language" content="fr">
+  <meta name="description"
+ content="Approche empirique de l'outil cmake: pr&eacute;sentation pas &agrave; pas de projets bas&eacute;s sur le syst&egrave;me de g&eacute;n&eacute;ration cmake">
+  <meta name="keywords"
+ content="cmake, linux, build, gcc, freeware, make">
+  <script type="text/javascript"
+ src="https://apis.google.com/js/plusone.js">
+  {lang: 'fr'}
+  </script>
+</head>
+<body>
+<small><small><span style="text-decoration: underline;">Auteur</span>:
+<a href="http://rachid.koucha.free.fr">R. Koucha</a><br>
+<span style="text-decoration: underline;">Dern&egrave;re mise &agrave;
+jour</span>: 31-jan-2011<br>
+<br>
+</small></small><small><br>
+<a href="http://rachid.koucha.free.fr/index.html">Retour &agrave; la
+page principale</a><br>
+<a href="http://rachid.koucha.free.fr/documents_techniques.html">Retour
+&agrave; la page pr&eacute;c&eacute;dente</a></small><br>
+<br>
+<h1 style="text-align: center;">Approche empirique de CMAKE</h1>
+<br>
+<table
+ style="text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(153, 255, 255);">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe
+ src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fcmake_manual_fr.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80"
+ style="border: medium none ; overflow: hidden; width: 450px; height: 80px;"
+ allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fcmake_manual_fr.html&amp;subject=Approche%20empirique%20de%20cmake"><img
+ alt="s" src="../send_to_a_friend.gif"
+ style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<br>
+<a href="#Introduction">Introduction</a><br>
+<a href="#Project_1:_Generation_of_an_executable"><span
+ style="text-decoration: underline;">Projet 1</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable</a><br>
+<a href="#Project_2:_Generation_of_an_executable"><span
+ style="text-decoration: underline;">Projet 2</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable li&eacute; &agrave; une
+librairie</a><br>
+<a href="cmake_manual.html#PROJECT_2"><span
+ style="text-decoration: underline;"></span></a><a
+ href="#Project_3:_Generation_of_an_executable"><span
+ style="text-decoration: underline;">Projet 3</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable et d'une librairie
+partag&eacute;e avec le m&ecirc;me nom</a><br>
+<a href="#Project_4:_Generation_and_installation"><span
+ style="text-decoration: underline;">Projet 4</span> :
+G&eacute;n&eacute;ration et installation d'un programme avec ses manuels</a><br>
+<a href="#Project_5:_Installation_of_an_executable"><span
+ style="text-decoration: underline;">Projet 5</span> :
+Installation d'un ex&eacute;cutable et d'une API en librairie
+partag&eacute;e avec les fichiers d'ent&ecirc;te et les manuels</a><br>
+<a href="#Project_6:_Packaging_of_a_project">Projet 6 :
+Packaging d'un projet</a><br>
+<a href="#Project_7:_Generation_of_a_configuration">Projet 7 :
+G&eacute;n&eacute;ration d'un fichier de configuration
+(config.h)</a><br>
+<a href="#Projet_8_:_Generation_dun_programme">Projet 8 :
+G&eacute;n&eacute;ration d'un programme Linux et de son module kernel</a><br>
+<a href="#Freeware_projects_using_cmake">Projets libres utilisant cmake</a><br>
+<a href="#Resources">Ressources</a><br>
+<a href="#About_the_author">A propos de l'auteur</a><br>
+<br>
+<hr style="width: 100%; height: 2px;"><br>
+<h2><a name="Introduction"></a>Introduction</h2>
+<span style="font-style: italic;">cmake</span> est un nouvel outil de
+g&eacute;n&eacute;ration pour les projets logiciels. Il est
+destin&eacute; &agrave; remplacer les c&eacute;l&egrave;bres <span
+ style="font-style: italic;">autotools</span>.<br>
+<br>
+<span style="font-style: italic;">cmake</span> est libre et bien
+d&eacute;crit <a href="http://www.cmake.org">ici</a>. Parmi les
+nombreuses fonctionnalit&eacute;s offertes, on peut citer les suivantes
+:<br>
+<ul>
+  <li>Support d'environnements de g&eacute;n&eacute;ration complexes;</li>
+  <li>G&eacute;n&eacute;ration de fichier de construction natifs (e.g.
+makefiles sous Unix).
+Par cons&eacute;quent, des outils standards peuvent &ecirc;tre
+utilis&eacute;s sur toute configuration de platforme/compilateur;</li>
+  <li>Facilit&eacute; d'extension pour ajouter de nouvelles
+fonctionnalit&eacute;s;</li>
+  <li>...</li>
+</ul>
+<br>
+Le but de cet article est d'aider le lecteur &agrave; ma&icirc;triser
+les concepts de base de <span style="font-style: italic;">cmake</span>
+&agrave; travers des petits projets logiciels.<br>
+<br>
+<hr style="width: 100%; height: 2px;"><br>
+<h2><a name="Project_1:_Generation_of_an_executable"></a><span
+ style="text-decoration: underline;">Projet 1</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">PROJECT1</span>
+est compos&eacute; du sous-arbre suivant (les fichiers sont
+localis&eacute;s <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project1">ici</a>):<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;</span><span
+ style="font-weight: bold; font-family: monospace;">&nbsp; <span
+ style="font-family: mon;">simple</span><br>
+&nbsp; &nbsp;&nbsp; /\<br>
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;/
+&nbsp;\<br>
+&nbsp; &nbsp;/ &nbsp; &nbsp;\<br style="font-family: monospace;">
+      </span><span style="font-family: monospace;">&nbsp;</span><span
+ style="font-family: monospace;">main.c simple</span><small
+ style="font-family: monospace;"><span style="font-weight: bold;"></span></small><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Le projet
+g&eacute;n&egrave;re une cible : un ex&eacute;cutable appel&eacute; <span
+ style="font-weight: bold;">simple</span>. Tous les fichiers objets
+sont stock&eacute;s dans le r&eacute;pertoire racine du projet<span
+ style="font-style: italic;"></span>.<br>
+<br>
+Le sous-arbre suivant montre les fichiers qui ont &eacute;t&eacute;
+ajout&eacute;s pour contruire le projet.<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;</span><span
+ style="font-weight: bold; font-family: monospace;">&nbsp; <span
+ style="font-family: mon;">&nbsp; &nbsp;
+&nbsp; simple<br>
+&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp; |
+&nbsp; &nbsp;&nbsp; \<br>
+      </span>&nbsp; &nbsp; &nbsp;/&nbsp;
+&nbsp;|&nbsp; &nbsp; \<br>
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; &nbsp; /
+&nbsp; &nbsp;|&nbsp; &nbsp; &nbsp;\<br>
+&nbsp;&nbsp; / &nbsp; &nbsp; |&nbsp;&nbsp;
+&nbsp; &nbsp;\<br style="font-family: monospace;">
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">main.c &nbsp;simple
+&nbsp;<a href="#CMakeLists.txt_in_project1">CMakeLists.txt</a></span><small
+ style="font-family: monospace;"><span style="font-weight: bold;"></span></small><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Quand les fichiers <span
+ style="font-style: italic;">cmake</span>
+sont configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er l'environnement de g&eacute;n&eacute;ration :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd simple</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Configuring
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../simple</span></td>
+    </tr>
+  </tbody>
+</table>
+<br style="font-family: monospace;">
+Ainsi, les makefiles sont pr&ecirc;ts pour g&eacute;n&eacute;rer le
+projet :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Scanning
+dependencies of target simple<br>
+[100%] Building C object CMakeFiles/simple.dir/main.o<br>
+Linking C executable simple<br>
+[100%] Built target simple<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="CMakeLists.txt_in_project1"></a>CMakeLists.txt dans
+project1</h3>
+<span style="font-style: italic;">simple</span>
+est le r&eacute;pertoire racine du projet. C'est l'endroit o&ugrave; on
+lance la commande <span style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On identifie le projet et le langage de programmation avec la directive
+<span style="font-weight: bold;">PROJECT</span>.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>. C'est facultatif de
+faire cela mais les flags par d&eacute;faut peuvent se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On d&eacute;finit la cible <span style="font-style: italic;">simple</span>
+avec la directive <span style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">PROJECT(project1 C)<br>
+      <br>
+ADD_DEFINITIONS(-g
+-O2 -fsigned-char -freg-struct-return -Wall -W -Wshadow
+-Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline -Werror)<br>
+      <br>
+ADD_EXECUTABLE(simple main.c)<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<hr style="width: 100%; height: 2px;"><br>
+<h2><a name="Project_2:_Generation_of_an_executable"></a><span
+ style="text-decoration: underline;">Projet 2</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable li&eacute; &agrave; une
+librairie</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">PROJECT2</span>
+est compos&eacute; du sous-arbre suivant (les fichiers sont
+localis&eacute;s <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project2">ici</a>):<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;</span><span
+ style="font-weight: bold; font-family: monospace;">&nbsp;&nbsp;<span
+ style="font-family: mon;">crypto</span><br>
+&nbsp; &nbsp;&nbsp; /\<br>
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;/
+&nbsp;\<br>
+&nbsp; &nbsp;/ &nbsp; &nbsp;\<br style="font-family: monospace;">
+      </span><span style="font-family: monospace;">&nbsp;</span><span
+ style="font-family: monospace;">main.c &nbsp;crypto</span><small
+ style="font-family: monospace;"><span style="font-weight: bold;"></span></small><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Le projet
+g&eacute;n&egrave;re une cible : un ex&eacute;cutable appel&eacute; <span
+ style="font-weight: bold;">crypto</span>. Tous les fichiers objets
+sont stock&eacute;s dans le r&eacute;pertoire racine du projet<span
+ style="font-style: italic;"></span>. L'ex&eacute;cutable a besoin de
+la librairie partag&eacute;e <span style="font-style: italic;">libcrypt.so</span>.<br>
+<br>
+Le sous-arbre suivant montre les fichiers qui ont &eacute;t&eacute;
+ajout&eacute;s pour contruire le projet.<br>
+<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;</span><span
+ style="font-weight: bold; font-family: monospace;">&nbsp; <span
+ style="font-family: mon;">&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; crypto<br>
+&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; / &nbsp;&nbsp; | &nbsp;
+&nbsp;&nbsp; \<br>
+      </span>&nbsp; &nbsp; &nbsp;/&nbsp;
+&nbsp;|&nbsp; &nbsp; \<br>
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; &nbsp; /
+&nbsp; &nbsp;|&nbsp; &nbsp; &nbsp;\<br>
+&nbsp;&nbsp; / &nbsp; &nbsp; |&nbsp;&nbsp;
+&nbsp; &nbsp;\<br style="font-family: monospace;">
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">main.c &nbsp;crypto
+&nbsp;<a href="#CMakeLists.txt_in_project2">CMakeLists.txt</a></span><small
+ style="font-family: monospace;"><span style="font-weight: bold;"></span></small><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Quand les fichiers <span
+ style="font-style: italic;">cmake</span>
+sont configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er l'environnement de g&eacute;n&eacute;ration :<span
+ style="font-style: italic;"></span><br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd crypto</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Configuring
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../crypto</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span>Ainsi, les makefiles sont
+pr&ecirc;ts pour g&eacute;n&eacute;rer le projet :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%] Built
+target crypto<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="CMakeLists.txt_in_project2"></a>CMakeLists.txt dans
+project2</h3>
+<span style="font-style: italic;"></span><span
+ style="font-style: italic;">crypto </span>est le r&eacute;pertoire
+racine du projet. C'est l'endroit o&ugrave; on lance la commande <span
+ style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On identifie le projet et le langage de programmation avec la directive
+<span style="font-weight: bold;">PROJECT</span>.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>.
+C'est facultatif de faire cela mais les flags par d&eacute;faut peuvent
+se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On d&eacute;finit la cible <span style="font-style: italic;"></span><span
+ style="font-style: italic;">crypto </span>avec la directive <span
+ style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+Comme <span style="font-style: italic;">crypto</span> d&eacute;pend de
+la librairie partag&eacute;e <span style="font-style: italic;">libcrypt.so</span>,
+on
+sp&eacute;cifie
+cela
+avec
+la
+directive
+<span style="font-weight: bold;">TARGET_LINK_LIBRARIES</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">PROJECT(project2 C)<br>
+      <br>
+ADD_DEFINITIONS(-g
+-O2 -fsigned-char -freg-struct-return -Wall -W -Wshadow
+-Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline -Werror)<br>
+      <br>
+ADD_EXECUTABLE(crypto main.c)<br>
+      <br>
+TARGET_LINK_LIBRARIES(crypto crypt)<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span>
+<hr style="width: 100%; height: 2px;"><span
+ style="font-family: monospace;"></span>
+<h2><a name="Project_3:_Generation_of_an_executable"></a><span
+ style="text-decoration: underline;">Projet 3</span> :
+G&eacute;n&eacute;ration d'un ex&eacute;cutable et d'une librairie
+partag&eacute;e avec la m&ecirc;me nom<br>
+</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">ROOF</span>
+est compos&eacute; du sous-arbre suivant :<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="text-align: left; vertical-align: middle; background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </span><span style="font-weight: bold; font-family: monospace;">&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;<big>roof</big><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+&nbsp;/ &nbsp;
+| &nbsp;\ &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; /
+&nbsp;&nbsp;&nbsp;| &nbsp; \ &nbsp; &nbsp; \<br>
+      </span><span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;/ &nbsp;
+&nbsp; | &nbsp; &nbsp;\ &nbsp; &nbsp; \</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp; / &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; \ &nbsp;
+&nbsp; \</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp; / &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp;\ &nbsp; &nbsp; \</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp;&nbsp; / &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; \</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp;&nbsp; &nbsp;/ &nbsp; &nbsp; &nbsp;
+&nbsp;
+| &nbsp; &nbsp; &nbsp;&nbsp; \ &nbsp; &nbsp; \</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+&nbsp; / &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp; \</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; </span><span style="font-weight: bold; font-family: monospace;">lib</span><small
+ style="font-family: monospace;"> &nbsp; &nbsp;
+&nbsp; &nbsp;</small><span
+ style="font-weight: bold; font-family: monospace;">client</span><small
+ style="font-family: monospace;"> &nbsp;&nbsp;<span
+ style="font-weight: bold;"><big>include</big>
+&nbsp;<big>bin</big></span></small><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp;| &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;|</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp;&nbsp;&nbsp;|&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; |
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;| &nbsp;
+&nbsp; &nbsp;|</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+roof.c &nbsp; &nbsp;&nbsp;&nbsp;main.c &nbsp;
+&nbsp;roof.h &nbsp; main.o</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+roof_p.h &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;roof.o</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;roof</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp;libroof.so</span><br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; </span><br>
+Le projet g&eacute;n&egrave;re deux cibles : une librarie
+partag&eacute;e appel&eacute;e <span style="font-weight: bold;">libroof.so
+</span>et un ex&eacute;cutable appel&eacute; <span
+ style="font-weight: bold;">roof</span>. Tous les fichiers objets sont
+stock&eacute;s dans le sous-r&eacute;pertoire bin du projet<span
+ style="font-style: italic;"></span>.<br>
+<br>
+Le sous-arbre suivant montre les fichiers qui ont &eacute;t&eacute;
+ajout&eacute;s pour contruire le projet.<br>
+<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;">&nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; <span style="font-weight: bold;">&nbsp;
+&nbsp; &nbsp; &nbsp;<big>roof</big><br>
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;/ &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; \
+&nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; /
+&nbsp; &nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp;
+&nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+      </span>&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;/ &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; \ &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; &nbsp; / &nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp;
+&nbsp; \<br>
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;/ &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; \ &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; / &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; \ &nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp;
+&nbsp; &nbsp; \<br>
+&nbsp; &nbsp;&nbsp;&nbsp;/ &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp;
+&nbsp; \<br>
+&nbsp;&nbsp;&nbsp; / &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp;
+&nbsp; \<br>
+&nbsp;&nbsp;&nbsp;<span style="font-weight: bold;">lib</span><small>
+&nbsp; &nbsp; &nbsp; &nbsp;</small><span style="font-weight: bold;">
+&nbsp; &nbsp;
+&nbsp;client</span><small> &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="font-weight: bold;"><big>include</big>
+&nbsp;&nbsp; <big>bin &nbsp; </big></span><a
+ href="cmake_manual.html#CMakeLists.txt_in_roof"><big>CMakeLists.txt</big></a></small><br>
+&nbsp;&nbsp; &nbsp;| &nbsp; &nbsp;
+&nbsp;&nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; &nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; | &nbsp; &nbsp; &nbsp; &nbsp;|<br>
+&nbsp; &nbsp;&nbsp;|&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp;|<br>
+&nbsp;&nbsp;roof.c &nbsp; &nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; main.c &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; roof.h &nbsp;
+&nbsp; main.o<br>
+&nbsp; roof_p.h &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; </span><a
+ href="cmake_manual.html#CMakeLists.txt_in_client"><span
+ style="font-family: monospace;"><small><big>CMakeLists.txt</big></small></span></a><span
+ style="font-family: monospace;"> &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;roof.o<br>
+&nbsp; </span><a href="cmake_manual.html#CMakeLists.txt_in_lib"><span
+ style="font-family: monospace;"><small><big>CMakeLists.txt</big></small></span></a><span
+ style="font-family: monospace;"> &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;roof<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+libroof.so<br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><br>
+Quand les fichiers <span style="font-style: italic;">cmake</span> sont
+configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er
+l'environnement de g&eacute;n&eacute;ration :<span
+ style="font-style: italic;"></span><br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd roof</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Configuring
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../roof</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span>Ainsi, les makefiles sont
+pr&ecirc;ts pour g&eacute;n&eacute;rer le projet :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 50%]
+Building C object bin/CMakeFiles/roof.dir/roof.o</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Linking C
+shared library libroof.so</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 50%] Built
+target roof</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%]
+Building C object bin/CMakeFiles/main.dir/main.o</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Linking C
+executable roof</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%] Built
+target main</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="CMakeLists.txt_in_roof"></a>CMakeLists.txt dans roof</h3>
+<span style="font-style: italic;">roof </span>est le r&eacute;pertoire
+racine du projet. C'est l'endroit o&ugrave; on lance la commande <span
+ style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On identifie le projet ainsi que le langage de programmation avec la
+directive <span style="font-weight: bold;">PROJECT</span>.<br>
+On sp&eacute;cifie les r&eacute;pertoires o&ugrave; sont
+localis&eacute;s les fichiers d'ent&ecirc;te (<span
+ style="font-style: italic;">include</span> et <span
+ style="font-style: italic;">lib</span>) avec la directive <span
+ style="font-weight: bold;">INCLUDE_DIRECTORIES</span>.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>.
+C'est facultatif de faire cela mais les flags par d&eacute;faut peuvent
+se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On sp&eacute;cifie les r&eacute;pertoires o&ugrave; sont
+localis&eacute;s les fichiers source &agrave; compiler (<span
+ style="font-style: italic;">lib</span> et <span
+ style="font-style: italic;">client</span>) ainsi que r&eacute;pertoire
+de destination des fichiers objet (<span style="font-style: italic;">bin</span>)
+avec
+la
+directive
+<span style="font-weight: bold;">ADD_SUBDIRECTORY</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">PROJECT(roof C)<br>
+      <br>
+INCLUDE_DIRECTORIES(include lib) </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">ADD_DEFINITIONS(-g
+-O2 -fsigned-char -freg-struct-return -Wall -W -Wshadow
+-Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline -Werror)</span><br
+ style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">ADD_SUBDIRECTORY(lib
+bin) </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">ADD_SUBDIRECTORY(client
+bin)</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><br>
+</span><span style="font-family: monospace;"></span>
+<h3><a name="CMakeLists.txt_in_lib"></a>CMakeLists.txt dans lib</h3>
+Le r&eacute;pertoire <span style="font-style: italic;">lib</span>
+contient les fichiers pour fabriquer la librairie partag&eacute;e <span
+ style="font-style: italic;">libroof.so</span>.<br>
+<br>
+On affecte la variable <span style="font-style: italic;">roof_lib_src</span>
+avec la liste des fichiers source n&eacute;cessaire &agrave; la
+construction de la librairie partag&eacute;e. Il n'y a en fait qu'un
+fichier appel&eacute; <span style="font-style: italic;">roof.c</span>.
+Cela se fait avec la directive <span style="font-weight: bold;">SET</span>.<br>
+Ensuite, on sp&eacute;cifie la librairie partag&eacute;e &agrave;
+construire avec la directive <span style="font-weight: bold;">ADD_LIBRARY</span>.
+On
+passe
+&agrave;
+cette
+directive
+le
+nom
+de
+la
+librairie
+(<span style="font-style: italic;">roof</span>)
+pour g&eacute;n&eacute;rer <span style="font-style: italic;">libroof.so</span>,
+le
+mot
+cl&eacute;<span style="font-style: italic;"> SHARED</span> pour
+sp&eacute;cifier qu'il
+s'agit d'une librairie partag&eacute;e et la liste des fichiers sources
+de la librairie avec la variable <span style="font-style: italic;">roof_lib_src</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">SET(roof_lib_src roof.c) </span><br
+ style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">ADD_LIBRARY(roof
+SHARED ${roof_lib_src})</span></td>
+    </tr>
+  </tbody>
+</table>
+<pre><br></pre>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span>
+<h3><a name="CMakeLists.txt_in_client"></a>CMakeLists.txt dans client</h3>
+Le r&eacute;pertoire <span style="font-style: italic;">client</span>
+contient les fichiers pour fabriquer l'ex&eacute;cutable <span
+ style="font-style: italic;">roof</span>.<br>
+<br>
+On d&eacute;finit d'abord l'ex&eacute;cutable cible avec la directive <span
+ style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+On affecte la variable <span style="font-style: italic;">roof_client_src</span>
+avec la liste des fichiers source utilis&eacute;s pour construire
+l'ex&eacute;cutable. Il n'y a en fait qu'un fichier appel&eacute; <span
+ style="font-style: italic;">main.c</span>. Cela se fait avec la
+directive <span style="font-weight: bold;">SET</span>.<br>
+On sp&eacute;cifie la d&eacute;pendance de l'ex&eacute;cutable <span
+ style="font-style: italic;">roof</span> avec la librairie <span
+ style="font-style: italic;">libroof.so</span> via la directive <span
+ style="font-weight: bold;">TARGET_LINK_LIBRARIES</span>.<span
+ style="color: rgb(255, 0, 0);"> Il y a un probl&egrave;me ici car on
+veut g&eacute;n&eacute;rer un ex&eacute;cutable appel&eacute; </span><span
+ style="font-style: italic; color: rgb(255, 0, 0);">roof</span><span
+ style="color: rgb(255, 0, 0);"> et une librairie appel&eacute;e </span><span
+ style="font-style: italic; color: rgb(255, 0, 0);">libroof.so</span>.
+Normalement, la directive devrait s'&eacute;crire :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">ADD_EXECUTABLE(roof)</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">TARGET_LINK_LIBRARIES(roof
+roof)</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span>Mais <span
+ style="font-style: italic;">cmake</span>
+g&eacute;n&egrave;re une erreur :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">CMake Error: Attempt to add
+link target roof of type: EXECUTABLE </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">to target
+roof. You can only link to STATIC or SHARED libraries.</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"><br>
+</span>
+En fait, cmake est perturb&eacute; car on lui donne l'impression de
+g&eacute;n&eacute;rer <span style="font-style: italic;">roof</span>
+avec lui m&ecirc;me. D'o&ugrave; l'utilisation du nom
+interm&eacute;diaire <span style="font-style: italic;">main</span>
+dans les directives <span style="font-weight: bold;">TARGET_LINK_LIBRARIES</span>
+et <span style="font-weight: bold;">ADD_EXECUTABLE</span>. Ensuite, on
+indique &agrave;<span style="font-style: italic;"> cmake </span>de
+renommer l'ex&eacute;cutable <span style="font-style: italic;">main</span>
+en
+<span style="font-style: italic;">roof</span> gr&acirc;ce &agrave; la
+directive <span style="font-weight: bold;">SET_TARGET_PROPERTIES</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">SET(roof_client_src main.c) </span><br
+ style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">ADD_EXECUTABLE(main
+${roof_client_src})</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">TARGET_LINK_LIBRARIES(main
+roof) </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">SET_TARGET_PROPERTIES(main </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PROPERTIES
+OUTPUT_NAME
+roof)</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="Project_4:_Generation_and_installation"></a><span
+ style="text-decoration: underline;">Projet 4</span> :
+G&eacute;n&eacute;ration et installation d'un programme avec ses manuels</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">PDIP</span>
+construit un ex&eacute;cutable appel&eacute; <span
+ style="font-weight: bold;">pdip</span> et un ensemble de manuels Linux
+compress&eacute;s avec l'outil <span style="font-style: italic;">gzip</span>.<br>
+Le projet est dans le sous-arbre suivant (les fichiers sont
+localis&eacute;s <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project4">ici</a>):<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="text-align: left; background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;">&nbsp;<span style="font-weight: bold;">&nbsp;pdip<br>
+&nbsp;&nbsp;&nbsp;|<br>
+      </span>&nbsp; &nbsp;|<br>
+&nbsp;pdip.c<br>
+&nbsp;pdip_en.1&nbsp; <br>
+&nbsp;pdip_fr.1 <br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><br>
+<br>
+<span style="font-style: italic;">pdip.c</span> est le source du
+programme et <span style="font-style: italic;">pdip_en.1</span> ainsi
+que <span style="font-style: italic;">pdip_fr.1</span> sont
+respectivement les manuels anglais et fran&ccedil;ais.<br>
+Le sous-arbre suivant montre les fichiers qui ont &eacute;t&eacute;
+ajout&eacute;s pour contruire le projet.<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="text-align: left; vertical-align: middle; background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;">&nbsp;&nbsp;<span
+ style="font-weight: bold;"> pdip<br>
+&nbsp; &nbsp;&nbsp;|<br>
+      </span>&nbsp; &nbsp; |<br>
+&nbsp; pdip.c<br>
+&nbsp; pdip_en.1<br>
+&nbsp; pdip_fr.1<br>
+&nbsp;&nbsp;<a href="cmake_manual.html#FindGZIP.cmake_in_pdip">FindGZIP.cmake</a><br>
+&nbsp;&nbsp;<a href="cmake_manual.html#CMakeLists.txt_in_pdip">CMakeLists.txt</a><br>
+&nbsp;&nbsp;<a href="cmake_manual.html#pdip_chown.cmake_in_pdip">pdip_chown.cmake</a><br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;">&nbsp; &nbsp;<br>
+<br>
+</span>Quand les fichiers <span style="font-style: italic;">cmake</span>
+sont configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er
+l'environnement de g&eacute;n&eacute;ration :<span
+ style="font-style: italic;"></span><br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd pdip<br
+ style="font-family: monospace;">
+      </span><span style="font-family: monospace;">--
+Configuring done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../pdip&nbsp;</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<br>
+Pour d&eacute;clencher la g&eacute;n&eacute;ration :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 33%]
+Building pdip_fr.1.gz</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 66%]
+Building pdip_en.1.gz</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">Scanning
+dependencies of target pdip</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%]
+Building C object CMakeFiles/pdip.dir/pdip.o </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Linking C
+executable pdip</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%] Built
+target pdip</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+Pour d&eacute;clencher l'installation du logiciel :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make install</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span>Ensuite, il est possible
+de faire le m&eacute;nage en effa&ccedil;ant tous les fichiers
+g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="FindGZIP.cmake_in_pdip"></a>FindGZIP.cmake dans pdip</h3>
+Comme le projet a besoin d'installer les manuels dans le format
+compress&eacute;, on utilise la directive <span
+ style="font-weight: bold;">FIND_PROGRAM</span>
+pour contr&ocirc;ler la pr&eacute;sence de l'outil <span
+ style="font-style: italic;">gzip</span> (sp&eacute;cifi&eacute;
+apr&egrave;s le mot cl&eacute; <span style="font-weight: bold;">NAMES</span>).
+La
+directive
+re&ccedil;oit
+en
+param&egrave;tres
+la
+liste
+des
+r&eacute;pertoires
+o&ugrave;
+effectuer
+la
+recherche
+(<span style="font-style: italic;">/bin</span>,
+<span style="font-style: italic;">/usr/bin</span> and <span
+ style="font-style: italic;">/usr/local/bin</span>).
+Le r&eacute;sultat de la commande est stock&eacute; dans la variable <span
+ style="font-weight: bold;">GZIP_TOOL</span> qui est pass&eacute; comme
+premier param&egrave;tre &agrave; la directive. Si <span
+ style="font-style: italic;">gzip</span> est trouv&eacute;, son chemin
+est stock&eacute; dans <span style="font-weight: bold;">GZIP_TOOL</span>.
+S'il
+n'est
+pas
+trouv&eacute;,
+<span style="font-weight: bold;">GZIP_TOOL</span> se voit assigner <span
+ style="font-weight: bold;">GZIP_TOOL-NOTFOUND</span>.<br>
+<br>
+Le r&eacute;sultat de la recherche est test&eacute; avec la directive <span
+ style="font-weight: bold;">IF</span> qui retourne<span
+ style="font-weight: bold;"> </span>vrai si la valeur de la variable
+n'est pas vide, <span style="font-weight: bold;">0</span>,
+&nbsp;<span style="font-weight: bold;">N</span>, <span
+ style="font-weight: bold;">NO</span>, <span style="font-weight: bold;">OFF</span>,
+<span style="font-weight: bold;">FALSE</span>, <span
+ style="font-weight: bold;">NOTFOUND</span> ou
+<span style="font-weight: bold;">&lt;variable&gt;-NOTFOUND</span>. Si
+le test est<span style="font-weight: bold;"> </span>faux, un message
+est affich&eacute; via la directive <span style="font-weight: bold;">MESSAGE</span>
+avec un poids positionn&eacute; &agrave; <span
+ style="font-weight: bold;">FATAL_ERROR</span> pour arr&ecirc;ter tout
+processing. <br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">FIND_PROGRAM(GZIP_TOOL</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;NAMES
+gzip</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;PATHS
+/bin</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;/usr/bin</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;/usr/local/bin</span><span
+ style="font-family: monospace;">)</span><br
+ style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">IF(NOT
+GZIP_TOOL)</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+MESSAGE(FATAL_ERROR "Unable to find 'gzip' program") </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">ENDIF(NOT
+GZIP_TOOL)</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br>
+<h3><a name="CMakeLists.txt_in_pdip"></a>CMakeLists.txt dans pdip</h3>
+Ce projet ne contient qu'un fichier <span style="font-style: italic;">CMakeLists.txt</span>.<br>
+Le nom du projet <span style="font-style: italic;">pdip</span>
+ainsi que le langage de programmation utilis&eacute; (<span
+ style="font-style: italic;">C</span>) sont d&eacute;clar&eacute;s avec
+la directive <span style="font-weight: bold;">PROJECT</span>.<br>
+Ensuite, on inclut le fichier <a href="#FindGZIP.cmake_in_pdip">FindGZIP.cmake</a>
+pour d&eacute;clencher la recherche de l'outil <span
+ style="font-style: italic;">gzip</span> (directive <span
+ style="font-weight: bold;">INCLUDE</span><span
+ style="font-weight: bold;"></span>).<br>
+Si l'outil <span style="font-style: italic;">gzip</span> est
+trouv&eacute;, son chemin est stock&eacute; dans la variable <span
+ style="font-style: italic;">GZIP_TOOL</span>.<br>
+Trois variables sont positionn&eacute;es avec la directive <span
+ style="font-weight: bold;">SET</span> :<br>
+<ul>
+  <li><span style="font-style: italic;">pdip_src</span> est la lsite
+des fichiers source &agrave; compiler (<span style="font-style: italic;">pdip.c</span>)</li>
+  <li><span style="font-style: italic;">pdip_exe</span> est le nom de
+l'ex&eacute;cutable &agrave; g&eacute;n&eacute;rer (<span
+ style="font-style: italic;">pdip</span>)</li>
+  <li><span style="font-style: italic;">pdip_man_src</span> est la
+liste des manuels &agrave; compresser (<span style="font-style: italic;">pdip_en.1</span>
+et <span style="font-style: italic;">pdip_fr.1</span>)</li>
+  <li><span style="font-style: italic;">pdip_man_gz</span> est la liste
+des manuels compress&eacute;s<br>
+  </li>
+</ul>
+Dans la boucle (directive <span style="font-weight: bold;">FOREACH</span>),
+on
+d&eacute;finit
+les
+cibles
+des
+manuels
+et
+la
+mani&egrave;re
+de
+les
+construire
+avec
+la
+directive<span style="font-weight: bold;">
+ADD_CUSTOM_COMMAND</span>. Cette
+directive
+liste aussi les d&eacute;pendances
+(<span style="font-weight: bold;">DEPENDS</span>) de la cible pour ne
+d&eacute;clencher la g&eacute;n&eacute;ration qu'&agrave; la condition
+o&ugrave; les sources des manuels ont &eacute;t&eacute;
+modifi&eacute;s. L'&eacute;tiquette <span style="font-weight: bold;">COMMENT</span>
+est utile pour faire en sorte que <span style="font-style: italic;">cmake</span>
+affiche la cha&icirc;ne de caract&egrave;res "Building pdip_....1.gz"
+quand il ex&eacute;cute la commande.<br>
+<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>.
+C'est facultatif de faire cela mais les flags par d&eacute;faut peuvent
+se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+<br>
+Le point d'entr&eacute;e de la g&eacute;nration est la directive <span
+ style="font-weight: bold;">ADD_EXECUTABLE</span> qui indique que le
+programme cible <span style="font-style: italic;">pdip</span>
+d&eacute;pend du source <span style="font-style: italic;">pdip.c</span>
+et des manuels compress&eacute;s <span style="font-style: italic;">pdip_en.1.gz</span>
+et <span style="font-style: italic;">pdip_fr.1.gz</span>.<br>
+<br>
+LEs directives suivantes d&eacute;crivent l'installation du logiciel.
+L'installation est faite &agrave; partir du r&eacute;pertoire
+sp&eacute;cifi&eacute; dans la variable<span style="font-weight: bold;">
+CMAKE_INSTALL_PREFIX</span>. Pa d&eacute;faut, c'est
+<span style="font-style: italic;">/usr/local</span>:<br>
+<ul>
+  <li><span style="font-style: italic;">pdip</span> est install&eacute;
+dans le sous-r&eacute;pertoire <span style="font-style: italic;">bin</span>
+avec les permissions appropri&eacute;es<br>
+  </li>
+  <li>Les manuels compress&eacute;s sont install&eacute;s dans <span
+ style="font-style: italic;">share/man/...</span></li>
+</ul>
+<span style="font-style: italic;">cmake</span> ne fournit pas de
+facilit&eacute;s pour changer les identifiants de propri&eacute;taire
+et de groupe. On doit indiquer un script &agrave; lancer &agrave; la
+fin de l'installation avec la directive <span
+ style="font-weight: bold;">INSTALL(SCRIPT...)</span>.
+Le script appel&eacute; <span style="font-style: italic;">pdip_chown.cmake</span>
+est &eacute;crit en langage <span style="font-style: italic;">cmake</span>
+et ne fait que changer les propri&eacute;taires et groupes &agrave; la
+valeur "root" en appelant les commandes shell <span
+ style="font-style: italic;">chown</span>
+and <span style="font-style: italic;">chgrp</span> avec la directive <span
+ style="font-weight: bold;">EXECUTE_PROCESS</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">PROJECT(pdip C)<br>
+      <br>
+# Search for gzip program<br>
+INCLUDE (FindGZIP.cmake)<br>
+      <br>
+SET(pdip_src pdip.c)<br>
+SET(pdip_exe pdip)<br>
+SET(pdip_man_src pdip_en.1 pdip_fr.1)<br>
+SET(pdip_man_gz pdip_en.1.gz pdip_fr.1.gz)<br>
+      <br>
+# Compression of the manuals<br>
+FOREACH(man ${pdip_man_src})<br>
+&nbsp; ADD_CUSTOM_COMMAND(OUTPUT ${man}.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMAND
+${GZIP_TOOL}
+-c
+${man}
+&gt;
+${man}.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DEPENDS
+${man}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMENT
+"Building
+${man}.gz")<br>
+ENDFOREACH(man)<br>
+      <br>
+# Compilation options passed to the compiler<br>
+ADD_DEFINITIONS(-g
+-O2 -fsigned-char -freg-struct-return -Wall -W -Wshadow
+-Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline -Werror)<br>
+      <br>
+# Build of the program<br>
+ADD_EXECUTABLE(${pdip_exe} ${pdip_src} ${pdip_man_gz})<br>
+      <br>
+# Installation of the program<br>
+INSTALL(TARGETS pdip<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "bin"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ
+OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)<br>
+      <br>
+# Installation of the manuals<br>
+INSTALL(FILES pdip_fr.1.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "share/man/fr/man1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ RENAME pdip.1.gz)<br>
+INSTALL(FILES pdip_en.1.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "share/man/man1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ RENAME pdip.1.gz)<br>
+      <br>
+# Script to be executed at installation time (kind of post-intallation
+script) to<br>
+# change the right accesses on the installed files<br>
+INSTALL(SCRIPT pdip_chown.cmake)</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"><br>
+</span>
+<h3><a name="pdip_chown.cmake_in_pdip"></a>pdip_chown.cmake dans pdip</h3>
+<span style="font-family: monospace;"><br>
+</span>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"># Copy the files to the
+destination directory</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">EXECUTE_PROCESS(COMMAND
+chown root ${CMAKE_INSTALL_PREFIX}/bin/pdip</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; COMMAND chgrp root ${CMAKE_INSTALL_PREFIX}/bin/pdip</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; COMMAND chown
+root
+${CMAKE_INSTALL_PREFIX}/share/man/fr/man1/pdip.1.gz</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; COMMAND chgrp
+root
+${CMAKE_INSTALL_PREFIX}/share/man/fr/man1/pdip.1.gz</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; COMMAND chown
+root
+${CMAKE_INSTALL_PREFIX}/share/man/man1/pdip.1.gz</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; COMMAND chgrp
+root
+${CMAKE_INSTALL_PREFIX}/share/man/man1/pdip.1.gz)</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br>
+<hr style="width: 100%; height: 2px;"><br>
+<h2><a name="Project_5:_Installation_of_an_executable"></a><span
+ style="text-decoration: underline;">Project 5</span> :
+Installation d'un ex&eacute;cutable et d'une API en librairie
+partag&eacute;e avec les fichiers d'ent&ecirc;te et manuels</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">ROOF</span>
+est compos&eacute; du sous-arbre suivant :<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="text-align: left; vertical-align: middle; background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </span><span style="font-weight: bold; font-family: monospace;">&nbsp;&nbsp;
+&nbsp;<big>roof</big><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+&nbsp;/ &nbsp;
+| &nbsp;\ &nbsp; &nbsp; &nbsp; &nbsp;\<br>
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; /
+&nbsp;&nbsp;&nbsp;| &nbsp; \ &nbsp; &nbsp;
+&nbsp; &nbsp;\<br>
+      </span><span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp; &nbsp;/ &nbsp;
+&nbsp; | &nbsp; &nbsp;\ &nbsp; &nbsp;
+&nbsp;&nbsp; \</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp; / &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; \ &nbsp;
+&nbsp; &nbsp; &nbsp;\</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp; / &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp;\ &nbsp; &nbsp;
+&nbsp;&nbsp; \</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp;&nbsp; / &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp;\</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp;&nbsp; &nbsp;/ &nbsp; &nbsp; &nbsp;
+&nbsp;
+| &nbsp; &nbsp; &nbsp;&nbsp; \ &nbsp; &nbsp;
+&nbsp;&nbsp; \</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+&nbsp; / &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp;
+&nbsp; &nbsp;\</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; </span><span style="font-weight: bold; font-family: monospace;">lib</span><small
+ style="font-family: monospace;"> &nbsp; &nbsp;
+&nbsp; &nbsp;</small><span
+ style="font-weight: bold; font-family: monospace;">client</span><small
+ style="font-family: monospace;"> &nbsp;&nbsp;<span
+ style="font-weight: bold;"><big>include
+&nbsp;&nbsp; man</big></span></small><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp;| &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp;|</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+&nbsp;&nbsp;&nbsp;|&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; |
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;| &nbsp;
+&nbsp; &nbsp; &nbsp;|</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+roof.c &nbsp; &nbsp;&nbsp;&nbsp;main.c &nbsp;
+&nbsp;roof.h &nbsp; &nbsp;roof.1</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;
+roof_p.h &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;roof.3<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;...<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;roof.7</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;">&nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; </span><br>
+Le projet g&eacute;n&egrave;re les cibles suivantes :<br>
+<ul>
+  <li>Une librairie partag&eacute;e appel&eacute;e <span
+ style="font-weight: bold;">libroof.so</span></li>
+  <li>Un ex&eacute;cuatble appel&eacute; <span
+ style="font-weight: bold;">roof</span></li>
+  <li>Un ensemble de manuels en ligne Linux<span
+ style="font-style: italic;"></span></li>
+</ul>
+Le sous-arbre suivant montre les fichiers qui ont &eacute;t&eacute;
+ajout&eacute;s pour contruire le projet.<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="3">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(51, 255, 51); white-space: nowrap;"><span
+ style="font-family: monospace;">&nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; <span style="font-weight: bold;">&nbsp;
+&nbsp; &nbsp; &nbsp;<big>roof</big><br>
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;/ &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; /
+&nbsp; &nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; \ &nbsp; &nbsp;
+&nbsp; &nbsp; \<br>
+      </span>&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;/ &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; &nbsp; / &nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;/ &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp; &nbsp; / &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; \ &nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp; &nbsp;&nbsp;&nbsp;/ &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp;&nbsp;&nbsp; / &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \
+&nbsp; &nbsp; &nbsp; &nbsp; \<br>
+&nbsp;&nbsp;&nbsp;<span style="font-weight: bold;">lib</span><small>
+&nbsp; &nbsp; &nbsp; &nbsp;</small><span style="font-weight: bold;">
+&nbsp; &nbsp;
+&nbsp;client</span><small> &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="font-weight: bold;"><big>include</big>
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; <big>man
+&nbsp; </big></span><a href="#CMakeLists.txt_in_roof_3"><big>CMakeLists.txt</big></a></small><br>
+&nbsp;&nbsp; &nbsp;| &nbsp; &nbsp;
+&nbsp;&nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; &nbsp;| &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; | &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;|<br>
+&nbsp; &nbsp;&nbsp;|&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; |<br>
+&nbsp;&nbsp;roof.c &nbsp; &nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; main.c &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; roof.h &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;roof.1<br>
+&nbsp; roof_p.h &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; </span><a href="#CMakeLists.txt_in_client_3"><span
+ style="font-family: monospace;"><small><big>CMakeLists.txt</big></small></span></a><span
+ style="font-family: monospace;"> &nbsp; <a
+ href="#CMakeLists.txt_in_include_3">CMakeLists.txt</a>&nbsp;
+roof.3<br>
+&nbsp; </span><a href="#CMakeLists.txt_in_lib_3"><span
+ style="font-family: monospace;"><small><big>CMakeLists.txt</big></small></span></a><span
+ style="font-family: monospace;">
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; ...<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;roof.7<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;<a href="#CMakeLists.txt_in_man_3">CMakeLists.txt</a><br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp;<a href="#FindGZIP.cmake_in_man_3">FindGZIP.cmake</a><br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><br>
+<br>
+Quand les fichiers <span style="font-style: italic;">cmake</span> sont
+configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour g&eacute;n&eacute;rer l'environment de g&eacute;n&eacute;ration
+(avec <span style="font-style: italic;">/tmp</span> comme
+r&eacute;pertoire d'installation cible au lieu de <span
+ style="font-style: italic;">/usr/local</span> par d&eacute;faut):<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd roof</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .
+-DCMAKE_INSTALL_PREFIX=/tmp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Configuring
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../roof</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+Ensuite, les makefiles sont pr&ecirc;ts &agrave; d&eacute;clencher la
+g&eacute;n&eacute;ration avec :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 50%]
+Building C object bin/CMakeFiles/roof.dir/roof.o</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Linking C
+shared library libroof.so</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[ 50%] Built
+target roof</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%]
+Building C object bin/CMakeFiles/main.dir/main.o</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Linking C
+executable roof</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">[100%] Built
+target main</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span> <br>
+Pour installer les fichiers dans <span style="font-style: italic;">/tmp</span>,
+il
+suffit
+de
+lancer
+:<br>
+<br style="font-family: monospace;">
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make install<br>
+[&nbsp; 3%] Built target roof<br>
+[&nbsp; 7%] Built target main<br>
+[100%] Built target man<br>
+Install the project...<br>
+-- Install configuration: ""<br>
+-- Install configuration: ""<br>
+-- Installing /tmp/lib/libroof.so.1.0.0<br>
+-- Install configuration: ""<br>
+-- Installing /tmp/bin/roof<br>
+-- Install configuration: ""<br>
+-- Installing /tmp/share/man/man1/roof.1.gz<br>
+-- Installing /tmp/share/man/man3/roof_cwd.3.gz<br>
+-- Installing /tmp/share/man/man3/roof_login.3.gz<br>
+...</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="CMakeLists.txt_in_roof_3"></a>CMakeLists.txt dans roof</h2>
+Le r&eacute;pertoire <span style="font-style: italic;">roof</span> est
+la racine du projet. C'est l'endroit o&ugrave; on lance la commande <span
+ style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On identifie le projet ainsi que le langage de programmation avec la
+directive <span style="font-weight: bold;">PROJECT</span>.<br>
+On sp&eacute;cifie les r&eacute;pertoires o&ugrave; sont
+localis&eacute;s les fichiers d'ent&ecirc;te (<span
+ style="font-style: italic;">include</span> et <span
+ style="font-style: italic;">lib</span>) avec la directive <span
+ style="font-weight: bold;">INCLUDE_DIRECTORIES</span>.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>.
+C'est facultatif de faire cela mais les flags par d&eacute;faut peuvent
+se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On sp&eacute;cifie les r&eacute;pertoires o&ugrave; sont
+localis&eacute;s les fichiers source &agrave; compiler (<span
+ style="font-style: italic;">lib</span>, <span
+ style="font-style: italic;">client</span><span
+ style="font-style: italic;">, man</span> et <span
+ style="font-style: italic;">include</span>) avec la directive <span
+ style="font-weight: bold;">ADD_SUBDIRECTORY</span>. On ne
+sp&eacute;cifie pas de r&eacute;pertoire pour les binaires
+(deuxi&egrave;me param&egrave;tre de <span style="font-weight: bold;">ADD_SUBDIRECTORY</span>)
+car
+on
+a
+&eacute;t&eacute;
+confront&eacute;
+&agrave;
+des
+probl&egrave;mes
+lors
+de
+l'installation
+des
+librairies
+partag&eacute;es
+(Bug
+dans
+<span style="font-style: italic;">cmake</span> ?).<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="white-space: nowrap; background-color: rgb(255, 204, 0);"><span
+ style="font-family: monospace;">PROJECT(roof C)<br>
+      <br>
+INCLUDE_DIRECTORIES(include lib)<br>
+      <br>
+ADD_DEFINITIONS(-g -O2 -fsigned-char -freg-struct-return -Wall -W
+-Wshadow -Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline
+-Werror)<br>
+      <br>
+ADD_SUBDIRECTORY(lib)<br>
+ADD_SUBDIRECTORY(client)<br>
+ADD_SUBDIRECTORY(man)<br>
+ADD_SUBDIRECTORY(include)<br>
+      <br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="CMakeLists.txt_in_lib_3"></a>CMakeLists.txt dans lib</h2>
+Le r&eacute;pertoire <span style="font-style: italic;">lib</span>
+contient tous les fichiers pour faire la librairie partag&eacute;e <span
+ style="font-style: italic;">libroof.so</span>.<br>
+<br>
+On d&eacute;fnit la librairie partag&eacute;e &agrave; construire avec
+la directive <span style="font-weight: bold;">ADD_LIBRARY</span>.
+Cette
+directive re&ccedil;oit en partam&egrave;tres le nom de la librairie (<span
+ style="font-style: italic;">roof</span>) pour g&eacute;n&eacute;rer <span
+ style="font-style: italic;">libroof.so</span>, le mot cl&eacute;<span
+ style="font-style: italic;"> SHARED</span> pour indiquer qu'il s'agit
+d'une librairie partag&eacute;e et la liste des fichiers source
+composant la librairie : <span style="font-style: italic;">roof.c</span>.<br>
+On d&eacute;finit la version de la g&eacute;n&eacute;ration (<span
+ style="font-weight: bold;">VERSION</span>) et la version de l'API
+(<span style="font-weight: bold;">SOVERSION</span>) de la librairie via
+la directive <span style="font-weight: bold;">SET_TARGET_PROPERTIES</span>.<br>
+L'installation de la librairie est sp&eacute;cifi&eacute;e avec la
+directive <span style="font-weight: bold;">INSTALL</span>. On indique
+ici que le r&eacute;pertoire destination dans le sous-arbre
+d'installation est <span style="font-style: italic;">lib</span>. Le
+sous-arbre d'installation est sp&eacute;cifi&eacute; par la variable <span
+ style="font-weight: bold;">CMAKE_INSTALL_PREFIX</span>. Par
+d&eacute;faut, c'est <span style="font-style: italic;">/usr/local</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"># Make shared library
+libroof.so from 'roof.c'<br>
+ADD_LIBRARY(roof SHARED roof.c)<br>
+      <br>
+# Set the build version (VERSION) and the API version (SOVERSION)<br>
+SET_TARGET_PROPERTIES(roof<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PROPERTIES<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+VERSION
+1.0.0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SOVERSION
+1)<br>
+      <br>
+# Installation of the library<br>
+INSTALL(TARGETS roof<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION lib<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)<br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="CMakeLists.txt_in_client_3"></a>CMakeLists.txt dans client</h2>
+Le r&eacute;pertoire <span style="font-style: italic;">client</span>
+contient les fichiers pour g&eacute;n&eacute;rer l'ex&eacute;cutable <span
+ style="font-style: italic;">roof</span>.<br>
+<br>
+On d&eacute;finit d'abord l'ex&eacute;cutable cible <span
+ style="font-style: italic;">roof</span> avec la directive <span
+ style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+On d&eacute;finit la d&eacute;pendance de l'ex&eacute;cutable avec la
+librairie <span style="font-style: italic;"></span> <span
+ style="font-style: italic;">libroof.so</span> avec la directive <span
+ style="font-weight: bold;">TARGET_LINK_LIBRARIES</span>. <span
+ style="color: rgb(255, 0, 0);">Il y a un probl&egrave;me ici car on
+veut g&eacute;n&eacute;rer un ex&eacute;cutable appel&eacute; </span><span
+ style="font-style: italic; color: rgb(255, 0, 0);">roof</span><span
+ style="color: rgb(255, 0, 0);"> et une librairie appel&eacute;e </span><span
+ style="font-style: italic; color: rgb(255, 0, 0);">libroof.so</span>.
+Normalement, la directive devrait s'&eacute;crire :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">ADD_EXECUTABLE(roof)</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">TARGET_LINK_LIBRARIES(roof
+roof)</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span>Mais <span
+ style="font-style: italic;">cmake</span>
+g&eacute;n&egrave;re une erreur :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">CMake Error: Attempt to add
+link target roof of type: EXECUTABLE </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">to target
+roof. You can only link to STATIC or SHARED libraries.</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"><br>
+<br>
+</span>En fait, <span style="font-style: italic;">cmake</span> est
+perturb&eacute; car on lui donne l'impression
+de g&eacute;n&eacute;rer <span style="font-style: italic;">roof</span>
+avec lui m&ecirc;me. D'o&ugrave; l'utilisation du nom
+interm&eacute;diaire <span style="font-style: italic;">main</span>
+dans les directives <span style="font-weight: bold;">TARGET_LINK_LIBRARIES</span>
+et <span style="font-weight: bold;">ADD_EXECUTABLE</span>. Ensuite, on
+indique &agrave;<span style="font-style: italic;"> cmake </span>de
+renommer l'ex&eacute;cutable <span style="font-style: italic;">main</span>
+en
+<span style="font-style: italic;">roof</span> gr&acirc;ce &agrave; la
+directive <span style="font-weight: bold;">SET_TARGET_PROPERTIES</span>.<br>
+<br>
+L'installation du programme est indiqu&eacute;e par la directive <span
+ style="font-weight: bold;">INSTALL</span>. On indique ici que le
+r&eacute;pertoire destination dans le sous-arbre d'installation est <span
+ style="font-style: italic;">bin</span>. Le sous-arbre d'installation
+est sp&eacute;cifi&eacute; par la variable <span
+ style="font-weight: bold;">CMAKE_INSTALL_PREFIX</span>. Par
+d&eacute;faut, c'est <span style="font-style: italic;">/usr/local</span>.<br>
+<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"># 'main' depends on some C
+source files<br>
+ADD_EXECUTABLE(main main.c)<br>
+      <br>
+# 'main' depends on libroof.so<br>
+TARGET_LINK_LIBRARIES(main roof)<br>
+      <br>
+# In the preceding rules, we can't use 'roof' as target name otherwise<br>
+# cmake will return in error with TARGET_LINK_LIBRARIES(roof roof):<br>
+#<br>
+#&nbsp;&nbsp;&nbsp; CMake Error: Attempt to add link target
+roof of type: EXECUTABLE<br>
+#&nbsp;&nbsp;&nbsp; to target roof. You can only link to
+STATIC or SHARED libraries.<br>
+#<br>
+# Hence the SET_TARGET_PROPERTIES to rename main to roof<br>
+#<br>
+SET_TARGET_PROPERTIES(main<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PROPERTIES
+OUTPUT_NAME
+roof)<br>
+      <br>
+# Installation of the program<br>
+INSTALL(TARGETS main<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+RUNTIME<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION bin<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ
+OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="CMakeLists.txt_in_include_3"></a>CMakeLists.txt dans
+include</h2>
+L'installation des fichiers d'ent&ecirc;te est sp&eacute;cifi&eacute;e
+avec la directive <span style="font-weight: bold;">INSTALL</span>. On
+indique ici que le r&eacute;pertoire destination dans le sous-arbre
+d'installation est <span style="font-style: italic;">include</span>.
+Le sous-arbre d'installation est sp&eacute;cifi&eacute; par la variable
+<span style="font-weight: bold;">CMAKE_INSTALL_PREFIX</span>. Par
+d&eacute;faut, c'est <span style="font-style: italic;">/usr/local</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">INSTALL(FILES roof.h<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION include<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)<br>
+      <br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="FindGZIP.cmake_in_man_3"></a>FindGZIP.cmake dans man</h2>
+Comme le projet a besoin d'installer les manuels dans le format
+compress&eacute;, on utilise la directive <span
+ style="font-weight: bold;">FIND_PROGRAM</span>
+pour contr&ocirc;ler la pr&eacute;sence de l'outil <span
+ style="font-style: italic;">gzip</span> (sp&eacute;cifi&eacute;
+apr&egrave;s le mot cl&eacute; <span style="font-weight: bold;">NAMES</span>).
+La
+directive
+re&ccedil;oit
+en
+param&egrave;tres
+la
+liste
+des
+r&eacute;pertoires
+o&ugrave;
+effectuer
+la
+recherche
+(<span style="font-style: italic;">/bin</span>,
+<span style="font-style: italic;">/usr/bin</span> and <span
+ style="font-style: italic;">/usr/local/bin</span>).
+Le r&eacute;sultat de la commande est stock&eacute; dans la variable <span
+ style="font-weight: bold;">GZIP_TOOL</span> qui est pass&eacute; comme
+premier param&egrave;tre &agrave; la directive. Si <span
+ style="font-style: italic;">gzip</span> est trouv&eacute;, son chemin
+est stock&eacute; dans <span style="font-weight: bold;">GZIP_TOOL</span>.
+S'il
+n'est
+pas
+trouv&eacute;,
+<span style="font-weight: bold;">GZIP_TOOL</span> se voit assigner <span
+ style="font-weight: bold;">GZIP_TOOL-NOTFOUND</span>.<br>
+<br>
+Le r&eacute;sultat de la recherche est test&eacute; avec la directive <span
+ style="font-weight: bold;">IF</span> qui retourne<span
+ style="font-weight: bold;"> </span>vrai si la valeur de la variable
+n'est pas vide, <span style="font-weight: bold;">0</span>,
+&nbsp;<span style="font-weight: bold;">N</span>, <span
+ style="font-weight: bold;">NO</span>, <span style="font-weight: bold;">OFF</span>,
+<span style="font-weight: bold;">FALSE</span>, <span
+ style="font-weight: bold;">NOTFOUND</span> ou
+<span style="font-weight: bold;">&lt;variable&gt;-NOTFOUND</span>. Si
+le test est<span style="font-weight: bold;"> </span>faux, un message
+est affich&eacute; via la directive <span style="font-weight: bold;">MESSAGE</span>
+avec un poids positionn&eacute; &agrave; <span
+ style="font-weight: bold;">FATAL_ERROR</span> pour arr&ecirc;ter tout
+processing. <br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">FIND_PROGRAM(GZIP_TOOL</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;NAMES
+gzip</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;PATHS
+/bin</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;/usr/bin</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"> &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;/usr/local/bin</span><span
+ style="font-family: monospace;">)</span><br
+ style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">IF(NOT
+GZIP_TOOL)</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+MESSAGE(FATAL_ERROR "Unable to find 'gzip' program") </span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">ENDIF(NOT
+GZIP_TOOL)</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2><a name="CMakeLists.txt_in_man_3"></a>CMakeLists.txt dans man</h2>
+On inclut d'abord le script <a href="#FindGZIP.cmake_in_man_3">FindGZIP.cmake</a>
+pour v&eacute;rifier la pr&eacute;sence de l'outil <span
+ style="font-style: italic;">gzip</span>.<br>
+On utilise la directive <span style="font-weight: bold;">SET</span>
+pour positionner trois variables avec la liste des sources des manuels.<br>
+Gr&acirc;ce &agrave; la directive <span style="font-weight: bold;">STRING</span>
+de manipulation des cha&icirc;nes de caract&egrave;res, on
+d&eacute;finit trois autres variables contenant la liste des manuels
+compress&eacute;s (suffix <span style="font-style: italic;">.gz</span>).<br>
+Pour chaque manuel source, on utilise <span style="font-weight: bold;">ADD_CUSTOM_COMMAND</span>
+pour g&eacute;n&eacute;rer la commande qui compresse les manuels
+sources.<br>
+On d&eacute;finit la cible <span style="font-style: italic;">man</span>
+&agrave; ajouter &agrave; la g&eacute;n&eacute;ration par d&eacute;faut
+de sorte &agrave; ce qu'elle soit g&eacute;n&eacute;r&eacute;e &agrave;
+chaque fois avec la directive <span style="font-weight: bold;">ADD_CUSTOM_TARGET</span>.
+Mais
+on
+la
+fait
+d&eacute;pendre
+des
+sources
+des
+manuels
+pour
+&eacute;viter
+de
+compresser
+les
+manuels
+&agrave;
+chaque
+fois
+qu'on
+appelle
+<span style="font-style: italic;">make</span>.<br>
+L'installation des manuels compress&eacute;s est
+sp&eacute;cifi&eacute;e avec la directive <span
+ style="font-weight: bold;">INSTALL</span>. On indique ici que le
+r&eacute;pertoire destination dans le sous-arbre d'installation est <span
+ style="font-style: italic;">share/man/manX</span><span
+ style="font-style: italic;"></span>. Le sous-arbre d'installation est
+sp&eacute;cifi&eacute; par la variable <span style="font-weight: bold;">CMAKE_INSTALL_PREFIX</span>.
+Par
+d&eacute;faut,
+c'est
+<span style="font-style: italic;">/usr/local</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"># Search for gzip program<br>
+INCLUDE (FindGZIP.cmake)<br>
+      <br>
+# Lists of source manuals<br>
+SET(roof_man_src_1 roof.1)<br>
+SET(roof_man_src_3 roof_cwd.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_login.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_pwd.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_syst.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_delete.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_mkdir.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_retr.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_type.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_get_debug_level.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_mv.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_rm.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_get_reply.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_new.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_rmdir.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_cdup.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_initialize.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_nlst.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_set_debug_level.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_close_ctrl.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_list.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_open_ctrl.3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+roof_stor.3)<br>
+SET(roof_man_src_7 roof.7)<br>
+      <br>
+# Lists of compressed manuals<br>
+STRING(REGEX REPLACE ".1" ".1.gz" roof_man_gz_1 "${roof_man_src_1}")<br>
+STRING(REGEX REPLACE ".3" ".3.gz" roof_man_gz_3 "${roof_man_src_3}")<br>
+STRING(REGEX REPLACE ".7" ".7.gz" roof_man_gz_7 "${roof_man_src_7}")<br>
+      <br>
+      <br>
+# Compression of the manuals<br>
+FOREACH(man ${roof_man_src_1} ${roof_man_src_3} ${roof_man_src_7})<br>
+&nbsp; ADD_CUSTOM_COMMAND(OUTPUT ${man}.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMAND
+${GZIP_TOOL}
+-c
+${man}
+&gt;
+${man}.gz<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DEPENDS
+${man}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMENT
+"Building
+${man}.gz")<br>
+ENDFOREACH(man)<br>
+      <br>
+# Add the manual generation in the global rules<br>
+ADD_CUSTOM_TARGET(man ALL<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; DEPENDS ${roof_man_gz_1}
+${roof_man_gz_3} ${roof_man_gz_7})<br>
+      <br>
+# Installation of the manuals<br>
+INSTALL(FILES ${roof_man_gz_1}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "share/man/man1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)<br>
+INSTALL(FILES ${roof_man_gz_3}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "share/man/man3"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)<br>
+INSTALL(FILES ${roof_man_gz_7}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DESTINATION "share/man/man7"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)<br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="Project_6:_Packaging_of_a_project"></a><span
+ style="text-decoration: underline;">Projet 6</span> :
+Packaging d'un projet</h2>
+Sur ce <span style="text-decoration: underline;"></span><a
+ href="http://www.cmake.org/HTML/cpack-2.6.html">lien</a>,
+il est expliqu&eacute; comment "packager" un projet. Grosso modo, <span
+ style="font-style: italic;">cmake</span> est associ&eacute; &agrave;
+l'outil <span style="font-style: italic;">CPack</span> pour
+g&eacute;n&eacute;rer les packages. Pour le moment, les packages DEB et
+RPM ne sont pas support&eacute;s. Seuls les formats suivants sont
+support&eacute;s :<br>
+<ul>
+  <li>STGZ: Self extracting Tar GZip compression</li>
+  <li>TBZ2: Tar BZip2 compression</li>
+  <li>TGZ: Tar GZip compression</li>
+  <li>TZ: Tar Compress compression</li>
+  <li>ZIP: ZIP file format</li>
+</ul>
+<br>
+Dans ce projet, on g&eacute;n&egrave;re un package pour le <a
+ href="#Project_5:_Installation_of_an_executable">projet 5</a>. Il
+suffit d'ajouter la directive <span style="font-weight: bold;">INCLUDE(CPack)</span>
+dans le fichier <span style="font-style: italic;">CMakeLists.txt</span>
+racine. De mani&egrave;re optionnelle, il est possible de positionner
+des variables de configuration pour <span style="font-style: italic;">CPack</span>
+telles que <span style="font-weight: bold;">CPACK_PACKAGE_VERSION_MAJOR</span>,
+<span style="font-weight: bold;">CPACK_PACKAGE_VERSION_MINOR</span>,
+<span style="font-weight: bold;">CPACK_PACKAGE_VERSION_PATCH</span>...<span
+ style="font-family: monospace;"><span style="color: rgb(255, 0, 0);"></span></span><br>
+Cela g&eacute;n&egrave;re une nouvelle cible appel&eacute;e <i>package</i>
+dans le syst&egrave;me de build. Quand cette cible est
+g&eacute;n&eacute;r&eacute;e, <span style="font-style: italic;">CPack</span>
+est sollicit&eacute; pour g&eacute;n&eacute;rer tous les packages. En
+interne, <span style="font-style: italic;">CPack</span> utilise les
+directives d'installation de CMake pour construire le package. <br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="white-space: nowrap; background-color: rgb(255, 204, 0);"><span
+ style="font-family: monospace;">PROJECT(roof C)<br>
+      <br>
+INCLUDE_DIRECTORIES(include lib)<br>
+      <br>
+ADD_DEFINITIONS(-g -O2 -fsigned-char -freg-struct-return -Wall -W
+-Wshadow -Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline
+-Werror)<br>
+      <br>
+ADD_SUBDIRECTORY(lib)<br>
+ADD_SUBDIRECTORY(client)<br>
+ADD_SUBDIRECTORY(man)<br>
+ADD_SUBDIRECTORY(include)<br>
+      <br>
+      <span style="color: rgb(255, 0, 0);">SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+"Remote
+Operations
+On
+Files")<br>
+SET(CPACK_PACKAGE_VENDOR "Rachid Koucha")<br>
+#SET(CPACK_PACKAGE_DESCRIPTION_FILE
+"${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")<br>
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")<br>
+SET(CPACK_PACKAGE_VERSION_MAJOR "1")<br>
+SET(CPACK_PACKAGE_VERSION_MINOR "0")<br>
+SET(CPACK_PACKAGE_VERSION_PATCH "0")<br>
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "CMake
+${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")<br>
+#SET(CPACK_STRIP_FILES "bin/MyExecutable")<br>
+#SET(CPACK_SOURCE_STRIP_FILES "")<br>
+SET(CPACK_PACKAGE_EXECUTABLES "roof" "FTP client")<br>
+INCLUDE(CPack)</span><br>
+      <br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Appeler la commande suivante pour g&eacute;n&eacute;rer le package :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="white-space: nowrap; background-color: rgb(255, 204, 0);"><span
+ style="font-family: monospace;">$ make package<br>
+[&nbsp; 3%] Built target roof<br>
+[&nbsp; 7%] Built target main<br>
+[100%] Built target man<br>
+Linking C executable CMakeFiles/CMakeRelink.dir/roof<br>
+Run CPack packaging tool...<br>
+CPack: Create package using STGZ<br>
+CPack: Install projects<br>
+CPack: - Run preinstall target for: roof<br>
+CPack: - Install project: roof<br>
+CPack: Compress package<br>
+CPack: Finalize package<br>
+CPack: Package .../roof/<span style="color: rgb(255, 0, 0);">roof-1.0.0-Linux.sh
+generated</span>.<br>
+CPack: Create package using TGZ<br>
+CPack: Install projects<br>
+CPack: - Run preinstall target for: roof<br>
+CPack: - Install project: roof<br>
+CPack: Compress package<br>
+CPack: Finalize package<br>
+CPack: Package .../roof/<span style="color: rgb(255, 0, 0);">roof-1.0.0-Linux.tar.gz
+generated</span>.<br>
+CPack: Create package using TZ<br>
+CPack: Install projects<br>
+CPack: - Run preinstall target for: roof<br>
+CPack: - Install project: roof<br>
+CPack: Compress package<br>
+CPack: Finalize package<br>
+CPack: Package .../roof/<span style="color: rgb(255, 0, 0);">roof-1.0.0-Linux.tar.Z
+generated</span>.<br>
+      <br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Comme on peut le voir, cela g&eacute;n&egrave;re les packages STGZ, TGZ
+et TZ. Les packages ne contiennent pas les sources mais seulement les
+binaires.<br>
+<br>
+Installation &agrave; partir du package STGZ dans le r&eacute;pertoire <span
+ style="font-style: italic;">/tmp</span> :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="white-space: nowrap; background-color: rgb(255, 204, 0);"><span
+ style="font-family: monospace;">$ ./roof-1.0.0-Linux.sh
+--help<br>
+Usage: ./roof-1.0.0-Linux.sh [options]<br>
+Options: [defaults in brackets after descriptions]<br>
+&nbsp;
+--help&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+print
+this
+message<br>
+&nbsp;
+--prefix=dir&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+directory in which to install<br>
+&nbsp; --include-subdir&nbsp; include the roof-1.0.0-Linux
+subdirectory<br>
+&nbsp; --exclude-subdir&nbsp; exclude the roof-1.0.0-Linux
+subdirectory<br>
+      <br>
+$ ./roof-1.0.0-Linux.sh --prefix=/tmp --exclude-subdir<br>
+roof Installer Version: 1.0.0, Copyright (c) Rachid Koucha<br>
+This is a self-extracting archive.<br>
+The archive will be extracted to: /tmp<br>
+      <br>
+Using target directory: /tmp<br>
+Extracting, please wait...<br>
+      <br>
+Unpacking finished successfully<br>
+$<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<hr style="width: 100%; height: 2px;"><br>
+<h2><span style="text-decoration: underline;"><a
+ name="Project_7:_Generation_of_a_configuration"></a>Projet 7</span> :
+G&eacute;n&eacute;ration d'un fichier de configuration (config.h)<br>
+</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">PROJET7</span>
+est compos&eacute; du sous-arbre suivant (les fichiers sont
+localis&eacute;s <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project7">ici</a>):<br>
+<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td><span style="font-family: monospace;"><span
+ style="font-family: monospace;">&nbsp;</span><span
+ style="font-weight: bold; font-family: monospace;">&nbsp; <span
+ style="font-family: mon;">simple</span><br>
+&nbsp; &nbsp;&nbsp; /\<br>
+      </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;/
+&nbsp;\<br>
+&nbsp; &nbsp;/ &nbsp; &nbsp;\<br style="font-family: monospace;">
+      </span><span style="font-family: monospace;">&nbsp;</span><span
+ style="font-family: monospace;">main.c simple</span><small
+ style="font-family: monospace;"><span style="font-weight: bold;"></span></small><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Le projet
+g&eacute;n&egrave;re une cible : un ex&eacute;cutable appel&eacute; <span
+ style="font-weight: bold;">simple</span>. Tous les fichiers objets
+sont stock&eacute;s dans le r&eacute;pertoire racine du projet<span
+ style="font-style: italic;"></span>.<br>
+<span style="font-family: monospace;"></span>Le fichier <span
+ style="font-style: italic;">main.c</span> a besoin de macros de
+configuration localis&eacute;es dans le fichier d'ent&ecirc;te <span
+ style="font-style: italic;">config.h</span>. Ce dernier sera construit
+automatiquement par <span style="font-style: italic;">cmake</span> car
+il est fait &agrave; partir de variables <span
+ style="font-style: italic;">cmake</span>.<br>
+<br>
+Once
+the cmake files are setup, launch <span style="font-style: italic;">cmake</span>
+to generate the build
+environment:<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto; font-family: monospace;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td>&nbsp;<span style="font-weight: bold;">&nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+simple<br>
+&nbsp; &nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /
+&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; \ &nbsp;
+&nbsp; &nbsp;&nbsp; \<br>
+&nbsp; &nbsp; &nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; |&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\ &nbsp; &nbsp; &nbsp;&nbsp; \<br>
+      </span>&nbsp; &nbsp; /
+&nbsp; &nbsp;&nbsp;&nbsp; /&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;
+&nbsp; &nbsp;&nbsp; \<br>
+&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; / &nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp; &nbsp;
+&nbsp;&nbsp; \<br>
+main.c&nbsp; <a href="#config.h_in_project7">config.h</a>&nbsp; <a
+ href="#config.h.cmake_in_project7">config.h.cmake</a>&nbsp; simple
+&nbsp;<a href="#CMakeLists.txt_in_project7">CMakeLists.txt</a><small><span
+ style="font-weight: bold;"></span></small><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Quand les fichiers <span
+ style="font-style: italic;">cmake</span>
+sont configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er l'environnement de g&eacute;n&eacute;ration :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd simple</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Configuring
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Generating
+done</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Build files
+have been written to: .../simple</span></td>
+    </tr>
+  </tbody>
+</table>
+<br style="font-family: monospace;">
+Ainsi, les makefiles sont pr&ecirc;ts pour g&eacute;n&eacute;rer le
+projet :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Scanning
+dependencies of target simple<br>
+[100%] Building C object CMakeFiles/simple.dir/main.o<br>
+Linking C executable simple<br>
+[100%] Built target simple<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="CMakeLists.txt_in_project7"></a>CMakeLists.txt dans projet7</h3>
+<span style="font-style: italic;">project7 </span>est le
+r&eacute;pertoire racine du projet. C'est l'endroit o&ugrave; on
+lance la commande <span style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On d&eacute;finit la version minimum de cmake qu'on supporte pour ce
+projet via la directive <span style="font-weight: bold;">CMAKE_MINIMUM_REQUIRED</span>.<br>
+On identifie le projet et le langage de programmation avec la directive
+<span style="font-weight: bold;">PROJECT</span>.<br>
+Gr&acirc;ce &agrave; la directive <span style="font-weight: bold;">SET</span>,
+on
+d&eacute;finit
+quelques
+variables
+(<span style="font-style: italic;">PROJECT_NAME,
+SIMPLE_VERSION</span>) qui vont &ecirc;tre utilis&eacute;e pour faire
+le fichier<span style="text-decoration: underline;"><span
+ style="font-style: italic;"> </span></span><a
+ href="#config.h_in_project7"><span style="font-style: italic;">config.h</span></a>.<br>
+On construit le fichier d'ent&ecirc;te <a href="#config.h_in_project7"><span
+ style="font-style: italic;">config.h</span></a> via la directive <span
+ style="font-weight: bold;">CONFIGURE_FILE</span>. On lui passe un
+fichier squelette (<a href="#config.h.cmake_in_project7"><span
+ style="font-style: italic;">config.h.cmake</span></a>) qui sera
+converti en <a href="#config.h_in_project7"><span
+ style="font-style: italic;">config.h</span></a> par des
+substitutions.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>. C'est facultatif de
+faire cela mais les flags par d&eacute;faut peuvent se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On d&eacute;finit la cible <span style="font-style: italic;">simple</span>
+avec la directive <span style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">CMAKE_MINIMUM_REQUIRED(VERSION 2.6)<br>
+      <br>
+PROJECT(project7 C)<br>
+      <br>
+SET(PROJECT_NAME SIMPLE)<br>
+      <br>
+SET(SIMPLE_MAJOR 1)<br>
+SET(SIMPLE_MINOR 8)<br>
+SET(SIMPLE_PATCH 6)<br>
+SET(SIMPLE_VERSION ${SIMPLE_MAJOR}.${SIMPLE_MINOR}.${SIMPLE_PATCH})<br>
+      <br>
+      <br>
+CONFIGURE_FILE(<a href="#config.h.cmake_in_project7">config.h.cmake</a>
+      <a href="#config.h_in_project7">config.h</a>)<br>
+      <br>
+ADD_DEFINITIONS(-g -O2 -fsigned-char -freg-struct-return -Wall -W
+-Wshadow -Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline
+-Werror)<br>
+      <br>
+ADD_EXECUTABLE(simple main.c)<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<h3><a name="config.h.cmake_in_project7"></a>config.h.cmake dans projet7</h3>
+Ce fichier est le squelette de <a href="#config.h_in_project7"><span
+ style="font-style: italic;">config.h</span></a> : toutes les
+cha&icirc;ne encadr&eacute;es par le caract&egrave;re @ (e.g.
+@PROJECT_NAME@) seront substitu&eacute;es par les variables <span
+ style="font-style: italic;">cmake</span> de m&ecirc;me nom (e.g.
+${PROJECT_NAME}).<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+// File&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : config.h<br>
+// Description : Configuration of <span
+ style="color: rgb(255, 0, 0); font-weight: bold;">@PROJECT_NAME@</span><br>
+//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+      <br>
+#ifndef CONFIG_H<br>
+#define CONFIG_H<br>
+      <br>
+//---------------------------------------------------------------------------<br>
+// Name : SIMPLE_VERSION<br>
+// Usage: Version of </span><span style="font-family: monospace;"><span
+ style="color: rgb(255, 0, 0); font-weight: bold;">@PROJECT_NAME@</span></span><br>
+      <span style="font-family: monospace;">//----------------------------------------------------------------------------<br>
+#define SIMPLE_VERSION "<span
+ style="font-weight: bold; color: rgb(255, 0, 0);">@SIMPLE_VERSION@</span>"<br>
+      <br>
+#endif // CONFIG_H<br>
+      <br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<h3><a name="config.h_in_project7"></a>config.h dans projet7</h3>
+Le fichier <a href="#config.h_in_project7"><span
+ style="font-style: italic;">config.h</span></a> est le r&eacute;sultat
+des
+substitutions faites par la directive <span style="font-weight: bold;">CONFIGURE_FILE</span>
+dans le fichier <a style="font-style: italic;"
+ href="#config.h.cmake_in_project7">config.h.cmake</a>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+// File&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : config.h<br>
+// Description : Configuration of <span
+ style="font-weight: bold; color: rgb(255, 0, 0);">SIMPLE</span><br>
+//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+      <br>
+#ifndef CONFIG_H<br>
+#define CONFIG_H<br>
+      <br>
+//---------------------------------------------------------------------------<br>
+// Name : SIMPLE_VERSION<br>
+// Usage: Version of <span
+ style="font-weight: bold; color: rgb(255, 0, 0);">SIMPLE</span><br>
+//----------------------------------------------------------------------------<br>
+#define SIMPLE_VERSION "<span
+ style="font-weight: bold; color: rgb(255, 0, 0);">1.8.6</span>"<br>
+      <br>
+#endif // CONFIG_H<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<hr style="width: 100%; height: 2px;">
+<h2><span style="text-decoration: underline;"><a
+ name="Projet_8_:_Generation_dun_programme"></a>Projet 8</span> :
+G&eacute;n&eacute;ration d'un programme Linux et de son module kernel</h2>
+Le projet appel&eacute; <span style="font-weight: bold;">PROJECT8</span>
+est compos&eacute; du sous-arbre suivant (les fichiers sont
+localis&eacute;s <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project8">ici</a>):<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto; font-family: monospace;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td> &nbsp;<span style="font-weight: bold;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+project8<br>
+      </span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;
+\<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; / &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp; \<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp; \<span style="font-weight: bold;"></span><br>
+      <span style="font-weight: bold;"></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;
+&nbsp;
+\<br>
+      <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project8/udp_console_u.c">udp_console_u.c</a>
+      <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project8/udp_console_k.c">udpc_console_k.c</a>
+udpc <a href="#Kbuild_in_project8">Kbuild</a> udpc.ko </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"><span
+ style="font-family: monospace;"></span></span>Le projet
+g&eacute;n&egrave;re une cible : un ex&eacute;cutable en espace
+utilisateur appel&eacute; <span style="font-weight: bold;">udpc</span>
+et un module kernel <span style="font-weight: bold;">udpc.ko</span>.
+Tous les objets sont stock&eacute;s dans le m&ecirc;me r&eacute;pertoire<span
+ style="font-style: italic;"></span>. Le fichier <span
+ style="font-style: italic;">udpc_console_u.c</span> a besoin de macros
+de configuration localis&eacute;s dans le fichier d'ent&ecirc;te <span
+ style="font-style: italic;">config.h</span>. Ce dernier est construit
+automatiquement par <span style="font-style: italic;">cmake</span> car
+fabriqu&eacute; gr&acirc;ce &agrave; quelques variables <span
+ style="font-style: italic;">cmake</span>.<br>
+<br>
+Le sous-arbre suivant montre les fichiers ajout&eacute;s pour
+construire le projet.<br>
+<br>
+<table
+ style="background-color: rgb(51, 255, 51); text-align: left; margin-left: auto; margin-right: auto; font-family: monospace;"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td>&nbsp;<span style="font-weight: bold;">&nbsp; &nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;&nbsp;
+&nbsp;&nbsp;
+project8<br>
+      </span><span style="font-family: monospace;">&nbsp;
+&nbsp;&nbsp;&nbsp; /
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/
+&nbsp;&nbsp;
+&nbsp;&nbsp;
+&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;
+&nbsp;&nbsp;
+&nbsp;&nbsp;
+&nbsp;
+\
+&nbsp;&nbsp;
+&nbsp;&nbsp;
+&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; &nbsp;
+&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;
+&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;
+&nbsp;
+\
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; &nbsp; /
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; /&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp; &nbsp;
+&nbsp; &nbsp;&nbsp; \&nbsp; &nbsp;
+&nbsp; &nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp; /
+&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; /
+&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; |
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; \&nbsp; &nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; \</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\<br style="font-family: monospace;">
+      <span style="font-family: monospace;"><a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project8/udp_console_u.c">udpc_console_u.c</a>&nbsp;&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_projects/project8/udp_console_k.c">udpc_console_k.c</a>&nbsp;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </span><a style="font-family: monospace;"
+ href="#config.h.cmake_in_project8">config.h.cmake</a><span
+ style="font-family: monospace;">&nbsp;&nbsp; udpc&nbsp;&nbsp; &nbsp; <a
+ href="#Kbuild_in_project8">Kbuild</a>&nbsp;&nbsp;&nbsp;
+udpc.ko&nbsp; </span><a style="font-family: monospace;"
+ href="#CMakeLists.txt_in_project8">CMakeLists.txt</a><br
+ style="font-family: monospace;">
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+Quand les fichiers <span style="font-style: italic;">cmake</span>
+sont configur&eacute;s, lancer <span style="font-style: italic;">cmake</span>
+pour cr&eacute;er l'environnement de g&eacute;n&eacute;ration :<span
+ style="font-style: italic;"></span><br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ cd project8</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">$ cmake .</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">-- Building UDPC version
+1.0.0<br>
+-- Configuring done<br>
+-- Generating done<br>
+-- Build files have been written to: .../project8<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+Ainsi, les makefiles sont pr&ecirc;ts pour g&eacute;n&eacute;rer le
+projet :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make</span><br
+ style="font-family: monospace;">
+      <span style="font-family: monospace;">Scanning dependencies of
+target kudpc<br>
+[&nbsp; 0%] Building udpc.ko<br>
+[ 50%] Built target kudpc<br>
+Scanning dependencies of target udpc<br>
+[100%] Building C object CMakeFiles/udpc.dir/udp_console_u.o<br>
+Linking C executable udpc <br>
+[100%] Built target udpc<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-style: italic;"></span><br>
+Ensuite, il est possible de faire le m&eacute;nage en effa&ccedil;ant
+tous les fichiers g&eacute;n&eacute;r&eacute;s par l'environnement <span
+ style="font-style: italic;">cmake</span> avec la commande suivante :<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">$ make clean</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="CMakeLists.txt_in_project8"></a>CMakeLists.txt dans
+project8</h3>
+<span style="font-style: italic;">project8</span> est le
+r&eacute;pertoire racine du projet. C'est l'endroit o&ugrave; on
+lance la commande <span style="font-style: italic;">cmake</span>.<br>
+<br>
+C'est le <span style="font-style: italic;">CMakeLists.txt</span>
+racine du projet.<br>
+On d&eacute;finit la version minimum de cmake qu'on supporte pour ce
+projet via la directive <span style="font-weight: bold;">CMAKE_MINIMUM_REQUIRED</span>.<br>
+On identifie le projet et le langage de programmation avec la directive
+<span style="font-weight: bold;">PROJECT</span>.<br>
+Gr&acirc;ce &agrave; la directive <span style="font-weight: bold;">SET</span>,
+on
+d&eacute;finit
+quelques
+variables
+(<span style="font-style: italic;">PROJECT_NAME, UDPC_VERSION</span>)
+qui vont &ecirc;tre utilis&eacute;e pour faire
+le fichier<span style="text-decoration: underline;"><span
+ style="font-style: italic;"> </span></span><a
+ href="#config.h_in_project8"><span style="font-style: italic;">config.h</span></a>.<br>
+On construit le fichier d'ent&ecirc;te <a href="#config.h_in_project8"><span
+ style="font-style: italic;">config.h</span></a> via la directive <span
+ style="font-weight: bold;">CONFIGURE_FILE</span>. On lui passe un
+fichier squelette (<a href="#config.h.cmake_in_project8"><span
+ style="font-style: italic;">config.h.cmake</span></a>) qui sera
+converti en <a href="#config.h_in_project8"><span
+ style="font-style: italic;">config.h</span></a> par des
+substitutions.<br>
+On d&eacute;finit les flags qui vont &ecirc;tre pass&eacute;s en
+argument au compilateur via la directive <span
+ style="font-weight: bold;">ADD_DEFINITIONS</span>. C'est facultatif de
+faire cela mais les flags par d&eacute;faut peuvent se
+r&eacute;v&eacute;ler insuffisamment s&eacute;v&egrave;res pour
+d&eacute;tecter les warnings et les erreurs.<br>
+On d&eacute;finit la cible <span style="font-style: italic;">udpc</span>
+avec la directive <span style="font-weight: bold;">ADD_EXECUTABLE</span>.<br>
+Pour construire le module kernel:<br>
+<ul>
+  <li>On obtient la version du syst&egrave;me Linux courant par la
+commande "<span style="font-style: italic;">uname -r</span>"
+gr&acirc;ce &agrave; la directive <span style="font-weight: bold;">EXECUTE_PROCESS</span>.
+On
+utilise
+le
+drapeau
+
+
+
+
+
+
+
+
+
+
+    <span style="font-weight: bold;">OUTPUT_STRIP_TRAILING_WHITESPACE</span>
+pour enlever la fin de ligne du
+r&eacute;sultat de la commande.<br>
+  </li>
+  <ul>
+    <li>La version du syst&egrave;me Linux courant est utilis&eacute;e
+pour fabriquer le r&eacute;pertoire kbuild de Linux qu'on stocke&nbsp;
+dans la variable <span style="font-weight: bold;">module_build_path</span>
+    </li>
+  </ul>
+  <li>On d&eacute;finit la cible du module kernel Linux (directive <span
+ style="font-weight: bold;">ADD_CUSTOM_TARGET</span>) et la
+mani&egrave;re de la construire avec la directive <span
+ style="font-weight: bold;">ADD_CUSTOM_COMMAND</span>.Cette directive
+liuste aussi les d&eacute;pendances (<span style="font-weight: bold;">DEPENDS</span>)
+de
+la
+cible
+pour
+ne
+d&eacute;clencher
+la
+g&eacute;n&eacute;ration
+qu'&agrave;
+partir
+du
+moment
+o&ugrave;
+le
+fichier<span style="font-weight: bold;"> </span><span
+ style="font-style: italic;">udp_console_k.c</span>
+ou <span style="font-style: italic;">Kbuild</span> a &eacute;t&eacute;
+modifi&eacute;. La directive <span style="font-weight: bold;">COMMENT</span>
+est utile pour que cmake affiche la cha&icirc;ne "Building udpc.ko"
+quand la commande est d&eacute;clench&eacute;e. Le fichier <a
+ href="#Kbuild_in_project8"><span style="font-style: italic;">Kbuild</span></a>
+permet &agrave; cette commande de construire le module kernel comme
+expliqu&eacute; dans la documentation des sources du syst&egrave;me
+Linux (<span style="font-style: italic;">.../Documentation/kbuild/kbuild.txt</span>)<br>
+  </li>
+</ul>
+Ensuite le module kernel et l'ex&eacute;cutable sont install&eacute;s
+par la directive <span style="font-weight: bold;">INSTALL</span>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">cmake_minimum_required(VERSION 2.4)<br>
+      <br>
+PROJECT(udpc C)<br>
+      <br>
+SET(PROJECT_NAME UDPC)<br>
+      <br>
+# Version number<br>
+SET(UDPC_MAJOR 1)<br>
+SET(UDPC_MINOR 0)<br>
+SET(UDPC_PATCH 0)<br>
+SET(UDPC_VERSION ${UDPC_MAJOR}.${UDPC_MINOR}.${UDPC_PATCH})<br>
+      <br>
+      <br>
+MESSAGE(STATUS "Building UDPC version ${UDPC_VERSION}")<br>
+      <br>
+CONFIGURE_FILE(config.h.cmake config.h)<br>
+      <br>
+      <br>
+SET(udpc_src udp_console_u.c)<br>
+SET(udpc_exe udpc)<br>
+      <br>
+ADD_DEFINITIONS(-g -O2 -fsigned-char -freg-struct-return -Wall -W
+-Wshadow -Wstrict-prototypes -Wpointer-arith -Wcast-qual -Winline
+-Werror)<br>
+      <br>
+# Build of the program<br>
+ADD_EXECUTABLE(${udpc_exe} ${udpc_src})<br>
+      <br>
+# Build the module<br>
+EXECUTE_PROCESS(COMMAND uname -r<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+OUTPUT_VARIABLE
+os_release<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+OUTPUT_STRIP_TRAILING_WHITESPACE)<br>
+SET(module_path /lib/modules/${os_release})<br>
+SET(module_build_path ${module_path}/build)<br>
+      <br>
+ADD_CUSTOM_COMMAND(OUTPUT udpc.ko<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMAND
+make
+-C
+${module_build_path}
+M=`pwd`<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+DEPENDS
+udp_console_k.c
+Kbuild<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+COMMENT
+"Building
+udpc.ko"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)<br>
+      <br>
+ADD_CUSTOM_TARGET(kudpc ALL DEPENDS udpc.ko)<br>
+      <br>
+      <br>
+# Installation of the module<br>
+SET(module_install_path ${module_path}/kernel)<br>
+INSTALL(FILES udpc.ko<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DESTINATION
+${module_install_path}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PERMISSIONS OWNER_READ
+OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)<br>
+      <br>
+# Installation of the program<br>
+INSTALL(TARGETS udpc<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DESTINATION "bin"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PERMISSIONS OWNER_READ
+OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<h3><a name="config.h.cmake_in_project8"></a>config.h.cmake dans
+project8</h3>
+Ce fichier est le squelette de <a href="#config.h_in_project8"><span
+ style="font-style: italic;">config.h</span></a> : Toutes les
+cha&icirc;nes encadr&eacute;es par le caract&egrave;re @ (e.g.
+@PROJECT_NAME@) sont substitu&eacute;es par les variable <span
+ style="font-style: italic;">cmake</span> du m&ecirc;me nom (e.g.
+${PROJECT_NAME}).<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;">//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+// File&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : config.h<br>
+// Description : Configuration of <span style="color: rgb(255, 0, 0);">@PROJECT_NAME@</span><br>
+// License&nbsp;&nbsp;&nbsp;&nbsp; :<br>
+//<br>
+//&nbsp; Copyright (C) 2011 Rachid Koucha &lt;rachid dot koucha at free
+dot fr&gt;<br>
+//<br>
+//<br>
+//&nbsp; This program is free software: you can redistribute it and/or
+modify<br>
+//&nbsp; it under the terms of the GNU General Public License as
+published by<br>
+//&nbsp; the Free Software Foundation, either version 3 of the License,
+or<br>
+//&nbsp; (at your option) any later version.<br>
+//<br>
+//&nbsp; This program is distributed in the hope that it will be useful,<br>
+//&nbsp; but WITHOUT ANY WARRANTY; without even the implied warranty of<br>
+//&nbsp; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.&nbsp; See
+the<br>
+//&nbsp; GNU General Public License for more details.<br>
+//<br>
+//&nbsp; You should have received a copy of the GNU General Public
+License<br>
+//&nbsp; along with this program.&nbsp; If not, see
+&lt;http://www.gnu.org/licenses/&gt;.<br>
+//<br>
+//<br>
+// Evolutions&nbsp; :<br>
+//<br>
+//&nbsp;&nbsp;&nbsp;&nbsp; 25-Jan-2011&nbsp; R.
+Koucha&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -
+Creation<br>
+//<br>
+//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+      <br>
+#ifndef CONFIG_H<br>
+#define CONFIG_H<br>
+      <br>
+//---------------------------------------------------------------------------<br>
+// Name : <span style="color: rgb(255, 0, 0);">@PROJECT_NAME@</span>_VERSION<br>
+// Usage: Version of <span style="color: rgb(255, 0, 0);">@PROJECT_NAME@</span><br>
+//----------------------------------------------------------------------------<br>
+#define <span style="color: rgb(255, 0, 0);">@PROJECT_NAME@</span>_VERSION
+"<span style="color: rgb(255, 0, 0);">@UDPC_VERSION@</span>"<br>
+      <br>
+#endif // CONFIG_H<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"></span><br>
+<h3><a name="config.h_in_project8"></a>config.h dans project8</h3>
+The file <span style="font-style: italic;">config.h</span> is the
+result of the
+substitutions done by the directive <span style="font-weight: bold;">CONFIGURE_FILE</span>
+into the file <a style="font-style: italic;"
+ href="#config.h_in_project8">config.h.cmake</a>.<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;">//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+// File&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : config.h<br>
+// Description : Configuration of <span style="color: rgb(255, 0, 0);">UDPC</span><br>
+// License&nbsp;&nbsp;&nbsp;&nbsp; :<br>
+//<br>
+//&nbsp; Copyright (C) 2011 Rachid Koucha &lt;rachid dot koucha at free
+dot fr&gt;<br>
+//<br>
+//<br>
+//&nbsp; This program is free software: you can redistribute it and/or
+modify<br>
+//&nbsp; it under the terms of the GNU General Public License as
+published by<br>
+//&nbsp; the Free Software Foundation, either version 3 of the License,
+or<br>
+//&nbsp; (at your option) any later version.<br>
+//<br>
+//&nbsp; This program is distributed in the hope that it will be useful,<br>
+//&nbsp; but WITHOUT ANY WARRANTY; without even the implied warranty of<br>
+//&nbsp; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.&nbsp; See
+the<br>
+//&nbsp; GNU General Public License for more details.<br>
+//<br>
+//&nbsp; You should have received a copy of the GNU General Public
+License<br>
+//&nbsp; along with this program.&nbsp; If not, see
+&lt;http://www.gnu.org/licenses/&gt;.<br>
+//<br>
+//<br>
+// Evolutions&nbsp; :<br>
+//<br>
+//&nbsp;&nbsp;&nbsp;&nbsp; 25-Jan-2011&nbsp; R.
+Koucha&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -
+Creation<br>
+//<br>
+//
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>
+      <br>
+#ifndef CONFIG_H<br>
+#define CONFIG_H<br>
+      <br>
+//---------------------------------------------------------------------------<br>
+// Name : <span style="color: rgb(255, 0, 0);">UDPC</span>_VERSION<br>
+// Usage: Version of <span style="color: rgb(255, 0, 0);">UDPC</span><br>
+//----------------------------------------------------------------------------<br>
+#define <span style="color: rgb(255, 0, 0);">UDPC</span>_VERSION "<span
+ style="color: rgb(255, 0, 0);">1.0.0</span>"<br>
+      <br>
+#endif // CONFIG_H<br>
+      </span><span style="font-family: monospace;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h3><a name="Kbuild_in_project8"></a>Kbuild dans project8</h3>
+Le fichier <span style="text-decoration: underline;"><span
+ style="font-style: italic;"></span></span><a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_manual.html#Kbuild_in_project8"><span
+ style="font-style: italic;"></span></a> <span
+ style="font-style: italic;">Kbuild</span> comme expliqu&eacute; dans
+la documentation du syst&egrave;me Linux (<span
+ style="font-style: italic;">.../Documentation/kbuild/kbuild.txt</span>)
+sert
+&agrave;
+construire
+le
+module
+kernel
+Linux
+:<br>
+<br>
+<table style="text-align: left; background-color: rgb(255, 204, 0);"
+ border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td
+ style="background-color: rgb(255, 204, 0); white-space: nowrap;"><span
+ style="font-family: monospace;"># Driver for the UDP based Linux
+console<br>
+obj-m += udpc.o<br>
+udpc-objs := udp_console_k.o</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="Freeware_projects_using_cmake"></a>Projets libres
+utilisant
+cmake</h2>
+Voici des liens sur des logiciels utilisant cmake:<br>
+<ul>
+  <li><a href="http://roof.sourceforge.net/">roof</a></li>
+  <li><a href="http://cmdline.sourceforge.net/">cmdline</a></li>
+  <li><a href="http://pdip.sourceforge.net/">pdip</a></li>
+  <li><a href="http://udpc.sourceforge.net/">udpc</a><br>
+  </li>
+</ul>
+<h2><a name="Resources"></a>Ressources</h2>
+<ul>
+  <li><a href="http://www.cmake.org">Site WEB de cmake</a></li>
+  <li><a
+ href="http://rachid.koucha.free.fr/tech_corner/cmake_manual.html">Cet
+article en anglais</a><br>
+  </li>
+  <li>Manuel en ligne de cmake - man 1 cmake</li>
+  <li>Manuel en ligne de cpack - man 1 cpack</li>
+  <li>GNU Linux Magazine num&eacute;ro 108: CMake et vos
+biblioth&egrave;ques <a
+ href="http://www.gnulinuxmag.com/index.php?2007/02/26/48-gnu-linux-magazine-92-mars-2007-en-kiosque"><img
+ style="border: 0px solid ; width: 100px; height: 31px;" alt="GLMF logo"
+ src="glmf_logo.gif"></a></li>
+  <li>GNU Linux Magazine num&eacute;ro 105: Quelques exemples
+d&#8217;utilisation de CMake <a
+ href="http://www.gnulinuxmag.com/index.php?2007/02/26/48-gnu-linux-magazine-92-mars-2007-en-kiosque"><img
+ style="border: 0px solid ; width: 100px; height: 31px;" alt="GLMF logo"
+ src="glmf_logo.gif"></a></li>
+  <li>GNU Linux Magazine num&eacute;ro 92: CMake : la rel&egrave;ve
+dans la construction de projet <a
+ href="http://www.gnulinuxmag.com/index.php?2007/02/26/48-gnu-linux-magazine-92-mars-2007-en-kiosque"><img
+ style="border: 0px solid ; width: 100px; height: 31px;" alt="GLMF logo"
+ src="glmf_logo.gif"></a></li>
+  <li>Builds et tests, Utilisation de CMake et de Dart - <a
+ href="http://www.irisa.fr/lagadic/pdf/2006_cmake_code&amp;travaux_spindler.pdf">http://www.irisa.fr/lagadic/pdf/2006_cmake_code&amp;travaux_spindler.pdf</a></li>
+  <li><a href="http://kernigh.pbwiki.com/CMake">kernigh's
+personal wiki</a></li>
+</ul>
+<h2><a name="About_the_author"></a>A propos de l'auteur</h2>
+L'auteur est un ing&eacute;nieur en informatique bas&eacute; en France.
+Il peut &ecirc;tre contact&eacute; <a
+ href="http://rachid.koucha.free.fr/contact/contact.html">ici</a> ou
+vous pouvez consulter son <a href="http://rachid.koucha.free.fr/">site
+WEB</a>.<br>
+<br>
+<table
+ style="text-align: left; margin-left: auto; margin-right: auto; background-color: rgb(153, 255, 255);">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div style="text-align: right;"><small><a
+ href="http://rachid.koucha.free.fr/index.html">Retour &agrave; la page
+principale</a></small><br>
+<small><a href="http://rachid.koucha.free.fr/documents_techniques.html">Retour
+&agrave;
+la
+page
+pr&eacute;c&eacute;dente</a></small><small><br>
+<br>
+</small></div>
+</body>
+</html>

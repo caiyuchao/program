@@ -1,0 +1,15 @@
+kernel//root/program/c/kernel/hello-1.ko
+kernel//root/program/c/kernel/hello-2.ko
+kernel//root/program/c/kernel/hello-3.ko
+kernel//root/program/c/kernel/hello-4.ko
+kernel//root/program/c/kernel/hello-5.ko
+kernel//root/program/c/kernel/startstop.ko
+kernel//root/program/c/kernel/startstop.ko
+kernel//root/program/c/kernel/chardev.ko
+kernel//root/program/c/kernel/procfs.ko
+kernel//root/program/c/kernel/procfs-2.ko
+kernel//root/program/c/kernel/chardev-2.ko
+kernel//root/program/c/kernel/sleep.ko
+kernel//root/program/c/kernel/print_string.ko
+kernel//root/program/c/kernel/kbleds.ko
+kernel//root/program/c/kernel/kset-example.ko

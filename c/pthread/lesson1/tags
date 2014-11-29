@@ -1,0 +1,100 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CFLAGS	makefile	/^CFLAGS= -lpthread$/;"	m
+DEF_MODE	csapp.h	30;"	d
+DEF_UMASK	csapp.h	31;"	d
+LISTENQ	csapp.h	57;"	d
+MAXBUF	csapp.h	56;"	d
+MAXLINE	csapp.h	55;"	d
+NUM_WORKERS	thread4.bk.c	81;"	d	file:
+NUM_WORKERS	thread4.c	64;"	d	file:
+RIO_BUFSIZE	csapp.h	41;"	d
+SA	csapp.h	/^typedef struct sockaddr SA;$/;"	t	typeref:struct:sockaddr
+__CSAPP_H__	csapp.h	3;"	d
+active	control.h	/^  int active;$/;"	m	struct:data_control
+cleanup	thread4.bk.c	/^  queue cleanup;$/;"	m	struct:cleanup_queue	file:
+cleanup	thread4.c	/^  queue cleanup;$/;"	m	struct:cleanup_queue	file:
+cleanup_node	thread4.bk.c	/^typedef struct cleanup_node {$/;"	s	file:
+cleanup_node	thread4.c	/^typedef struct cleanup_node {$/;"	s	file:
+cleanup_queue	thread4.bk.c	/^struct cleanup_queue {$/;"	s	file:
+cleanup_queue	thread4.c	/^struct cleanup_queue {$/;"	s	file:
+cleanup_structs	thread4.bk.c	/^void cleanup_structs(void) {$/;"	f
+cleanup_structs	thread4.c	/^void cleanup_structs(void) {$/;"	f
+cnode	thread4.bk.c	/^} cnode;$/;"	t	typeref:struct:cleanup_node	file:
+cnode	thread4.c	/^} cnode;$/;"	t	typeref:struct:cleanup_node	file:
+cond	control.h	/^  pthread_cond_t cond;$/;"	m	struct:data_control
+control	thread4.bk.c	/^  data_control control;$/;"	m	struct:cleanup_queue	file:
+control	thread4.bk.c	/^  data_control control;$/;"	m	struct:work_queue	file:
+control	thread4.c	/^  data_control control;$/;"	m	struct:cleanup_queue	file:
+control	thread4.c	/^  data_control control;$/;"	m	struct:work_queue	file:
+control_activate	control.c	/^int control_activate(data_control *mycontrol) {$/;"	f
+control_deactivate	control.c	/^int control_deactivate(data_control *mycontrol) {$/;"	f
+control_destroy	control.c	/^int control_destroy(data_control *mycontrol) {$/;"	f
+control_init	control.c	/^int control_init(data_control *mycontrol) {$/;"	f
+cq	thread4.bk.c	/^} cq;$/;"	v	typeref:struct:cleanup_queue
+cq	thread4.c	/^} cq;$/;"	v	typeref:struct:cleanup_queue
+create_threads	thread4.bk.c	/^int create_threads(void) {$/;"	f
+create_threads	thread4.c	/^int create_threads(void) {$/;"	f
+dabort	dbug.h	1;"	d
+data_control	control.h	/^typedef struct data_control {$/;"	s
+data_control	control.h	/^} data_control;$/;"	t	typeref:struct:data_control
+handler_t	csapp.h	/^typedef void handler_t(int);$/;"	t
+head	queue.h	/^  node *head, *tail; $/;"	m	struct:queue
+initialize_structs	thread4.bk.c	/^void initialize_structs(void) {$/;"	f
+initialize_structs	thread4.c	/^void initialize_structs(void) {$/;"	f
+jobnum	thread4.bk.c	/^  int jobnum;$/;"	m	struct:work_node	file:
+jobnum	thread4.c	/^  int jobnum;$/;"	m	struct:work_node	file:
+join_threads	thread4.bk.c	/^void join_threads(void) {$/;"	f
+join_threads	thread4.c	/^void join_threads(void) {$/;"	f
+main	thread1.c	/^int main(void) {$/;"	f
+main	thread2.c	/^int main(void) {$/;"	f
+main	thread3.c	/^int main(void) {$/;"	f
+main	thread4.bk.c	/^int main(void) {$/;"	f
+main	thread4.c	/^int main(void) {$/;"	f
+mutex	control.h	/^  pthread_mutex_t mutex;$/;"	m	struct:data_control
+myglobal	thread2.c	/^int myglobal;$/;"	v
+myglobal	thread3.c	/^int myglobal;$/;"	v
+mymutex	thread3.c	/^pthread_mutex_t mymutex=PTHREAD_MUTEX_INITIALIZER;$/;"	v
+next	queue.h	/^  struct node *next;$/;"	m	struct:node	typeref:struct:node::node
+next	thread4.bk.c	/^  struct node *next;$/;"	m	struct:cleanup_node	typeref:struct:cleanup_node::node	file:
+next	thread4.bk.c	/^  struct node *next;$/;"	m	struct:work_node	typeref:struct:work_node::node	file:
+next	thread4.c	/^  struct node *next;$/;"	m	struct:cleanup_node	typeref:struct:cleanup_node::node	file:
+next	thread4.c	/^  struct node *next;$/;"	m	struct:work_node	typeref:struct:work_node::node	file:
+node	queue.h	/^typedef struct node {$/;"	s
+node	queue.h	/^} node;$/;"	t	typeref:struct:node
+numthreads	thread4.bk.c	/^int numthreads;$/;"	v
+numthreads	thread4.c	/^int numthreads;$/;"	v
+queue	queue.h	/^typedef struct queue {$/;"	s
+queue	queue.h	/^} queue;$/;"	t	typeref:struct:queue
+queue_get	queue.c	/^node *queue_get(queue *myroot) {$/;"	f
+queue_init	queue.c	/^void queue_init(queue *myroot) {$/;"	f
+queue_put	queue.c	/^void queue_put(queue *myroot,node *mynode) {$/;"	f
+rio_buf	csapp.h	/^    char rio_buf[RIO_BUFSIZE]; \/* internal buffer *\/$/;"	m	struct:__anon1
+rio_bufptr	csapp.h	/^    char *rio_bufptr;          \/* next unread byte in internal buf *\/$/;"	m	struct:__anon1
+rio_cnt	csapp.h	/^    int rio_cnt;               \/* unread bytes in internal buf *\/$/;"	m	struct:__anon1
+rio_fd	csapp.h	/^    int rio_fd;                \/* descriptor for this internal buf *\/$/;"	m	struct:__anon1
+rio_t	csapp.h	/^} rio_t;$/;"	t	typeref:struct:__anon1
+tail	queue.h	/^  node *head, *tail; $/;"	m	struct:queue
+thread_function	thread1.c	/^ void *thread_function(void *arg) {$/;"	f
+thread_function	thread2.c	/^ void *thread_function(void *arg) {$/;"	f
+thread_function	thread3.c	/^ void *thread_function(void *arg) {$/;"	f
+threadfunc	thread4.bk.c	/^void *threadfunc(void *myarg) {$/;"	f
+threadfunc	thread4.c	/^void *threadfunc(void *myarg) {$/;"	f
+threadnum	thread4.bk.c	/^  int threadnum;$/;"	m	struct:cleanup_node	file:
+threadnum	thread4.c	/^  int threadnum;$/;"	m	struct:cleanup_node	file:
+tid	thread4.bk.c	/^  pthread_t tid;$/;"	m	struct:cleanup_node	file:
+tid	thread4.c	/^  pthread_t tid;$/;"	m	struct:cleanup_node	file:
+wnode	thread4.bk.c	/^} wnode;$/;"	t	typeref:struct:work_node	file:
+wnode	thread4.c	/^} wnode;$/;"	t	typeref:struct:work_node	file:
+work	thread4.bk.c	/^  queue work;$/;"	m	struct:work_queue	file:
+work	thread4.c	/^  queue work;$/;"	m	struct:work_queue	file:
+work_node	thread4.bk.c	/^typedef struct work_node {$/;"	s	file:
+work_node	thread4.c	/^typedef struct work_node {$/;"	s	file:
+work_queue	thread4.bk.c	/^struct work_queue {$/;"	s	file:
+work_queue	thread4.c	/^struct work_queue {$/;"	s	file:
+wq	thread4.bk.c	/^} wq;$/;"	v	typeref:struct:work_queue
+wq	thread4.c	/^} wq;$/;"	v	typeref:struct:work_queue

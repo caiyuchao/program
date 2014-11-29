@@ -1,0 +1,2036 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+
+
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Utilisation des pseudo-terminaux (pty) pour piloter les programmes interactifs</title>
+  
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  <meta name="author" content="rachid koucha">
+  <meta name="Category" content="pty, pseudo-terminal, pdip, linux, programmes interactifs">
+  <meta name="language" content="fr">
+  <meta http-equiv="Content-Language" content="fr">
+  <meta name="description" content="Utilisation des pseudo-terminaux (pty) pour controler les programmes interactifs. C'est une introduction a PDIP.">
+  <meta name="keywords" content="pty, pseudo-terminal, pdip, redirection entrees sorties, processus, linux, telnet, unix">
+  <meta name="GENERATOR" content="OpenOffice.org 2.3 (Linux)">
+  <style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.41cm }
+H1.western { font-family: "Tahoma", sans-serif; font-size: 16pt; font-weight: medium }
+H1.cjk { font-family: "Lucida Sans Unicode" }
+H1.ctl { font-family: "Tahoma" }
+H2.western { font-family: "Tahoma", sans-serif; font-size: 14pt; font-weight: medium }
+H2.cjk { font-family: "Lucida Sans Unicode" }
+H2.ctl { font-family: "Tahoma" }
+--> </style>
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js">
+  {lang: 'fr'}
+  </script></head><body>
+<small><small><span style="text-decoration: underline;">Author</span>:
+R.
+Koucha</small></small><br>
+<small><small><span style="text-decoration: underline;">Last
+update</span>: 16-Avr-2014</small></small><br>
+<br>
+<small><a href="http://rachid.koucha.free.fr/index.html">Page principale</a><br>
+<a href="../documents_techniques.html">Page précédente</a></small><br>
+<p style="margin-top: 0.42cm; margin-bottom: 0.5cm; page-break-after: avoid; text-align: center;"><font face="Arial Black, sans-serif"><font size="6"><b>Utilisation
+des
+pseudo-terminaux (pty) pour piloter les programmes interactifs</b></font></font></p>
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b><br>
+</b></i></font></font><br>
+</p>
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fpty_pdip_fr.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fpty_pdip_fr.html&amp;subject=Utilisation%20des%20pseudo-terminaux%20%28pty%29%20pour%20piloter%20les%20programmes%20interactifs"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b>Bien
+que de moins en moins utilisées, les applications
+intéractives
+en mode ligne de commande interagissant avec un opérateur via
+un terminal sur port série, sont encore légions.
+Notamment dans le monde Linux embarqué où les
+ressources graphiques sont superflues ou d'un coût trop
+élevé.
+Parmi ces applications, on peut en citer quelques unes des plus
+connues:</b></i></font></font></p>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"> <font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b><font color="#ff0000">- </font><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">bash</font></font></font>
+: Le shell par défaut de Linux</b></i></font></font></p>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"> <font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b><font color="#ff0000">- </font><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">bc</font></font></font><font color="#ff0000"> </font>: La calculatrice</b></i></font></font></p>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"> <font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b><font color="#ff0000">- </font><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">ftp</font></font></font>
+:
+Utilitaire de transfert de fichier</b></i></font></font></p>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"> <font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b><font color="#ff0000">- </font><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">telnet</font></font></font>
+: Terminal distant</b></i></font></font><br>
+  </p>
+</ul>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b>Il
+est possible de tirer bénéfice de ces utilitaires dans
+des scripts shell afin d'automatiser certaines tâches comme les
+tests ou les opérations de maintenance et d'administration
+système. Par exemple, on pourrait lancer un script qui
+crée
+une session <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">telnet</font></font></font>
+sur une machine distante afin de déclencher certaines
+opérations. Mais cela n'est pas aussi simple car un processus
+interactif, nécessitant l'intervention d'un opérateur
+pour fonctionner, se prête à priori mal à une
+automatisation de son déclenchement.</b></i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b>Cet
+article se propose donc de présenter une solution à
+l'automatisation des programmes interactifs à travers la
+notion de pseudo-terminal.</b></i></font></font></p>
+<a href="#Avant_propos">Avant propos</a><br>
+<a href="#1._Redirection_des_entrees_et_sorties">1.
+Redirection des entrées et sorties
+standards d'un processus</a><br>
+<a href="#2._Problemes_dautomatisation_dun">2. Problèmes
+d'automatisation d'un
+programme intéractif</a><br>
+<a href="#3._Presentation_des_pseudo-terminaux">3.
+Présentation des pseudo-terminaux</a><br>
+<div style="margin-left: 40px;"><a href="#3.1_API_des_pseudo-terminaux_">3.1
+API
+des
+pseudo-terminaux&nbsp;</a><br>
+</div>
+<a href="#4._Application_des_pseudo-terminaux">4.
+Application des pseudo-terminaux</a><br>
+<div style="margin-left: 40px;"><a href="#4.1_Communication_inter-processus_via_un">4.1
+Communication inter-processus via
+un
+pseudo-terminal</a><br>
+<a href="#4.2_Limitation_de_grantpt">4.2 Limitation de grantpt()</a><br>
+<a href="#4.3_Prise_de_contr%F4le_dun_processus">4.3 Prise
+de contrôle d'un processus
+intéractif</a><br>
+</div>
+<a href="#5._Presentation_de_PDIP">5. Présentation de PDIP</a><br>
+<a href="#6._Utilisation_de_PDIP">6. Utilisation de PDIP</a><br>
+<a href="#Conclusion">Conclusion</a><br>
+<a href="#Notes">Notes</a><br>
+<a href="#A_propos_de_lauteur">A propos de l'auteur</a>
+<h2><a name="Avant_propos"></a><span class="western">Avant propos</span></h2>
+<font face="Arial, sans-serif"><font size="2">Cet
+article a été publié dans </font></font><a href="http://www.unixgarden.com/index.php/programmation/utilisation-des-pseudo-terminaux-pour-piloter-les-programmes-interactifs"><img alt="glmf_logo" src="../glmf_logo.jpg" style="border: 0px solid ; width: 100px; height: 30px;"></a> numéro hors série 34.<br>
+<br>
+<h1 class="western"><a name="1._Redirection_des_entrees_et_sorties"></a>1.
+Redirection
+des
+entrées
+et
+sorties
+standards
+d'un
+processus</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Un
+programme Linux
+lorsqu'il est chargé en mémoire pour être
+exécuté, devient un processus qui est attaché au
+terminal courant. Par défaut, l'entrée standard (<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>stdin</b></font></font>)
+provient du clavier tandis que les sorties normales et en erreur
+standards (<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>stdout</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>stderr</b></font></font>)
+sont redirigées sur l'écran (cf. <a href="#Figure_1">figure
+1</a>).</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="center">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><b><a name="Figure_1"></a>Figure
+1 </b>:
+Entrée et sorties standard d'un processus Linux</i></font></font></p>
+<div style="text-align: center;">
+<img style="width: 255px; height: 234px;" alt="figure_1" src="pty_pdip_fr_figure_1.jpg"><br>
+</div>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Linux
+offre la notion de
+redirection des entrées et sorties de sorte à permettre
+à un processus de lire ses données d'entrée
+à
+partir d'une autre source que le clavier du terminal courant et
+d'afficher ses données de sortie sur une autre destination que
+l'écran du terminal courant. La puissance de ce mécanisme
+réside dans le fait que les redirections sont
+complètement
+transparentes: le processus lit son entrée standard et affiche
+sur ses sorties standards sans connaître la nature des
+périphériques qui se cachent derrière. En
+d'autres termes, un programme peut être lancé sans
+modification pour lire tantôt le clavier, tantôt le
+contenu d'un fichier, tantôt la sortie d'un autre programme
+(via le mécanisme de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>pipe</b></font></font>).
+Il en va de même pour ses sorties.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Considérons
+le
+programme simple suivant appelé <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>,
+qui
+saisit
+un
+nom
+de
+login
+et
+un
+mot
+de
+passe
+:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="background-color: rgb(204, 204, 204); white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">int
+main(void)<br>
+{<br>
+char
+nom_de_login[150];<br>
+char
+mot_de_passe[150];</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Par défaut stdin, stdout et stderr sont ouverts<br>
+&nbsp; fprintf(stdout,
+"login : ");<br>
+&nbsp; if
+(NULL == fgets(nom_de_login, sizeof(nom_de_login), stdin))<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Pas de nom de login\n");<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+fprintf(stdout,
+"Mot de passe : ");<br>
+&nbsp; if
+(NULL == fgets(mot_de_passe, sizeof(mot_de_passe), stdin))<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Pas de mot de passe\n");<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+fprintf(stdout,
+"La saisie est :\n%s%s\n", nom_de_login, mot_de_passe);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; return
+0;<br>
+}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Sous un shell tel que
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">bash</font></b></font></font>,
+plusieurs
+solutions
+sont
+à
+disposition
+pour
+effectuer
+les
+opérations
+de
+redirection.</font></font><font face="Arial, sans-serif"><font size="2">
+Si on
+lance le programme
+simplement, son entrée et ses sorties standards sont
+respectivement le clavier et l'écran du terminal courant :<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mylogin<br>
+login
+: toto<br>
+Mot
+de passe : foo<br>
+La
+saisie est :<br>
+toto<br>
+foo<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Le programme précédent
+peut être lancée de la manière suivante pour
+rediriger ce qui est saisi au clavier dans le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">output.txt</font></b></font></font>
+:</font></font><br>
+<br>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mylogin &gt; output.txt<br>
+toto<br>
+foo<br>
+$
+cat output.txt<br>
+login
+: Mot de passe : La saisie est :<br>
+toto<br>
+foo<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+On voit que sans aucunes
+modifications du programme <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>,
+on
+a
+pu
+le
+lancer
+la
+première
+fois
+avec
+l'entrée
+standard
+sur
+le clavier et la sortie standard sur l'écran et
+la seconde fois avec l'entrée standard sur le clavier et la
+sortie standard sur le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">output.txt</font></b></font></font>.<br>
+</font></font>
+<h1 class="western"><a name="2._Problemes_dautomatisation_dun"></a>2.
+Problèmes d'automatisation d'un
+programme intéractif</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Un
+programme intéractif
+aussi simple que <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>
+peut être automatisé. Nous entendons par automatisation,
+le remplacement d'un opérateur humain par un programme tel
+qu'un script shell. Considérons par exemple, le fichier
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">input.txt</font></b></font></font>
+dans lequel on a mis le nom de login et le mot de passe attendus par
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>
+:</font></font></p>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+cat input.txt<br>
+toto<br>
+foo<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+On
+peut lancer le
+programme <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>
+en injectant le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">input.txt</font></b></font></font>
+sur son entrée standard&nbsp;:<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mylogin &lt; input.txt<br>
+login
+: Mot de passe : La saisie est :<br>
+toto<br>
+foo<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+On
+a donc remplacé
+l'opérateur humain par un fichier contenant les entrées
+attendues par <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mylogin</font></b></font></font>.
+Mais
+il
+n'est
+malheureusement
+pas
+possible
+de
+généraliser
+cette
+méthode
+à
+tout
+programme intéractif. En
+effet, certains sont très élaborés. Typiquement,
+un programme de saisie de login et mot de passe effectue
+systématiquement un nettoyage de son entrée standard
+pour ne pas tenir compte des caractères saisis entre la
+demande du nom de login et la demande du mot de passe (l'écho
+des caractères est aussi désactivée pendant la
+saisie du mot de passe). Pour étayer ces dernières
+remarques, on peut simuler le nettoyage de l'entrée standard
+en modifiant <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">mylogin.c</font></b></font></font>
+de sorte à insérer un appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">fseek()</font></b></font></font>
+juste avant la saisie du mot de passe :<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">int
+main(void)<br>
+{<br>
+char
+nom_de_login[150];<br>
+char
+mot_de_passe[150];</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Par défaut stdin, stdout et stderr sont ouverts</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+fprintf(stdout,
+"login : ");<br>
+&nbsp; if
+(NULL == fgets(nom_de_login, sizeof(nom_de_login), stdin))<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Pas de nom de login\n");<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; //
+Nettoyage de l'entrée standard<br>
+&nbsp; fseek(stdin,
+0, SEEK_END);</font></font></font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+fprintf(stdout,
+"Mot de passe : ");<br>
+&nbsp; if
+(NULL == fgets(mot_de_passe, sizeof(mot_de_passe), stdin))<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Pas de mot de passe\n");<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+fprintf(stdout,
+"La saisie est :\n%s%s\n", nom_de_login, mot_de_passe);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; return
+0;<br>
+}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Le
+programme continue à
+se comporter comme souhaité quand il interagit avec un
+opérateur (l'entrée standard est le clavier) :<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mylogin</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">login
+: toto</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">Mot
+de passe : foo</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">La
+saisie est :</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">toto</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">foo</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Par
+contre, lorsque
+l'entrée standard est un fichier, le message d'erreur «<font color="#000000">&nbsp;Pas
+de mode de passe&nbsp;»</font> s'affiche pour indiquer
+qu'aucune donnée n'a été saisie pour le mot de
+passe. En fait, le deuxième appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">fread()</font></b></font></font>
+rencontre une fin de fichier qui indique qu'il n'y a plus de
+données
+en entrée :<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mylogin &lt; input.txt<br>
+      <font color="#ff0000"><font style="font-size: 9pt;" size="2">Pas
+de mot de passe</font></font><br>
+login
+: Mot de passe :<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<font face="Arial, sans-serif"><font size="2">Quand
+les données
+du programme sont fournies par l'opérateur, ce dernier attend
+l'affichage de la chaîne «&nbsp;<font color="#000000">Mot
+de passe&nbsp;»</font> avant de saisir le mot de passe. En
+mode
+automatique, le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">input.txt</font></b></font></font>
+est injectée d'une traite et par conséquent sa
+deuxième
+ligne se retrouve «&nbsp;nettoyée&nbsp;» par
+l'appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">fseek()</font></b></font></font>.
+C'est
+un
+cas
+typique
+de
+désynchronisation
+de
+l'entrée
+standard
+avec
+le
+programme.</font></font>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">A
+travers cet exemple
+simple, est mis en avant un des nombreux problèmes que l'on
+peut rencontrer lors du lancement automatique des programmes
+intéractifs. En effet, en plus de la désynchronisation
+qu'il peut y avoir entre les données en entrée et le
+programme, ce dernier peut aussi effectuer des opérations de
+reconfiguration du terminal pour se mettre en mode ligne ou canonique
+ou tout simplement pour désactiver l'écho des
+caractères. Si, l'entrée ou les sorties standards ne
+sont pas des terminaux mais des fichiers par exemple, alors ces
+opérations vont échouer et déclencher des
+erreurs dans le programme.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">La
+notion de
+pseudo-terminal est une solution à ce problème comme
+nous allons le voir dans la suite.</font></font></p>
+<h1 class="western"><a name="3._Presentation_des_pseudo-terminaux"></a>3.
+Présentation
+des
+pseudo-terminaux</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Un
+pseudo-terminal
+(communément appelé <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>)
+est
+une
+paire
+de
+périphériques
+virtuels
+en
+mode
+caractère
+:
+l'un
+est
+esclave
+et l'autre est maître. Un canal bidirectionnel
+relie ces deux entités. Toute donnée écrite du
+côté maître se retrouve en sortie du
+côté
+esclave. Inversement, toute donnée écrite du
+côté
+esclave, se retrouve en sortie du côté maître
+comme indiqué en <a href="#Figure_2">figure 2</a>.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="center"><font face="Arial Narrow, sans-serif"><font size="2"><i><b><a name="Figure_2"></a>Figure
+2 </b>:
+Vue générale d'un pseudo-terminal</i></font></font></p>
+<div style="text-align: center;"><img style="width: 963px; height: 443px;" alt="figure_2" src="pty_pdip_fr_figure_2.jpg"><br>
+</div>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+partie esclave se
+comporte exactement comme un terminal classique dans le sens où
+tout processus peut l'ouvrir pour en faire son entrée et sa
+sortie standard. Certains traitements tel que l'écho, le
+remplacement des <i>carriage return</i> par des <i>line
+feed</i> ou
+autre peuvent être réalisés sur les données
+entrant ou sortant sur le <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a><font color="#ff0000">
+</font>esclave.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+partie maître
+n'est quant à elle pas un terminal mais permet de faire des
+opérations de lecture de données provenant de la partie
+esclave et d'écriture de données à destination
+de la partie esclave.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">Dans
+le monde Unix en
+général, il existe plusieurs implémentations des
+pseudo-terminaux. Il y a la version BSD et la version System V. Le
+monde Linux a retenu la version System V sous l'appellation
+«&nbsp;Unix
+98 pty&nbsp;». C'est cette dernière qui est
+recommandée
+désormais et qui fera donc l'objet de la suite de cet article.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><br>
+</p>
+<h2 class="western"><a name="3.1_API_des_pseudo-terminaux_"></a>3.1 API
+des
+pseudo-terminaux&nbsp;</h2>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">La mise
+en oeuvre des pseudo-terminaux se fait à
+l'aide d'une API assez simple :</font></font>&nbsp;</h2>
+<ul>
+  <li>
+    <h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">posix_openpt</font></b></font></font></font></font></h2>
+  </li>
+</ul>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">Cette
+fonction permet de
+créer la partie maître d'un pseudo-terminal. Elle ouvre
+le périphérique <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">/dev/ptmx</font></b></font></font></font></font><font face="Arial, sans-serif"><font size="2"> pour
+obtenir le descripteur de fichier associé à la
+partie maître du pseudo-terminal.</font></font></h2>
+<ul>
+  <li>
+    <h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">grantpt</font></b></font></font></font></font></h2>
+  </li>
+</ul>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">Après
+l'appel à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">posix_openpt()</font></b></font></font>,
+le
+descripteur
+de
+fichier
+est
+passé
+à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">grantpt()</font></b></font></font>
+pour changer les droits d'accès sur la partie esclave du
+pseudo-terminal: l'identifiant d'utilisateur du
+périphérique
+esclave est positionné avec l'identifiant d'utilisateur du
+processus appelant. Le groupe est positionné à une
+valeur non spécifiée (par exemple
+«&nbsp;tty&nbsp;»)
+et les droits d'accès sont positionnés à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#000000">crw--w----</font></b></font></font>.</font></font>&nbsp;</h2>
+<ul>
+  <li>
+    <h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">unlockpt</font></b></font></font></font></font></h2>
+  </li>
+</ul>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">Après
+l'appel à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">grantpt()</font></b></font></font>,
+le
+descripteur
+de
+fichier
+est
+passé
+à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">unlockpt()</font></b></font></font>
+pour dévérouiller le périphérique
+esclave.</font></font></h2>
+<ul>
+  <li>
+    <h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">ptsname</font></b></font></font></font></font></h2>
+  </li>
+</ul>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">Après
+les
+opérations précédentes, la partie esclave du
+pseudo-terminal peut être ouverte à l'aide de l'appel
+système <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">open()</font></b></font></font>
+mais avant cela, il faut obtenir le nom du périphérique
+esclave via l'appel à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">ptsname()</font></b></font></font>.</font></font></h2>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">A
+ces API, il faut
+ajouter les opérations classiques sur les terminaux telles que
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">tcgetattr()</font></b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">cfmakeraw()</font></b></font></font>...</font></font></h2>
+<h2 style="font-weight: normal;" class="western"><font face="Arial, sans-serif"><font size="2">Le
+petit programme
+suivant appelé <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty</font></b></font></font>
+met en oeuvre l'API pour créer un pseudo-terminal :</font></font></h2>
+<ul>
+  <ul>
+    <ul>
+    </ul>
+  </ul>
+</ul>
+<ul>
+  <ul>
+    <ul>
+    </ul>
+  </ul>
+</ul>
+<ul>
+  <ul>
+    <ul>
+    </ul>
+  </ul>
+</ul>
+<ul>
+  <ul>
+    <ul>
+    </ul>
+  </ul>
+</ul>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">#define
+_XOPEN_SOURCE 600</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdlib.h&gt;<br>
+#include
+&lt;stdio.h&gt;<br>
+#include
+&lt;fcntl.h&gt;<br>
+#include
+&lt;errno.h&gt;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">int
+main(void)<br>
+{<br>
+int
+fdm;<br>
+int
+rc;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Affichage de /dev/pts<br>
+&nbsp; system("ls
+-l /dev/pts");</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; fdm
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">posix_openpt</font></font>(O_RDWR);<br>
+&nbsp; if
+(fdm &lt; 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur posix_openpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">grantpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur grantpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">unlockpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur unlockpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Affichage des changements dans /dev/pts<br>
+&nbsp; system("ls
+-l /dev/pts");</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+printf("Le
+pseudo-terminal esclave a pour nom : %s\n", ptsname(fdm));</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; return
+0;<br>
+}
+// main</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Le
+programme affiche le
+contenu du répertoire <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">/dev/pts</font></b></font></font>
+au début et à la fin de son exécution pour
+montrer que la création d'un pseudo-terminal ajoute une
+nouvelle entrée dans le répertoire <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">/dev/pts</font></b></font></font>.
+Dans
+l'exemple
+d'exécution
+suivant,
+c'est
+le
+pseudo-terminal
+esclave
+numéro
+4
+qui
+est
+créé :<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mypty<br>
+total
+0<br>
+crw--w----
+1 koucha tty 136, 0 2007-09-25 13:56 0<br>
+crw--w----
+1 koucha tty 136, 1 2007-09-25 13:32 1<br>
+crw--w----
+1 koucha tty 136, 2 2007-09-25 12:58 2<br>
+crw--w----
+1 koucha tty 136, 3 2007-09-25 07:32 3<br>
+total
+0<br>
+crw--w----
+1 koucha tty 136, 0 2007-09-25 13:56 0<br>
+crw--w----
+1 koucha tty 136, 1 2007-09-25 13:32 1<br>
+crw--w----
+1 koucha tty 136, 2 2007-09-25 12:58 2<br>
+crw--w----
+1 koucha tty 136, 3 2007-09-25 07:32 3<br>
+      <font color="#ff0000">crw--w----
+1 koucha tty 136, 4 2007-09-25 13:56 4<br>
+      <font style="font-size: 9pt;" size="2">Le
+pseudo-terminal esclave a pour nom : /dev/pts/4</font></font><br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western" style="" align="justify"><a name="4._Application_des_pseudo-terminaux"></a>4.
+Application des pseudo-terminaux</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Les
+pseudo-terminaux sont
+essentiellement utilisés pour faire croire à un
+processus qu'il est en interface avec un terminal classique alors
+qu'il est en communication avec un ou plusieurs processus.</font></font></p>
+<h2 class="western"><a name="4.1_Communication_inter-processus_via_un"></a>4.1
+Communication
+inter-processus
+via
+un
+pseudo-terminal</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Pour
+mettre en évidence
+les fonctionnalités d'un pseudo-terminal, on peut modifier le
+programme <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty</font></b></font></font>
+en <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty2</font></b></font></font>
+comme suit :</font></font></p>
+<table style="text-align: left; background-color: silver; font-family: monospace;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#define
+_XOPEN_SOURCE 600<br>
+#include
+&lt;stdlib.h&gt;<br>
+#include
+&lt;fcntl.h&gt;<br>
+#include
+&lt;errno.h&gt;<br>
+#include
+&lt;unistd.h&gt;<br>
+#include
+&lt;stdio.h&gt;<br>
+#define
+__USE_BSD<br>
+#include
+&lt;termios.h&gt;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">int
+main(void)<br>
+{<br>
+int &nbsp;fdm,
+fds, rc;<br>
+char
+input[150];</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; fdm
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">posix_openpt</font></font>(O_RDWR);<br>
+&nbsp; if
+(fdm &lt; 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur posix_openpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">grantpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur grantpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">unlockpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur unlockpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Ouverture du PTY esclave<br>
+&nbsp; fds
+= open(<font color="#ff0000"><font style="font-size: 9pt;" size="2">ptsname</font></font>(fdm),
+O_RDWR);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Création d'un processus fils<br>
+&nbsp; if
+(fork())<br>
+&nbsp; {<br>
+&nbsp; &nbsp; //
+Code du processus pere<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la partie esclave du PTY<br>
+&nbsp; &nbsp; close(fds);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; while
+(1)<br>
+&nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; //
+Saisie operateur (entree standard = terminal)<br>
+&nbsp; &nbsp; &nbsp; write(1,
+"Entree : ", sizeof("Entree : "));<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; rc
+= read(0, input, sizeof(input));</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; if
+(rc &gt; 0)<br>
+&nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; //
+Envoie de la saisie aux processus fils via le PTY<br>
+&nbsp; &nbsp; &nbsp; &nbsp; write(fdm,
+input, rc);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; //
+Lecture de la reponse du fils dans le PTY<br>
+&nbsp; &nbsp; &nbsp; &nbsp; rc
+= read(fdm, input, sizeof(input) - 1);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; if
+(rc &gt; 0)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+Ajout d'une fin de chaine en fin de buffer<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; input[rc]
+= '\0';</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"> <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; fprintf(stderr,
+"%s", input);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; else<br>
+&nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; break;<br>
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; else<br>
+&nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; break;<br>
+&nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; }
+// End while<br>
+&nbsp; }<br>
+&nbsp; else<br>
+&nbsp; {<br>
+&nbsp; struct
+termios slave_orig_term_settings; // Saved terminal settings<br>
+&nbsp; struct
+termios new_term_settings; // Current terminal settings</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Code du processus fils</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la partie maitre du PTY<br>
+&nbsp; &nbsp; close(fdm);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Sauvegarde des parametre par defaut du PTY esclave<br>
+&nbsp; &nbsp; rc
+= tcgetattr(fds, &amp;slave_orig_term_settings);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Positionnement du PTY esclave en mode RAW<br>
+&nbsp; &nbsp; new_term_settings
+= slave_orig_term_settings;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; cfmakeraw
+(&amp;new_term_settings);<br>
+&nbsp; &nbsp; tcsetattr
+(fds, TCSANOW, &amp;new_term_settings);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le cote esclave du PTY devient l'entree et les sorties standards du
+fils<br>
+&nbsp; &nbsp; close(0);
+// Fermeture de l'entrée standard (terminal courant)<br>
+&nbsp; &nbsp; close(1);
+// Fermeture de la sortie standard (terminal courant)<br>
+&nbsp; &nbsp; close(2);
+// Fermeture de la sortie erreur standard (terminal courant)<br>
+&nbsp; &nbsp; dup(fds);
+// Le PTY devient l'entree standard (0)<br>
+&nbsp; &nbsp; dup(fds);
+// Le PTY devient la sortie standard (1)<br>
+&nbsp; &nbsp; dup(fds);
+// Le PTY devient la sortie erreur standard (2)</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; while
+(1)<br>
+&nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; rc
+= read(fds, input, sizeof(input) - 1);<br>
+&nbsp; &nbsp; &nbsp; if
+(rc &gt; 0)<br>
+&nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; //
+Remplacement du retour a la ligne par une fin de chaine<br>
+&nbsp; &nbsp; &nbsp; &nbsp; input[rc
+- 1] = '\0';</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; printf("Le
+fils a recu : '%s'\n", input);<br>
+&nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; else<br>
+&nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; break;<br>
+&nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; }
+// End while<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&nbsp; return
+0;<br>
+}
+// main</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Le
+programme consiste en
+deux processus. Le premier (le père) lit une ligne de
+caractères saisie au clavier et l'envoie sur la partie
+maître
+du <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>.
+Le
+second
+(le
+fils),
+a
+fait
+du
+<a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+esclave, son entrée et ses sorties standards et renvoie sur sa
+sortie standard, toute chaîne lue, préfixée par<font face="Arial, sans-serif">
+«</font><font color="#000000"><font face="Arial, sans-serif">&nbsp;</font></font><font color="#000000"><font face="Arial, sans-serif"><font size="2">Le
+fils a recu :&nbsp;». </font></font></font><font face="Arial, sans-serif"><font size="2">Voici
+un exemple de lancement :<br>
+<br>
+</font></font></font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mypty2<br>
+Entree
+: azerty<br>
+Le
+fils a recu : 'azerty'<br>
+Entree
+: qwerty<br>
+Le
+fils a recu : 'qwerty'<br>
+Entree
+: pwd<br>
+Le
+fils a recu : 'pwd'</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+<a href="#Figure_3">figure 3</a> explique le
+fonctionnement de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty2</font></b></font></font>
+lorsque l'opérateur saisit la chaîne de caractères
+«<font color="#000000">&nbsp;qwerty&nbsp;»</font>
+:</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="center"><font face="Arial Narrow, sans-serif"><font size="2"><i><b><a name="Figure_3"></a>Figure
+3 </b>:
+Fonctionnement de mypty2</i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;">
+<img style="width: 1040px; height: 359px;" alt="figure_3" src="pty_pdip_fr_figure_3.jpg"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Côté
+processus
+fils,
+on
+remarquera
+la
+configuration
+du
+<a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+esclave via les appels à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">cfmakeraw()</font></b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">tcsetattr()</font></b></font></font>
+de sorte à passer en mode <i>raw</i> (brut en français)
+pour désactiver les opérations telles que l'écho.<br>
+On
+peut rendre plus
+générique la modification faite dans <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty2</font></b></font></font>
+pour donner la possibilité d'exécuter n'importe quel
+programme derrière le <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>.
+Dans
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty3</font></b></font></font>,
+le
+processus
+père
+envoie
+tout
+ce
+qui
+vient
+de
+son
+entrée
+standard
+sur le <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+maître et tout ce qui vient du <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+maître sur sa sortie standard. Il se conduit simplement comme
+un relayeur de données. Le processus fils effectue les
+mêmes
+opérations que précédemment mais se
+généralise
+pour éxécuter un programme interactif quelconque
+avec ses paramètres passés
+en arguments. Nous noterons les appels à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">setsid()</font></b></font></font>
+et <span style="font-weight: bold; color: rgb(255, 0, 0);">ioctl(TIOCSCTTY)</span>
+pour faire en sorte que le <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+esclave soit le terminal de contrôle du programme
+exécuté. On notera aussi la fermeture du descripteur de
+fichier <span style="font-weight: bold; color: rgb(255, 0, 0);">fds</span>
+qui n'est plus utile après les appels à <span style="font-weight: bold; color: rgb(255, 0, 0);">dup()</span>.<br>
+<br>
+</font></font></p>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">#define
+_XOPEN_SOURCE 600<br>
+#include
+&lt;stdlib.h&gt;<br>
+#include
+&lt;fcntl.h&gt;<br>
+#include
+&lt;errno.h&gt;<br>
+#include
+&lt;unistd.h&gt;<br>
+#include
+&lt;stdio.h&gt;<br>
+#define
+__USE_BSD<br>
+#include
+&lt;termios.h&gt;<br>
+#include
+&lt;sys/select.h&gt;<br>
+      </font>#include &lt;sys/ioctl.h&gt;<br>
+#include &lt;string.h&gt;<br>
+      <br>
+      </p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])<br>
+{<br>
+int &nbsp;fdm,
+fds;<br>
+int &nbsp;rc;<br>
+char
+input[150];</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Contrôle des arguments<br>
+&nbsp; if
+(ac &lt;= 1)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Usage: %s nom_de_programme [parametres]\n", av[0]);<br>
+&nbsp; &nbsp; exit(1);<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; fdm
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">posix_openpt</font></font>(O_RDWR);<br>
+&nbsp; if
+(fdm &lt; 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur posix_openpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">grantpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur grantpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; rc
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">unlockpt</font></font>(fdm);<br>
+&nbsp; if
+(rc != 0)<br>
+&nbsp; {<br>
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur unlockpt()\n", errno);<br>
+&nbsp; &nbsp; return
+1;<br>
+&nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Ouverture du PTY esclave<br>
+&nbsp; fds
+= open(<font color="#ff0000"><font style="font-size: 9pt;" size="2">ptsname</font></font>(fdm),
+O_RDWR);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; //
+Création d'un processus fils<br>
+&nbsp; if
+(fork())<br>
+&nbsp; {<br>
+&nbsp; fd_set
+fd_in;</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Code du processus pere</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la partie esclave du PTY<br>
+&nbsp; &nbsp; close(fds);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; while
+(1)<br>
+&nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; //
+Attente de données de l'entrée standard et du PTY
+maître<br>
+&nbsp; &nbsp; &nbsp; FD_ZERO(&amp;fd_in);<br>
+&nbsp; &nbsp; &nbsp; FD_SET(0,
+&amp;fd_in);<br>
+&nbsp; &nbsp; &nbsp; FD_SET(fdm,
+&amp;fd_in);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; rc
+= select(fdm + 1, &amp;fd_in, NULL, NULL, NULL);<br>
+&nbsp; &nbsp; &nbsp; switch(rc)<br>
+&nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; case
+-1 : fprintf(stderr, "Erreur %d sur select()\n", errno);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; exit(1);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; default
+:<br>
+&nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //
+S'il y a des donnees sur l'entree standard<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+(FD_ISSET(0, &amp;fd_in))<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rc
+= read(0, input, sizeof(input));<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+(rc &gt; 0)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; //
+Envoie des données sur le PTY maitre<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; write(fdm,
+input, rc);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; else<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; if
+(rc &lt; 0)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur read entree standard\n", errno);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; exit(1);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; //
+S'il y a des donnees sur le PTY maitre<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+(FD_ISSET(fdm, &amp;fd_in))<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; rc
+= read(fdm, input, sizeof(input));<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if
+(rc &gt; 0)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; //
+Envoie des données sur la sortie standard<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; write(1,
+input, rc);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; else<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; if
+(rc &lt; 0)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; {<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; fprintf(stderr,
+"Erreur %d sur read PTY maitre\n", errno);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; exit(1);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; &nbsp; }<br>
+&nbsp; &nbsp; &nbsp; }
+// End switch<br>
+&nbsp; &nbsp; }
+// End while<br>
+&nbsp; }<br>
+&nbsp; else<br>
+&nbsp; {<br>
+&nbsp; struct
+termios slave_orig_term_settings; // Saved terminal settings<br>
+&nbsp; struct
+termios new_term_settings; // Current terminal settings<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Code du processus fils</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;">
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la partie maitre du PTY<br>
+&nbsp; &nbsp; close(fdm);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Sauvegarde des parametre par defaut du PTY esclave<br>
+&nbsp; &nbsp; rc
+= tcgetattr(fds, &amp;slave_orig_term_settings);<br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Positionnement du PTY esclave en mode RAW<br>
+&nbsp; &nbsp; new_term_settings
+= slave_orig_term_settings;<br>
+&nbsp; &nbsp; cfmakeraw
+(&amp;new_term_settings);<br>
+&nbsp; &nbsp; tcsetattr
+(fds, TCSANOW, &amp;new_term_settings);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le cote esclave du PTY devient l'entree et les sorties standards du
+fils</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de l'entrée standard (terminal courant)<br>
+&nbsp; &nbsp; close(0);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;">
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la sortie standard (terminal courant)<br>
+&nbsp; &nbsp; close(1);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;">
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Fermeture de la sortie erreur standard (terminal courant)<br>
+&nbsp; &nbsp; close(2);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le PTY devient l'entree standard (0)<br>
+&nbsp; &nbsp; dup(fds);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le PTY devient la sortie standard (1)<br>
+&nbsp; &nbsp; dup(fds);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le PTY devient la sortie erreur standard (2)<br>
+&nbsp; &nbsp; dup(fds);</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;">&nbsp;&nbsp;&nbsp;
+//
+Maintenant
+le
+descripteur
+de
+fichier
+original
+n'est
+plus
+utile<br>
+&nbsp;&nbsp;&nbsp; <span style="color: rgb(255, 0, 0);">close(fds);</span><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Le process courant devient un leader de session<br>
+      <font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp;
+setsid();</font></font><br>
+      </font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;">&nbsp;&nbsp;&nbsp;
+//
+Comme
+le
+process
+courant
+est
+un
+leader
+de
+session,
+La partie esclave
+du PTY devient sont terminal de contrôle<br>
+&nbsp;&nbsp;&nbsp; // (Obligatoire pour les programmes comme le shell
+pour faire en sorte qu'ils gerent correctement leurs sorties)<br>
+&nbsp;&nbsp;&nbsp; <span style="color: rgb(255, 0, 0);">ioctl(0,
+TIOCSCTTY, 1)</span>;<br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp;
+&nbsp; //
+Execution du programme<br>
+&nbsp;&nbsp; {<br>
+&nbsp;&nbsp; char **child_av;<br>
+&nbsp;&nbsp; int i;<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp; // Construction de la ligne de commande<br>
+&nbsp;&nbsp; &nbsp; child_av = (char **)malloc(ac * sizeof(char *));<br>
+&nbsp;&nbsp;&nbsp;&nbsp; for (i = 1; i &lt; ac; i ++)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; child_av[i - 1] = strdup(av[i]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp; child_av[i - 1] = NULL;<br>
+&nbsp;&nbsp;&nbsp;&nbsp; rc = execvp(child_av[0], child_av);<br>
+&nbsp; }<br>
+</font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">&nbsp; return
+0;<br>
+}
+// main</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Ci-après,
+on lance
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty3</font></b></font></font>
+avec la calculatrice <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">bc</font></b></font></font>
+à travers le <a href="#man_7_pty"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pty</font></b></font></font></a>
+:<br>
+<br>
+</font></font>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+./mypty3<br>
+Usage:
+./mypty3 program_name<br>
+$<br>
+$
+./mypty3 bc<br>
+bc
+1.06<br>
+Copyright
+1991-1994, 1997, 1998, 2000 Free Software Foundation, Inc.<br>
+This
+is free software with ABSOLUTELY NO WARRANTY.<br>
+For
+details type `warranty'.<br>
+3+6<br>
+9<br>
+quit<br>
+Erreur
+5 sur read PTY maitre<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Il
+est possible de lancer
+un shell ou tout autre programme interactif à la place de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">bc</font></b></font></font>.
+Cette
+technique
+s'appliquent
+à
+nombre
+de
+programmes
+célèbres
+tels
+que
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">xterm</font></b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">ssh</font></b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">rlogin</font></b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">rsh</font></b></font></font>...
+Par
+exemple,
+la
+<a href="#Figure_4">figure 4</a> décrit
+l'architecture de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="center">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><b><a name="Figure_4"></a>Figure
+4 </b>:
+Description d'une session telnet</i></font></font></p>
+<div style="text-align: center;"><img style="width: 1021px; height: 379px;" alt="figure_4" src="pty_pdip_fr_figure_4.jpg"><br>
+</div>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Pour
+faire le parallèle
+avec les programmes d'exemples précédents, le
+démon
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnetd</font></b></font></font>
+est le processus père dont l'entrée standard n'est pas
+un simple terminal mais un terminal déporté à
+travers un réseau où s'éxécute le client
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>.
+Le
+processus
+fils
+est
+un
+shell
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">bash</font></b></font></font>.
+Tout
+ce
+qui
+provient
+du
+client
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>
+à travers le réseau est transmis par <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnetd</font></b></font></font>
+sur le pseudo-terminal maître. Tout ce qui provient du shell
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">bash</font></b></font></font>
+à travers le pseudo-terminal, est transmis au client <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>
+par le réseau.</font></font></p>
+<h2 class="western"><a name="4.2_Limitation_de_grantpt"></a>4.2 Limitation de grantpt()</h2>
+Si on lit attentivement le manuel en ligne de <span style="font-style: italic;">grantpt()</span>, il est dit que son comportement est non spécifié si un handler de signal est installé pour capturer le signal <span style="font-weight: bold;">SIGCHLD</span>. La raison se trouve dans le code source de <span style="font-style: italic;">grantpt()</span> dans la <span style="color: red;">GLIBC</span>. Cette dernière peut se terminer avec un appel à <span style="font-style: italic;">fork()</span> pour exécuter le programme <span style="font-style: italic;">chown</span> tandis que le père (i.e. l'appelant de <span style="font-style: italic;">grantpt()</span>) attend sa terminaison avec <span style="font-style: italic;">waitpid()</span>. D'où l'impossibilité de capturer le signal <span style="font-weight: bold;">SIGCHLD</span> sinon l'appel système <span style="font-style: italic;">waitpid()</span> dans <span style="font-style: italic;">grantpt()</span> échouera. Voici un extrait du code source de la fin de <span style="font-style: italic;">grantpt()</span> :<br>
+<br>
+<tt>/* Change the ownership and access permission of the slave
+        pseudo</tt><tt><br>
+      </tt><tt>&nbsp;&nbsp; terminal associated with the master pseudo terminal
+        specified</tt><tt><br>
+      </tt><tt>&nbsp;&nbsp; by FD.&nbsp; */</tt><tt><br>
+      </tt><b><tt>int</tt></b><b><tt><br>
+        </tt></b><b><tt>grantpt (int fd)</tt></b><tt><br>
+      </tt><tt>{</tt><tt><br>
+        [...]<br>
+        &nbsp; /* We have to use the helper program.&nbsp; */<br>
+        &nbsp;helper:;<br>
+        <br>
+        &nbsp; <font color="#ff0000"><b>pid_t pid = __fork ();</b></font><br>
+        &nbsp; if (pid == -1)<br>
+        &nbsp;&nbsp;&nbsp; goto cleanup;<br>
+        &nbsp; else if (pid == 0)<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* Disable core dumps.&nbsp; */<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct rlimit rl = { 0, 0 };<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; __setrlimit (RLIMIT_CORE, &amp;rl);<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* We pass the master pseudo terminal as file descriptor
+        PTY_FILENO.&nbsp; */<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (fd != PTY_FILENO)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (__dup2 (fd, PTY_FILENO) &lt; 0)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _exit (FAIL_EBADF);<br>
+        <br>
+        #ifdef CLOSE_ALL_FDS<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLOSE_ALL_FDS ();<br>
+        #endif<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ff0000"><b>execle (_PATH_PT_CHOWN, basename
+            (_PATH_PT_CHOWN), NULL, NULL);</b></font><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _exit (FAIL_EXEC);<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp; else<br>
+        &nbsp;&nbsp;&nbsp; {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int w;<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#ff0000"><b>if (__waitpid (pid, &amp;w, 0)
+            == -1)</b></font><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; goto cleanup;<br>
+        [...]</tt><br>
+<br>
+Il faut donc désactiver tout handler de signal sur <span style="font-weight: bold;">SIGCHLD</span> avant appel à <span style="font-style: italic;">grantpt()</span> et le rétablir juste après.<br>
+<br>
+
+<h2 class="western"><a name="4.3_Prise_de_contrôle_dun_processus"></a>4.3
+Prise
+de
+contrôle
+d'un
+processus
+intéractif</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">mypty3</font></b></font></font>
+peut être modifié pour rendre le processus père
+plus intelligent de sorte à lui faire interpréter un
+scénario avec un ensemble de commandes qui lui permettent de
+se synchroniser avec le processus fils. En d'autres termes, on
+pourrait remplacer l'opérateur humain par un script de
+commandes. C'est tout simplement ce qui est fait par le programme
+<a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a><font color="#000000"> </font>que nous
+voyons dans la suite.</font></font></p>
+<h1 class="western"><a name="5._Presentation_de_PDIP"></a>5.
+Présentation de PDIP</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2"><a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a>
+est l'acronyme de «&nbsp;<b>P</b>rogrammed <b>D</b>ialogue
+with
+<b>I</b>nteractive <b>P</b>rograms&nbsp;».
+En français,
+cela donne «&nbsp;Dialogue Programmé avec des Programmes
+Interactifs&nbsp;». Ce nom provient des premières lignes
+du manuel du programme <a href="http://expect.nist.gov"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">expect</font></b></font></font></a>&nbsp;dont
+<a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a>
+se veut être une version extrêmement simplifiée.
+C'est un utilitaire qui accepte un scénario en entrée
+pour dialoguer avec un programme interactif. <a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a>
+est disponible en source libre sur sourceforge.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Comme
+<a href="http://expect.nist.gov"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">expect</font></b></font></font></a>,
+<a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a>
+accepte un langage de commande pour envoyer et recevoir des
+chaînes
+de caractères à un programme. Mais contrairement à
+<a href="http://expect.nist.gov"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">expect</font></b></font></font></a>,
+le
+langage
+de
+commande
+n'est
+pas
+évolué
+au
+point
+d'accepter
+des
+structures
+de contrôle de haut niveau ou des
+branchements. Il ne permet pas non plus de dialoguer avec plusieurs
+programmes en même temps ou de rendre la main à
+l'opérateur en cours de session.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Comme
+indiqué en
+<a href="#Figure_5">figure 5</a>, <a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a><font color="#000000">
+reçoit en paramètre le chemin d'accès du
+programme intéractif à exécuter et pour
+interagir avec, il accepte un langage de commandes simples sur son
+entrée standard ou sous forme d'un script passé en
+paramètre.</font></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="center">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><b><a name="Figure_5"></a>Figure
+5 </b>:
+Vue générale du fonctionnement de <a href="http://pdip.sourceforge.net">pdip</a></i></font></font></p>
+<div style="text-align: center;">
+<img style="width: 910px; height: 420px;" alt="figure_5" src="pty_pdip_fr_figure_5.jpg"><br>
+</div>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">La
+liste des commandes
+disponibles pouvant être interprétées par </font></font><a href="http://pdip.sourceforge.net"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></font></font></a><font face="Arial, sans-serif"><font size="2">
+est :</font></font></p>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+  <font face="Arial, sans-serif"><font size="2"><b>#<br>
+  </b></font></font></p>
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><font face="Arial, sans-serif"><font size="2"><span style="">Début de commentaire</span></font></font></div>
+</div>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>dbg</b> niveau</font></font></p>
+  <ul>
+    <p class="western" style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><span style="font-family: Arial,sans-serif;"><span style="font-weight: bold;"></span></span>Positionne&nbsp;
+le&nbsp; niveau du mode mise au point a niveau.&nbsp; Plus le niveau,
+est grand, plus vous obtenez des traces. La valeur 0 désactive le mode
+mise au point.<br>
+    </p>
+  </ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>timeout</b>
+x<br>
+  </font></font></p>
+
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><font face="Arial, sans-serif"><font size="2">Positionne
+à x secondes le temps maximum à attendre après
+chacune des
+commandes qui suivent (la valeur 0 annulle le temporisateur, c&#8217;est la
+comportement par défaut).</font></font></div>
+</div>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>recv</b>
+"w1 w2..."<br>
+  </font></font></p>
+</ul>
+<div style="margin-left: 80px;"><font face="Arial, sans-serif"><font size="2">Attend
+une chaîne de cractères venant du programme se conformant
+au
+modèle <b>w1 w2...</b> Le modèle est une expression
+régulière conforme à <a href="#man_7_regex"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">regex</font></b></font></font></a><font color="#000000"><span style="">.</span></font></font></font></div>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+  <font face="Arial, sans-serif"><font size="2"><b>send</b>
+"w1 w2..."<br>
+  </font></font></p>
+</ul>
+<div style="margin-left: 80px;"><font face="Arial, sans-serif"><font size="2">Envoie
+la chaîne de caractères <b>w1 w2...</b> au
+programme. La chaîne peut contenir les caractères de
+contrôle suivants:</font></font></div>
+<ul>
+  <ul>
+    <ul>
+      <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font size="2">\a
+Cloche<br>
+\b Retour arrière<br>
+\t Tabulation horizontale<br>
+\n Retour à la ligne<br>
+\v Tabulation verticale<br>
+\f Saut de page<br>
+\r Retour chariot<br>
+\" Guillemet<br>
+\\ Barre oblique inversée</font></p>
+      <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font size="2">\[ Echappement</font></p>
+      <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font size="2">\] Séparateur de groupe</font></p>
+      <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font size="2">\^ Caractère ^</font><font face="Arial, sans-serif"><font size="2"><br>
+      </font></font></p>
+
+    </ul>
+  </ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+  <font face="Arial, sans-serif"><font size="2"><b>print </b>"w1 w2..."</font></font></p>
+  <ul>
+    <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2">affiche la chaine de caracteres <span style="font-weight: bold;">w1 w2...</span>&nbsp; sur la sortie standard.<b><br>
+    </b></font></font></p>
+  </ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>sig</b> signame<b><br>
+  </b></font></font></p>
+</ul>
+<div style="margin-left: 80px;">Envoie&nbsp; le&nbsp; signal&nbsp;
+Linux&nbsp; signame au programme.&nbsp; signame peut prendre les
+valeurs : HUP, INT, QUIT, ILL, TRAP, ABRT, BUS, FPE, KILL, USR1, SEGV,
+USR2, PIPE, ALRM, TERM.<br>
+</div>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>sleep</b>
+x<br>
+  </font></font></p>
+
+</ul>
+
+<div style="margin-left: 80px;"><font face="Arial, sans-serif"><font size="2">Arrête
+toute activité pendant <b>x</b> secondes</font></font></div>
+<ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>sh </b>[-s] cmd par...</font></font></p>
+  <ul>
+    <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2">Execute la commande shell <span style="font-weight: bold;">cmd par...</span>&nbsp; (de manière synchrone si l'option [-s] est spécifiée.<b><br>
+    </b></font></font></p>
+  </ul>
+  <p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2"><b>exit</b><br>
+  </font></font></p>
+
+</ul>
+<div style="margin-left: 80px;"><font face="Arial, sans-serif"><font size="2">Fin de
+session</font></font></div>
+<h1 class="western"><a name="6._Utilisation_de_PDIP"></a>6.
+Utilisation de PDIP</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Utiliser
+<a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a><font color="#ff0000">
+</font><font color="#000000">est d'une simplicité
+extrême
+comme on le voit ici avec le pilotage d'un client telnet qui se
+connecte à une machine appelée
+«&nbsp;remote&nbsp;»
+avec le nom de login «&nbsp;foo&nbsp;» et le mot de passe
+«&nbsp;bar&nbsp;». Ensuite la commande </font><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">ls</font></b></font></font><font color="#000000">
+est exécutée avant de terminer la session :</font></font></font></p>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto; font-family: monospace;"><font style="font-size: 9pt;" size="2">$
+pdip --cmd=&#8217;telnet remote&#8217;<br>
+recv
+"login" # Attente du prompt «&nbsp;login:&nbsp;»<br>
+send
+"foo\n" # Envoi du nom de login &#8217;foo&#8217;<br>
+recv
+"Password"# Attente du prompt «&nbsp;Password&nbsp;»<br>
+send
+"bar\n" # Envoi du mot de passe &#8217;bar&#8217;<br>
+recv
+"\$ " # Attente du prompt du shell «&nbsp;$&nbsp;»<br>
+send
+"ls\n" # Lancement de la commande &#8217;ls&#8217;<br>
+recv
+"\$ " # Attente du prompt du shell «&nbsp;$&nbsp;»<br>
+send
+"exit\n" # Sortie du shell<br>
+exit #
+Sortie de PDIP<br>
+$</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Arial, sans-serif"><font size="2"><br>
+Le
+script est largement
+commenté. On précisera toutefois que étant
+donné
+que la commande «&nbsp;recv&nbsp;», reçoit une
+expression régulière en paramètre, il convient
+de ne pas oublier d'inhiber les caractères spéciaux
+tels que <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>$</b></font></font>
+à l'aide du caractère <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>\</b></font></font>.
+D'où la commande <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">recv
+</font></b></font></font><font color="#ff0000"><span style="">"\$
+" </span></font>pour attendre le prompt du shell. Voici un
+exemple de résultat de ce script pdip :</font></font><br>
+<table style="text-align: left; background-color: silver;" border="1">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2">$
+pdip --cmd='telnet remote'<br>
+      <font color="#ff0000"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">recv
+"login&nbsp;»</font></font></font></font><br>
+Trying
+192.0.1.12...<br>
+Connected
+to remote.<br>
+Escape
+character is '^]'.</font></font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2">Linux
+2.6.22-14-generic (remote) (pts/10)<br>
+remote
+login<font color="#ff0000"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">send
+"foo\n"<br>
+recv
+"Password"</font></font></font></font><br>
+:
+foo<br>
+Password<font color="#ff0000"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">send
+"bar\n"<br>
+recv
+"\$ "</font></font></font></font><br>
+:<br>
+Last
+login: Tue Nov 6 20:06:51 CET 2007 on :0<br>
+Linux
+remote 2.6.22-14-generic #1 SMP Sun Oct 14 23:05:12 GMT 2007 i686</font></font></p>
+      <p style="margin-bottom: 0cm; page-break-before: auto;"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2">The
+programs included with the Ubuntu system are free software;<br>
+the
+exact distribution terms for each program are described in the<br>
+individual
+files in /usr/share/doc/*/copyright.<br>
+Ubuntu
+comes with ABSOLUTELY NO WARRANTY, to the extent permitted by<br>
+applicable
+law.<br>
+foo@remote:~$ <font color="#ff0000"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">send
+"ls\n"<br>
+recv
+"\$ "</font></font></font></font><br>
+ls<br>
+DIR2
+DOCUMENTS PERSO TODO<br>
+Applications
+PHOTOS VIDEOS<br>
+foo@remote:~$ <font color="#ff0000"><font face="Letter Gothic MT, monospace"><font style="font-size: 9pt;" size="2"><font color="#ff0000">send
+"exit\n"<br>
+exit</font></font></font></font></font></font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western"><a name="Conclusion"></a>Conclusion</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+notion de
+pseudo-terminal est très largement utilisé dans le
+monde Unix en général à travers les utilitaires
+les plus célèbres tels que <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">telnet</font></b></font></font>
+ou <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">xterm</font></b></font></font>.
+Cet
+article
+a
+présenté
+l'une
+de
+ses
+applications
+à
+travers
+<a href="http://pdip.sourceforge.net"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><font color="#ff0000">pdip</font></b></font></font></a>
+qui a pour but de piloter des programmes interactifs.</font></font></p>
+<h1 class="western"><a name="Notes"></a>Notes&nbsp;</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[1]
+<a name="man_7_pty"></a>man 7 pty</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[2]
+<a name="man_7_regex"></a>man 7 regex<br>
+</font></font><small>[3]
+Programmed Dialogues with Interactive Programs (<a href="http://pdip.sourceforge.net/">PDIP</a>)<br>
+[4] Utilisation des pseudo-terminaux pour piloter les programmes
+interactifs - <a href="http://www.unixgarden.com/index.php/programmation/utilisation-des-pseudo-terminaux-pour-piloter-les-programmes-interactifs"><img alt="glmf_logo" src="../glmf_logo.jpg" style="border: 0px solid ; width: 100px; height: 30px;"></a><br>
+[5] <a href="http://www.tset.de/lpty/">lpty - PTY control for Lua</a><br>
+</small>
+<br>
+</p>
+<h1 class="western"><a name="A_propos_de_lauteur"></a>A
+propos de l'auteur</h1>
+<font face="Arial, sans-serif"><font size="2">L'auteur
+est un ingénieur en informatique travaillant en France. Il peut
+être
+contacté à <a href="http://rachid.koucha.free.fr/contact/contact.html">ici</a>
+ou vous pouvez
+consulter son site <a href="http://rachid.koucha.free.fr/">WEB</a>.<br>
+<br>
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</font></font>
+<div style="text-align: right;"><small><a href="http://rachid.koucha.free.fr/index.html">Page principale</a></small><br>
+<small>&nbsp; <a href="../documents_techniques.html">Page
+précédente</a></small><br>
+</div>
+
+</body></html>

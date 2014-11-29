@@ -1,0 +1,4 @@
+kernel//home/yubo/programe/kernel/samples/kfifo/bytestream-example.ko
+kernel//home/yubo/programe/kernel/samples/kfifo/dma-example.ko
+kernel//home/yubo/programe/kernel/samples/kfifo/inttype-example.ko
+kernel//home/yubo/programe/kernel/samples/kfifo/record-example.ko

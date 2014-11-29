@@ -1,0 +1,74 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BUF_SIZE	echod.c	228;"	d	file:
+BUF_SIZE	select.c	96;"	d	file:
+CFLAGS	Makefile	/^CFLAGS = -g -O0$/;"	m
+Client	echod.c	/^} Client;$/;"	t	typeref:struct:__anon1	file:
+Client	epoll_echod.c	/^} Client;$/;"	t	typeref:struct:__anon3	file:
+Client	select_echod.c	/^} Client;$/;"	t	typeref:struct:__anon2	file:
+MAXLINE	epoll_echod.c	35;"	d	file:
+MAXLINE	select_echod.c	29;"	d	file:
+MAX_EVENTS	epoll_echod.c	174;"	d	file:
+NALLOC	echod.c	28;"	d	file:
+NALLOC	epoll_echod.c	34;"	d	file:
+NALLOC	select_echod.c	28;"	d	file:
+OBJS	Makefile	/^OBJS = select_echod epoll_echod$/;"	m
+SHUT_FD1	echod.c	212;"	d	file:
+SHUT_FD1	select.c	80;"	d	file:
+SHUT_FD2	echod.c	220;"	d	file:
+SHUT_FD2	select.c	88;"	d	file:
+addr	echod.c	/^  struct sockaddr_in addr;$/;"	m	struct:__anon1	typeref:struct:__anon1::sockaddr_in	file:
+addr	epoll_echod.c	/^  struct sockaddr_in addr;$/;"	m	struct:__anon3	typeref:struct:__anon3::sockaddr_in	file:
+addr	select_echod.c	/^  struct sockaddr_in addr;$/;"	m	struct:__anon2	typeref:struct:__anon2::sockaddr_in	file:
+client	echod.c	/^Client   *client;        \/* ptr to malloc'ed array *\/$/;"	v
+client	epoll_echod.c	/^Client   *client;        \/* ptr to malloc'ed array *\/$/;"	v
+client	select_echod.c	/^Client   *client;        \/* ptr to malloc'ed array *\/$/;"	v
+client_add	echod.c	/^client_add(int fd, struct sockaddr_in *addr)$/;"	f
+client_add	epoll_echod.c	/^client_add(int fd, struct sockaddr_in *addr)$/;"	f
+client_add	select_echod.c	/^client_add(int fd, struct sockaddr_in *addr)$/;"	f
+client_alloc	echod.c	/^client_alloc(void)      \/* alloc more entries in the client[] array *\/$/;"	f	file:
+client_alloc	epoll_echod.c	/^client_alloc(void)      \/* alloc more entries in the client[] array *\/$/;"	f	file:
+client_alloc	select_echod.c	/^client_alloc(void)      \/* alloc more entries in the client[] array *\/$/;"	f	file:
+client_del	echod.c	/^client_del(int fd)$/;"	f
+client_del	epoll_echod.c	/^client_del(void *ptr)$/;"	f
+client_del	select_echod.c	/^client_del(int fd)$/;"	f
+client_size	echod.c	/^int       client_size;   \/* # entries in client[] array *\/$/;"	v
+client_size	epoll_echod.c	/^int       client_size;   \/* # entries in client[] array *\/$/;"	v
+client_size	select_echod.c	/^int       client_size;   \/* # entries in client[] array *\/$/;"	v
+connect_socket	echod.c	/^connect_socket(int connect_port, char *address)$/;"	f	file:
+connect_socket	epoll_echod.c	/^connect_socket(int connect_port, char *address)$/;"	f	file:
+connect_socket	select.c	/^connect_socket(int connect_port, char *address)$/;"	f	file:
+connect_socket	select_echod.c	/^connect_socket(int connect_port, char *address)$/;"	f	file:
+fd	echod.c	/^  int   fd;         \/* fd, or -1 if available *\/$/;"	m	struct:__anon1	file:
+fd	epoll_echod.c	/^  int   fd;         \/* fd, or -1 if available *\/$/;"	m	struct:__anon3	file:
+fd	select_echod.c	/^  int   fd;         \/* fd, or -1 if available *\/$/;"	m	struct:__anon2	file:
+forward_port	echod.c	/^static int forward_port;$/;"	v	file:
+forward_port	epoll_echod.c	/^static int forward_port;$/;"	v	file:
+forward_port	select.c	/^static int forward_port;$/;"	v	file:
+forward_port	select_echod.c	/^static int forward_port;$/;"	v	file:
+handle_request	epoll_echod.c	/^handle_request(char *buf, int nread, int clifd, struct sockaddr_in *client_address)$/;"	f	file:
+handle_request	select_echod.c	/^handle_request(char *buf, int nread, int clifd, struct sockaddr_in *client_address)$/;"	f	file:
+listen_socket	echod.c	/^listen_socket(int listen_port)$/;"	f	file:
+listen_socket	epoll_echod.c	/^listen_socket(int listen_port)$/;"	f	file:
+listen_socket	select.c	/^listen_socket(int listen_port)$/;"	f	file:
+listen_socket	select_echod.c	/^listen_socket(int listen_port)$/;"	f	file:
+loop	echod.c	/^static void loop(int port)$/;"	f	file:
+loop	epoll_echod.c	/^static void loop(int port)$/;"	f	file:
+loop	select_echod.c	/^static void loop(int port)$/;"	f	file:
+main	echod.c	/^main(int argc, char *argv[])$/;"	f
+main	epoll_echod.c	/^main(int argc, char *argv[])$/;"	f
+main	select.c	/^main(int argc, char *argv[])$/;"	f
+main	select_echod.c	/^main(int argc, char *argv[])$/;"	f
+max	echod.c	15;"	d	file:
+max	echod.c	16;"	d	file:
+max	epoll_echod.c	21;"	d	file:
+max	epoll_echod.c	22;"	d	file:
+max	select.c	15;"	d	file:
+max	select.c	16;"	d	file:
+max	select_echod.c	15;"	d	file:
+max	select_echod.c	16;"	d	file:
+setnonblocking	epoll_echod.c	/^void setnonblocking(int sock)$/;"	f

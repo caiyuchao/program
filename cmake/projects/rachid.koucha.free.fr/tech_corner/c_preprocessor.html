@@ -1,0 +1,1941 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>How to use the C preprocessor</title>
+  
+  <meta name="author" content="rachid koucha">
+  <meta name="Category" content="C langage, defensive programming, debug, C preprocessor, __FUNCTION__, __LINE__, __GNUC__, __VA_ARGS__">
+  <meta name="language" content="en">
+  <meta http-equiv="Content-Language" content="en">
+  <meta name="description" content="How toi use the C preprocessor (especially CPP de GCC) to get more robust programs.">
+  <meta name="keywords" content="C langage, defensive programming, debug, C preprocessor, __FUNCTION__, __LINE__, __GNUC__, __VA_ARGS__">
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=ISO-8859-1">
+  
+  <meta name="GENERATOR" content="OpenOffice.org 2.4 (Linux)">
+<style type="text/css">
+<!--
+@page { size: 21cm 29.7cm; margin: 2cm }
+P { margin-bottom: 0.21cm }
+H1.western { font-family: "Tahoma", sans-serif; font-size: 16pt; font-weight: medium }
+H1.cjk { font-family: "Lucida Sans Unicode" }
+H1.ctl { font-family: "Tahoma" }
+H2.western { font-family: "Tahoma", sans-serif; font-size: 14pt; font-weight: medium }
+H2.cjk { font-family: "Lucida Sans Unicode" }
+H2.ctl { font-family: "Tahoma" }
+-->
+</style></head><body>
+<small><small><span style="text-decoration: underline;">Author</span>:
+R.
+Koucha<br>
+<span style="text-decoration: underline;">Last update</span>:
+19-Mar-2011<br>
+<br>
+</small></small><small><a href="http://rachid.koucha.free.fr/index.html">Home
+page</a><br>
+<a href="../technical_documents.html">Previous page</a></small><br>
+<br>
+<p style="margin-top: 0.42cm; margin-bottom: 0.5cm; page-break-after: avoid; text-align: center;"><font face="Arial Black, sans-serif"><font size="6"><b>Better use of the C
+language preprocessor<br>
+</b></font></font></p>
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fc_preprocessor_fr.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fc_preprocessor_fr.html&amp;subject=Mieux%20connaitre%20le%20preprocesseur%20du%20langage%20C"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-bottom: 0cm;" align="right"><font face="Arial, sans-serif"><font style="font-size: 8pt;" size="1"><b><br>
+</b></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial Black, sans-serif"><font style="font-size: 11pt;" size="2"><i><b>In C language, the <a href="http://en.wikipedia.org/wiki/C_preprocessor">preprocessing</a>
+is the step before the
+compilation. This is a powerful mechanism which permits the conditional
+compilation, the file inclusion and the definition of
+macro-intructions. Although very simple at first sight, those
+facilities must be used with caution to avoid compilation errors in the
+best cases and program dysfunctionning in the worse cases. Moreover the
+GCC preprocessor provides additional facilities which may appear very
+useful.<br>
+&nbsp; <br>
+</b></i></font></font></p>
+<a href="#Foreword"><span class="western">Foreword</span></a><br>
+<a href="#1._An_unknown_failure_of_the_compiler">1. An unknown failure
+of the compiler</a><br>
+<a href="#2._Ending_of_macros">2. Ending of macros</a><br>
+<a href="#3._Instruction_grouping">3. Instruction grouping</a><br>
+<a href="#4._Put_the_parameters_inside_parentheses">4. Put the
+parameters inside parentheses</a><br>
+<a href="#5._Put_the_expressions_inside">5. Put the expressions inside
+parentheses</a><br>
+<a href="#6._Eviter_les_expressions_en_param%E8tres">6. Eviter les
+expressions en paramètres</a><br>
+<a href="#7._Nombre_variable_darguments">7. Nombre variable d'arguments</a><br>
+<a href="#8._Les_macros_sp%E9ciales">8. Les macros spéciales
+</a><br>
+<div style="margin-left: 40px;"><a href="#8.1.___GNUC__">8.1. __GNUC__</a><br>
+<a href="#8.2.___LINE_____FILE___et___FUNCTION__">8.2. __LINE__,
+__FILE__ et __FUNCTION__</a><br>
+<a href="#8.3._Lop%E9rateur_%AB__%BB">8.3. L'opérateur
+«&nbsp;#&nbsp;»
+</a><br>
+<a href="#8.4._Lop%E9rateur_%AB__%BB">8.4. L'opérateur
+«&nbsp;##&nbsp;»
+</a><br>
+</div>
+<a href="#9._Comment_%E9liminer_les_attributs_de_GCC">9. Comment
+éliminer les attributs de
+GCC
+</a><br>
+<a href="#10._Inclusions_conditionnelles">10. Inclusions conditionnelles</a><br>
+<a href="#11._Conclusion">11. Conclusion
+</a><br>
+<a href="#Related_links"><span style="text-decoration: underline;">Related
+links</span></a><br>
+<a href="#References">References</a><br>
+<a href="#About_the_author_">About the author</a>
+<h2><span class="western"><a name="Foreword"></a>Foreword<br>
+</span></h2>
+<font face="Arial, sans-serif"><font size="2">The original french
+version of this article have been published in&nbsp; <a href="http://www.unixgarden.com/index.php/programmation/mieux-connaitre-et-utiliser-le-preprocesseur-du-langage-c"><span style="text-decoration: underline;"><img alt="glmf_logo" src="../glmf_logo.jpg" style="border: 0px solid ; width: 100px; height: 30px;"></span></a> issue 105.<br>
+</font></font>
+<h1 class="western"><a name="1._An_unknown_failure_of_the_compiler"></a>1.
+An
+unknown
+failure
+of
+the compiler<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Thanks to the macro
+processor of the C language, it is possible to define and use constants
+as follow:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1 &nbsp;#include
+&lt;stdio.h&gt;</font> <br>
+      <font style="font-size: 9pt;" size="2">2</font> <br>
+      <font style="font-size: 9pt;" size="2">3 &nbsp;#define
+CONSTANT_1 (0x3d+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">4 &nbsp;#define
+CONSTANT_2 (0x3e+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">5 &nbsp;#define
+CONSTANT_3 (0x3f+20)</font> <br>
+      <font style="font-size: 9pt;" size="2">6</font> <br>
+      <font style="font-size: 9pt;" size="2">7 &nbsp;int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">8 &nbsp;{</font> <br>
+      <font style="font-size: 9pt;" size="2">9
+&nbsp; &nbsp;printf("%u\n", CONSTANT_1);</font> <br>
+      <font style="font-size: 9pt;" size="2">10
+&nbsp; printf("%u\n", CONSTANT_2);</font> <br>
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; printf("%u\n", CONSTANT_3);</font> <br>
+      <font style="font-size: 9pt;" size="2">12 }</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<font face="Arial, sans-serif"><font size="2">If we compile this
+program, we get an unexpected error:<br>
+<br>
+</font></font>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> $ gcc main.c <br>
+main.c:10:18: error: invalid suffix "+20" on integer constant<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">The
+compiler point out an error at line 10, column 18 that is to say at the
+location of the <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANT_2</b></font></font>
+macro.
+This is a weakness of the compiler which believes to encounter an
+integer constant with the value "0x3" along with the exponent "e+20":
+0x3 x 10^20. This is not a legal notation in C language as the
+exponents arte not allowed for the hexadecimal constants. To get out of
+this error, </font></font><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CO</b></font></font></font></font><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>NSTANT_2</b></font></font> may be
+rewritten with blanks as:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">#define
+CONSTANT_2 (0x3e + 20)</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2"><br>
+This makes possible the compilation and the execution of the program:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc main.c </font> <br>
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out</font> <br>
+      <font style="font-size: 9pt;" size="2">81</font> <br>
+      <font style="font-size: 9pt;" size="2">82</font> <br>
+      <font style="font-size: 9pt;" size="2">83</font> </td>
+    </tr>
+  </tbody>
+</table>
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><br>
+</b></font></font>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">So, it
+is advised to systematically put spaces arounf the "+" and "-"
+operators when we define a macro with the hexadecimal digit "e".<br>
+<br>
+</font></font></p>
+<h1 class="western"><a name="2._Ending_of_macros"></a>2. Ending of
+macros<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">It is not recommended to
+end a macro with ";" as shown in the following example:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">1
+&nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+ADD(a,
+b)
+a
++
+b;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">2 </font> <br>
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;int main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">4
+&nbsp;{</font> <br>
+      <font style="font-size: 9pt;" size="2">5
+&nbsp;int r = ac;</font> <br>
+      <font style="font-size: 9pt;" size="2">6 </font> <br>
+      <font style="font-size: 9pt;" size="2">7 &nbsp; &nbsp;if (r)</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">8 &nbsp; &nbsp; r =
+ADD(4, 5);</font> <br>
+      <font style="font-size: 9pt;" size="2">9 &nbsp; &nbsp;else</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">10 &nbsp; &nbsp;r =
+ADD(5, 6);</font> <br>
+      <font style="font-size: 9pt;" size="2">11 </font> <br>
+      <font style="font-size: 9pt;" size="2">12 &nbsp; return 0;</font>
+      <br>
+      <font style="font-size: 9pt;" size="2">13
+}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;"><font face="Arial, sans-serif"><font size="2">This ends with a compilation
+error:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">$ gcc main.c <br>
+main.c: In function 'main':<br>
+main.c:9: error: <span style="color: rgb(255, 0, 0);">'else' without a
+previous 'if'</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">The line
+number 9 contains two C instructions because of the ending ";" of the <span style="font-weight: bold;">ADD()</span> macro. The output of the
+preprocessor shows:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">&gt;
+gcc -E main.c</font> <br>
+      <font style="font-size: 9pt;" size="2">[...]</font> <br>
+      <font style="font-size: 9pt;" size="2">if
+(r)</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">r
+= 4 + 5;;</font></font></font> <br>
+      <font style="font-size: 9pt;" size="2">else</font> <br>
+      <font style="font-size: 9pt;" size="2">r
+= 5 + 6;;</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">So, the <span style="font-weight: bold;">else</span> instruction becomes orphan
+because the <span style="font-weight: bold;">if</span> to which it is
+supposed to belong to contains more than one instruction which are not
+grouped inside braces: "r = 4 + 5" and the empty instruction ";".<br>
+<br>
+</font></font></p>
+<h1 class="western"><a name="3._Instruction_grouping"></a>3.
+Instruction grouping<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">When a macro contains
+several instructions like:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;printf("=
+%d\n", c);</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">We may
+face the compilation error seen in <a href="#2._Ending_of_macros">§2</a>
+if it is used in a <span style="font-weight: bold;">if</span>
+instruction because the user of the macro may not put braces around the
+call. Or perhaps the macro originally contained a single instruction
+and was naturally used without braces around it inside the <span style="font-weight: bold;">if</span> instructions but an enhancement
+of the software introduced additional instrcutions in the macro. This
+may trigger unexpected software dysfunctionnings. For example, if the
+macro is used in a <span style="font-weight: bold;">while</span>
+without braces: <br>
+</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2"><br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; printf("=
+%d\n", c);</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font> <br>
+      <font style="font-size: 9pt;" size="2">{</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+i = 0;</font> <br>
+      <font style="font-size: 9pt;" size="2">int
+r = 0;</font> <br>
+      <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; while
+(av[i++])</font></font></font><br>
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; ADD(r,
+1, r);</font></font></font><br>
+      <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font> <br>
+      <font style="font-size: 9pt;" size="2">}</font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">We
+expect that all the instructions of the macro are executed in each
+iteration of the loop. Unfortunately, the preprocessor will generate a
+suite of instructions without braces. So, at each iterations, only the
+first instruction "</font></font><font style="font-size: 9pt;" size="2">printf("%d
++
+%d
+",
+a,
+b);"</font><font face="Arial, sans-serif"><font size="2"> is
+executed. To avoid those kind of errors, it is advised to group the
+instructions in a "do-while" without any ending ";" (rule of <a href="#2._Ending_of_macros">§2</a>) in order to make the macro
+appear as a single instruction:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"> <font style="font-size: 9pt;" size="2">#define
+ADD(a, b, c) <font color="#ff0000"><font style="font-size: 9pt;" size="2">do
+{</font></font> \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+printf("%d
++ %d ", a, b); \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; c
+= a + b; \</font> <br>
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+printf("=
+%d\n", c); \</font> <br>
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font></font></font> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">The
+compiler will not generate any loop as the test condition of the loop
+is always false: <span style="font-weight: bold;">while(0)</span>. We
+should not consider to use only braces because this would trigger the
+problem seen in <a href="#2._Ending_of_macros">§2</a> if the
+macro is used followed by a ";"&nbsp; in a "if-else". Under this
+format, it is mandatory for the user to put an ending ";" behind the
+macro when he uses it otherwise he would get a compilation error as if
+it was any other single instruction not followed by a ";". This is the
+standard programming way in C language. <br>
+<br>
+</font></font></p>
+<h1 class="western"><a name="4._Put_the_parameters_inside_parentheses"></a>4.
+Put
+the
+parameters inside parentheses<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Let's consider the
+following program which defines and uses a macro excuting an integer
+division:<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+DIV(a, b, c) do { \</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; printf("%d
+/ %d ", a, b); \</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; c
+= a / b; \</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; printf("=
+%d\n", c); \</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+r = 5;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+v1 = 12;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+v2 = 6;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; DIV(v1,
+v2, r);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; DIV(v1
++ 6, v2, r);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">At
+runtime we expect the display of the value 2 as the result for the
+first division (12 / 6) and 3 as the result for the second division </font></font><font face="Arial, sans-serif"><font size="2">((12 + 6)
+/ 6). But we get the erroneous following result instead:</font></font><br>
+<font face="Arial, sans-serif"><font size="2"><br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&gt;
+./a.out </font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">12
+/ 6 = 2</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">18
+/ 6 = 13</font></font></font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">As
+usual, when there are doubts, the output of the preprocessor is useful:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+r = 5;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+v1 = 12;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+v2 = 6;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; do
+{ printf("%d / %d ", v1, v2);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;r
+= v1 / v2; </font></font></font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;printf("=
+%d\n", r);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;}
+while(0);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; do
+{ printf("%d / %d ", v1 + 6, v2);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;r
+= v1 + 6 / v2;</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp;printf("=
+%d\n", r);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font color="#ff0000"> <font style="font-size: 9pt;" size="2"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;}
+while(0);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">We can
+see that we face a problem of operator precedence at the second call of
+<span style="font-weight: bold;">DIV()</span>. In the expression "</font></font><font face="Arial, sans-serif"><font size="2">r = v1 + 6 / v2", the operator
+"/" is more prioritary than the "+". So, the compiler generates an
+operation equivallent to "</font></font><font face="Arial, sans-serif"><font size="2">r = v1 + ( 6 / v2
+)". Hence the result 13 when <span style="font-weight: bold;">v1</span>
+and <span style="font-weight: bold;">v2</span> have respectively the
+values 12 and 6. The solution consists in puting parentheses around all
+the occurences of the macro parameters:&nbsp; </font></font><br>
+<font face="Arial, sans-serif"><font size="2"><br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#define
+DIV(a, b, c) do { \</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;printf("%d
+/ %d ", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>a<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>b<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>);
+\</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; (</font></font>c<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>
+= <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>a<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>
+/ <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>b<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>;
+\</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;printf("=
+%d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>c<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font>);
+\</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }
+while(0)</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">The
+second call to <span style="font-weight: bold;">DIV()</span> in the
+preceding program now gives the right operation in the output of the
+preprocessor:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">do
+{ printf("%d / %d ", (v1 + 6), (v2));</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;(r)
+= (v1 + 6) / (v2);</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+&nbsp;printf("=
+%d\n", (r));</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;}
+while(0);</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="5._Put_the_expressions_inside"></a>5.
+Put the expressions inside parentheses<br>
+</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Let's consider the
+constant defined as the macro <span style="font-weight: bold;">CONSTANT</span>
+and used as follow:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+BASE 2000</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+CONSTANT BASE + 2</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; printf("%d\n",
+CONSTANT / 2);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">The
+expected result is the result of the operation "2002 / 2", that is to
+say 1001. But we get 2001. The output of the preprocessor show that we
+have a problem of operator precedence like the one we face in <a href="#4._Put_the_parameters_inside_parentheses">§ 4</a>:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">printf("%d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">2000
++ 2 / 2</font></font>);</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><br>
+</p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">As a
+general rule, if a macro contains an expression (contant, test, ...),
+it is advised to use parentheses. Hence the following fix for our
+example:<br>
+<br>
+</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#define
+BASE <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>2000<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+CONSTANT <font color="#ff0000"><font style="font-size: 9pt;" size="2">(</font></font>BASE
++
+2<font color="#ff0000"><font style="font-size: 9pt;" size="2">)</font></font></font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western"><a name="6._Eviter_les_expressions_en_paramètres"></a>6.
+Avoid passing expressions as parameters<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">On
+a souvent tendance à
+utiliser une macro comme si c'était une fonction ou alors des
+évolutions de code peuvent mener au fait qu'une fonction
+deviennent
+une macro pour des raisons de lisibilité ou d'optimisation.
+Voici un
+exemple de programme qui définit et utilise la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK(c)</b></font></font>
+qui retourne vrai si le paramètre est un caractère blanc
+(espace ou
+tabulation)&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ((c) == '\t' || (c) == ' ')</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(*(p++)))</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", (p - 1) - av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Ce
+programme est sensé
+afficher les indices des caractères blancs dans son nom.
+Pourtant
+l'indice affiché est erroné ou certains blancs ne sont
+pas
+détectés&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&gt;
+gcc main.c -o "nom avec espaces"</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+./nom\&nbsp;avec\&nbsp;espaces </font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">Blanc
+à l'indice 5</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+seul blanc détecté
+est indiqué à l'indice 5 alors que dans la chaîne
+de caractères
+«&nbsp;./nom&nbsp;avec&nbsp;espaces&nbsp;», il y a des
+blancs aux
+indices 5 et 10. Ceci est du au fait que le paramètre <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>c</b></font></font>
+est évalué deux fois dans la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>&nbsp;:
+la
+première
+fois
+pour
+être
+comparé
+à
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>'\t'
+</b></font></font>et la seconde pour être comparé à<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>
+'&nbsp;'</b></font></font>. Or, le programme
+passe <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>*(p++)
+</b></font></font>à la macro. Ce qui donne en sortie
+du
+préprocesseur&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;"><font style="font-size: 9pt;" size="2">if
+(((*(p++)) == '\t' || (*(p++)) == ' '))</font></td>
+    </tr>
+  </tbody>
+</table>
+<p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b><br>
+</b></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">En
+d'autres termes, la
+première comparaison se fait avec le caractère
+pointé par <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>
+étant ensuite incrémenté
+(post-incrémentation), la seconde
+comparaison se fait avec le caractère suivant. En retour de
+macro, <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>p</b></font></font>
+est de nouveau incrémenté. La bonne écriture pour
+le programme est
+donc d'éviter de passer une expression en paramètre de la
+macro&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ((c) == '\t' || (c) == ' ')</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(<font color="#ff0000"><font style="font-size: 9pt;" size="2">*p</font></font>))</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">p</font></font>
+- av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; &nbsp; p
+++;</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Il
+n'est pas toujours
+évident de respecter cette règle surtout si <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>
+était une fonction et après évolution du code
+source, la fonction
+est devenue une macro. En effet, une telle modification implique
+qu'une revue complète du code soit faite. Ce n'est pas facile
+voire
+impossible si la macro est définie dans un fichier
+d'entête qui est
+déjà utilisé dans nombre de programmes à
+travers le monde.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Une
+extension spécifique
+à GCC, donc pas forcément conforme à l'ANSI C,
+offre l'opportunité
+de transformer des blocs d'instructions (instructions encadrées
+par
+des accolades) en expression (cf. <a href="http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html">[1]</a>).
+Comme
+il
+est
+par
+ailleurs
+possible
+de
+déclarer
+des
+variables
+locales
+à
+un
+bloc,
+la
+macro
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>IS_BLANK()</b></font></font>
+peut être réécrite comme suit&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+IS_BLANK(c) ({char _c = c; </font></font>((<font color="#ff0000"><font style="font-size: 9pt;" size="2">_c</font></font>)
+== '\t' || (<font color="#ff0000"><font style="font-size: 9pt;" size="2">_c</font></font>)
+==
+'
+');<font color="#ff0000"><font style="font-size: 9pt;" size="2">})</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">char
+*p = av[0];</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; while(*p)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; if
+(IS_BLANK(<font color="#ff0000"><font style="font-size: 9pt;" size="2">*(p++)</font></font>))</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+printf("Blanc
+à l'indice %d\n", <font color="#ff0000"><font style="font-size: 9pt;" size="2">(p
+- 1)</font></font> - av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+variable locale <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>_c</b></font></font>
+a été définie à l'intérieur du bloc
+de la macro pour stocker la
+valeur du paramètre. Ainsi, ce dernier n'est
+évalué plus qu'une
+seule fois&nbsp;: au moment de l'affectation de la variable locale.</font></font></p>
+<h1 class="western"><a name="7._Nombre_variable_darguments"></a>7.
+Nombre variable d'arguments</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+norme ISO C99 permet
+de définir des macros avec un nombre variable d'arguments. Il
+existe
+deux notations&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">1
+&nbsp;#include &lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">2</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;#define DEBUG(fmt, <font color="#ff0000"><font style="font-size: 9pt;" size="2">...</font></font>)
+\</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">4
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fprintf(stderr, fmt
+"\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">__VA_ARGS__</font></font>)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">5</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">6
+&nbsp;#define DEBUG2(fmt, <font color="#ff0000"><font style="font-size: 9pt;" size="2">args...</font></font>)
+\</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">7
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fprintf(stderr, fmt
+"\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">args</font></font>)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">8</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">9
+&nbsp;int main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">10
+{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; DEBUG("Nom du programme = %s", av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">12
+&nbsp; DEBUG("Message sans arguments");</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">13</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">14
+&nbsp; DEBUG2("Nom du programme = %s", av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">15
+&nbsp; DEBUG2("Message sans arguments");</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">16</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">17 &nbsp; return 0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">18
+}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2"><font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG()</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG2()</b></font></font>
+sont des surcharges de la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fprintf()</b></font></font>
+pour afficher un message d'erreur formaté. Le paramètre <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fmt</b></font></font>
+concaténé à des chaînes de caractères
+est le format passé en
+premier argument de la fonction d'affichage. Les notations
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__VA_ARGS__</b></font></font>
+ou «&nbsp;args&nbsp;» représentent tous les
+arguments en nombre
+variable avec les virgules qui les séparent. La seconde notation
+est
+souvent préférée à la première dans
+la mesure où elle permet de
+nommer les arguments (par exemple ici avec <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>args</b></font></font>)
+au lieu d'utiliser l'identifiant générique <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__VA_ARGS__</b></font></font>.
+La seconde notation était d'ailleurs spécifique à
+GCC avant que
+les macros à nombre variable d'arguments ne soient
+normalisées. Sur
+d'anciennes versions de GCC, c'est donc la seule notation
+supportée.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Bien
+que très pratique,
+ces écritures présentent un inconvénient de
+taille&nbsp;: elles
+n'autorisent pas l'appel sans arguments. Voici le résultat de la
+compilation suivie de la sortie du préprocesseur pour le
+programme
+précédent&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&gt;
+gcc main.c </font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">main.c:
+In function «main":</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">main.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">12:
+erreur: expected expression before «)" token</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">main.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">15:
+erreur: expected expression before «)" token</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc -E main.c</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">[...]</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Nom du programme = %s" "\n", 11, av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Message sans arguments" "\n", 12, );</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Nom du programme = %s" "\n", 14, av[0]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">&nbsp; fprintf(stderr,
+"Message sans arguments" "\n", 15, );</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Les
+erreurs de
+compilation viennent de la virgule qui précède la liste
+vide des
+arguments variables au deuxième et quatrième appel
+à <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fprintf()</b></font></font>.
+GCC propose une extension très utile à travers la
+notation
+«&nbsp;##&nbsp;»
+pour supprimer la virgule quand la liste des arguments qui la
+succède
+est vide. D'où la réécriture suivante des
+macros&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#define
+DEBUG(fmt, ...) \</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+fmt "\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">##</font></font>
+__VA_ARGS__)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+DEBUG2(fmt, args...) \</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+fmt "\n", __LINE__, <font color="#ff0000"><font style="font-size: 9pt;" size="2">##</font></font>
+args)</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h1 class="western"><a name="8._Les_macros_spéciales"></a>8. Les macros
+spéciales</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Il
+existe de nombreuses
+macros et notations ayant un rôle particulier pour le
+préprocesseur.
+Dans ce paragraphe, seuls sont cités les plus utiles ou tout au
+moins les plus usitées.</font></font></p>
+<h2 class="western"><a name="8.1.___GNUC__"></a>8.1. __GNUC__</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__GNUC__</b></font></font>
+est toujours définie lorsqu'on utilise la chaîne de
+compilation
+GCC. C'est donc conseillé pour faire de la compilation
+conditionnelle quand un programme utilise des extensions
+spécifiques
+à GCC mais qui est susceptible d'être compilé par
+d'autres chaînes
+de compilation (cf. <a href="#9._Comment_%E9liminer_les_attributs_de_GCC">§ 9</a> pour
+un exemple d'utilisation).</font></font></p>
+<h2 class="western"><a name="8.2.___LINE_____FILE___et___FUNCTION__"></a>8.2.
+__LINE__,
+__FILE__
+et
+__FUNCTION__</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Les
+macros <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__LINE__</b></font></font>,
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FILE__</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FUNCTION__</b></font></font>
+sont respectivement remplacées par le numéro de ligne, le
+nom de
+fichier et le nom de la fonction dans lesquelles elles
+apparaîssent.
+Ces facilités sont en général utilisées
+pour la génération de
+traces et d'erreurs pour aider à la mise au point. Pour
+illustrer,
+voici un petit programme affichant ses arguments à l'aide de la
+macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>DEBUG()</b></font></font>
+dont la valeur ajoutée est d'imprimer le nom de fichier, le nom
+de
+la fonction et le numéro de ligne d'où elle est
+appelée&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+DEBUG(fmt, args...) \</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; fprintf(stderr,
+"%s(%s)#%d : " fmt , \</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; __FILE__,
+__FUNCTION__, __LINE__, ## args)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+i;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; for
+(i = 0; i &lt; ac; i ++)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; DEBUG("Param
+%d is : %s\n", i, av[i]);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; return
+0;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">[...]</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc debug.c</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out param1 param2</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 0 is : ./a.out</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 1 is : param1</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">debug.c(main)#14</font></font>
+: Param 2 is : param2</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">On
+notera que
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__FUNCTION__</b></font></font>
+est spécifique à GCC. Le standard C est arrivé
+après avec la
+définition <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__func__</b></font></font>.
+Bien que donnant un résultat identique, ces deux notations avait
+une
+différence de taille&nbsp;: la première s'expansait en
+une chaîne
+de caractères constante tandis que l'autre se comportait comme
+si en
+début de chaque fonction, un tableau local de nom
+«&nbsp;__func__&nbsp;»
+était défini et initialisé avec la chaîne de
+caractères
+constante qui contient le nom de la fonction. Donc d'un coté, on
+avait une constante qui pouvait être concaténée au
+moment de la
+compilation à d'autres chaînes de caractères alors
+que de l'autre
+on avait une variable. Mais depuis la version 3.4 du compilateur GCC,
+ces deux notations sont identiques et se comportent toutes deux comme
+des variables.</font></font></p>
+<h2 class="western"><a name="8.3._Lopérateur_«__»"></a>8.3.
+L'opérateur
+«&nbsp;#&nbsp;»</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">La
+notation «&nbsp;#&nbsp;»
+permet de convertir un paramètre de macro en chaîne de
+caractères.
+Par exemple, voici une fonction qui affiche un numéro de signal
+Linux gràce à la macro <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CASE_SIG()</b></font></font>&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#include
+&lt;signal.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#include
+&lt;stdlib.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+CASE_SIG(s) case (s) : printf("%s\n", "SIGNAL_" <font color="#ff0000"><font style="font-size: 9pt;" size="2">#s</font></font>);
+break</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">void
+signum(int sig)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; switch(sig)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGINT);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGTERM);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGKILL);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGTRAP);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGSEGV);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+CASE_SIG(SIGCHLD);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; [...]</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp; default
+: printf("???\n");</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; if
+(ac &gt; 1)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; {</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; &nbsp;
+signum(atoi(av[1]));</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; }</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">[...]</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc signal.c</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out 5</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">SIGNAL_SIGTRAP</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="8.4._Lopérateur_«__»"></a>8.4.
+L'opérateur
+«&nbsp;##&nbsp;»</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">On
+a déjà eu une forme
+d'utilisation de «&nbsp;##&nbsp;» dans le <a href="#7._Nombre_variable_darguments">§ 7</a>. Mais il existe
+une
+autre forme d'utilisation où cette directive concatène
+les éléments
+lexicaux qui l'entourent pour former une nouvelle unité
+lexicale.
+Dans l'exemple suivant les mots <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTA</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>NTE</b></font></font>
+sont concaténés pour former le nom <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>CONSTANTE</b></font></font>
+qui s'avère être une macro définissant la constante
+233&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#include
+&lt;stdio.h&gt;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+CONSTANTE 233</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+CONCAT(a, b) a##b</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">int
+main(int ac, char *av[])</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&nbsp; printf("%d\n",
+CONCAT(CONSTA, NTE));</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">}</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">[...]</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+gcc concat.c</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">&gt;
+./a.out</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">233</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2 class="western"><a name="9._Comment_éliminer_les_attributs_de_GCC"></a>9.
+Comment
+éliminer
+les
+attributs
+de
+GCC</h2>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Les
+attributs sont des
+extensions spécifiques à GCC pour augmenter les
+contrôles et
+contribuer à l'optimisation du code généré.
+Considérons
+l'exemple suivant où est décrit l'attribut
+«&nbsp;format&nbsp;»
+(pour de plus amples informations sur les attributs de GCC, cf. <a href="http://www.unixwiz.net/techtips/gnu-c-attributes.html">[4]</a>).
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>funct()</b></font></font>
+fait appel à deux fonctions effectuant de l'affichage
+formaté à la
+manière de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>printf()</b></font></font>&nbsp;:
+le premier paramètre contient une description du format d'une
+chaîne
+de caractères et la liste variable des paramètres qui
+suivent est
+utilisée pour construire la chaîne à afficher. A
+l'appel de ces
+fonctions d'affichage, il y a une erreur classique de
+programmation&nbsp;:
+le format nécessite l'adresse d'une chaîne de
+caractères et un
+entier signé mais la liste des aguments ne contient qu'un entier
+signé.</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">1
+&nbsp;extern void my_printf1 (const char *fmt, ...);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">2 </font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">3
+&nbsp;extern void my_printf2 (const char *fmt, ...)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">4 &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<font color="#ff0000"><font style="font-size: 9pt;" size="2">__attribute__
+((format (printf, 1, 2)))</font></font>;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">5 </font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">6 </font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">7
+&nbsp;void funct(void)</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">8
+&nbsp;{</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">9
+&nbsp; &nbsp;my_printf1(<font color="#ff0000"><font style="font-size: 9pt;" size="2">"Affichage
+de %s suivi de %d\n", 46</font></font>);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">10 </font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">11
+&nbsp; my_printf2(<font color="#ff0000"><font style="font-size: 9pt;" size="2">"Affichage
+de %s suivi de %d\n", 46</font></font>);</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">12
+}</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">La
+compilation de ce
+programme avec l'option <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>-Wall</b></font></font>
+va signaler l'erreur de programmation (sous la forme d'un
+«&nbsp;warning&nbsp;») pour la ligne 11 mais pas pour la
+ligne
+9.
+En effet, en ligne 11, on utilise la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>my_printf2()</b></font></font>
+qui est définie avec l'attribut <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>format</b></font></font>
+pour indiquer que c'est une fonction
+«&nbsp;printf-like&nbsp;»
+qui
+utilise un format en argument 1 et que la liste variable des
+arguments commence au deuxième paramètre&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&gt;
+gcc -c -Wall attribute.c </font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">attribute.c:
+In function «funct":</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">attribute.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">11:
+attention : format «%s" expects type «char *", but
+argument 2 has type «int"</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">attribute.c:<font color="#ff0000"><font style="font-size: 9pt;" size="2">11:
+attention : trop peu d'arguments dans le format</font></font></font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Si
+la notion d'attribut
+est pratique et puissante, elle peut poser problème lorsque le
+compilateur utilisé n'est pas GCC. Comme la directive <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__attribute__</b></font></font>
+est définie avec un seul paramètre (d'où le double
+parenthésage
+lorsqu'on lui passe plusieurs paramètres de sorte à ce
+qu'ils
+n'apparaîssent que sous la forme d'un seul), il est possible
+d'utiliser le principe de la compilation conditionnelle pour
+redéfinir <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__attribute__</b></font></font>
+à rien lorsque le compilateur utilisé n'est pas GCC&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">#ifndef
+__GNUC__</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#define
+__attribute__(p) // Rien</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">#endif
+// __GNUC__</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Dans
+cet exemple, la
+condition de compilation utilise le drapeau <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>__GNUC__</b></font></font>
+qui n'est défini par défaut que lorsque GCC est
+utilisé (cf. §
+<a href="#8.1.___GNUC__">8.1</a>).</font></font></p>
+<h1 class="western"><a name="10._Inclusions_conditionnelles"></a>10.
+Inclusions conditionnelles</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">Un
+fichier d'entête est
+inclus dans un fichier source à l'aide de la directive
+«&nbsp;#include&nbsp;».
+Ces fichiers contiennent la plupart du temps des déclarations
+externes de variables ou fonctions, des définitions de types et
+de
+macros. Un fichier d'entête peut lui-même inclure d'autres
+fichiers
+d'entête car une règle de base en programmation C est de
+rendre un
+fichier d'entête indépendant. En d'autres termes, si un
+fichier
+d'entête utilise un type, une macro, une fonction ou une
+variable,
+il est recommandé que soit inclus dans ce fichier, le fichier
+d'entête où se trouve la définition correspondante.
+Dans l'exemple
+de la <a href="#Figure_1">figure 1</a>, le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+inclut les fichiers d'entête <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>
+qui définissent respectivement le type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str_t</b></font></font>
+et la fonction <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fonc()</b></font></font>.
+Ces deux derniers incluent le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+pour la définition du type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER</b></font></font>.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><a name="Figure_1"></a>Figure
+1&nbsp;:
+Inclusions multiples</i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;"><font face="Arial Narrow, sans-serif"><font size="2"><i><img style="width: 1058px; height: 794px;" alt="figure_1" src="c_preprocessor_fr_figure_1.jpg"></i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">La
+compilation de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+donne les erreurs suivantes&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2">&gt;
+gcc -c main.c </font> </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">In
+file included from fct.h:1,</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">from
+main.c:2:</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">entier.h:1:
+erreur: redefinition of typedef «ENTIER"</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">entier.h:1:
+erreur: previous declaration of «ENTIER" was here</font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Le
+compilateur remonte le
+fait que le type <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER</b></font></font>
+est défini deux fois. La première définition
+provient du fichier
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et la seconde du fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>
+qui incluent tout deux le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>.
+Cela donne comme résultat que le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+inclut le fichier <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+deux fois. Pour résoudre ce problème on peut utiliser la
+compilation conditionnelle de sorte à inclure un fichier
+d'entête
+seulement si une définition qui lui est propre n'est pas
+déjà
+définie. Cette définition est généralement
+faite à partir du nom
+du fichier. Afin d'illustrer le propos, voici comment le fichier
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+est modifié pour être inclus qu'à la condition que <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER_H</b></font></font>
+ne soit pas déjà défini&nbsp;:</font></font></p>
+<table style="text-align: left; font-family: monospace; background-color: silver;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="white-space: nowrap;">
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;"><font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#ifndef
+ENTIER_H</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#define
+ENTIER_H</font></font></font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2">typedef
+int ENTIER;</font></p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <br>
+      </p>
+      <p style="background: transparent none repeat scroll 0% 50%; -moz-background-clip: border; -moz-background-origin: padding; -moz-background-inline-policy: continuous; margin-bottom: 0cm; page-break-before: auto;">
+      <font style="font-size: 9pt;" size="2"><font color="#ff0000"><font style="font-size: 9pt;" size="2">#endif
+// ENTIER_H</font></font></font></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify"><font face="Arial, sans-serif"><font size="2">Cela
+permet de compiler
+<font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>main.c</b></font></font>
+car <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>ENTIER_H</b></font></font>
+est défini par l'inclusion de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+dans <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>str.h</b></font></font>
+et cela va donc empêcher la deuxième inclusion de <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>entier.h</b></font></font>
+via <font face="Bitstream Vera Sans Mono, monospace"><font style="font-size: 9pt;" size="2"><b>fct.h</b></font></font>.
+D'une manière générale, il est conseillé
+d'appliquer le principe
+de l'inclusion conditionnelle à tout fichier d'entête. La <a href="#Figure_2">figure 2</a>
+est une version revue et corrigée de la <a href="#Figure_1">figure
+1</a> à laquelle a été
+appliqué ce principe.</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;">
+<font face="Arial Narrow, sans-serif"><font size="2"><i><a name="Figure_2"></a>Figure
+2&nbsp;:
+Inclusions conditionnelles</i></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto; text-align: center;"><font face="Arial Narrow, sans-serif"><font size="2"><i><img style="width: 1058px; height: 794px;" alt="figure_2" src="c_preprocessor_fr_figure_2.jpg"></i></font></font></p>
+<h1 class="western"><a name="11._Conclusion"></a>11. Conclusion</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="justify">
+<font face="Arial, sans-serif"><font size="2">This article introduced
+various rules and tricks to get the best from the C preprocessor in
+order to enhance the robustness, the portability and the debugging of
+the programs.<br>
+Those are only a subset of the powerful offered capabilities. The
+reader can look at the <a href="#Related_links">related links</a> and <a href="#References">references</a> of this article to go farther.<br>
+</font></font></p>
+<h1 class="western"><a name="Related_links"></a>Related links<br>
+</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[1] GCC extensions:
+<a href="http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html">http://sunsite.ualberta.ca/Documentation/Gnu/gcc-2.95.2/html_chapter/gcc_4.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[2] The C preprocessor :
+<a href="http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221">http://www.game-lab.com/index.php?section=tutorials&amp;section_id=1&amp;p=tutorial&amp;action=showtut&amp;id=221</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[3] The C preprocessor :
+<a href="http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html">http://www.redhat.com/docs/manuals/enterprise/RHEL-4-Manual/cpp/index.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[4] GCC attributes :
+<a href="http://www.unixwiz.net/techtips/gnu-c-attributes.html">http://www.unixwiz.net/techtips/gnu-c-attributes.html</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left">
+<font face="Arial, sans-serif"><font size="2">[5] GCC manuals :
+<a href="http://gcc.gnu.org/onlinedocs/">http://gcc.gnu.org/onlinedocs/</a></font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;" align="left"><font face="Arial, sans-serif"><font size="2">[6] The C
+preprocessor in Wikipedia : <a href="http://en.wikipedia.org/wiki/C_preprocessor">http://en.wikipedia.org/wiki/C_preprocessor</a><br>
+</font></font></p>
+<h1 class="western"><a name="References"></a>References</h1>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[7]
+Boulay (Nicolas),
+«&nbsp;Le C n'est pas portable&nbsp;», GLMF 102,
+Février 2008</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[8]
+Boulay (Nicolas),
+«&nbsp;Le processus de compilation C&nbsp;», GLMF 103, Mars
+2008</font></font></p>
+<p style="margin-top: 0.2cm; margin-bottom: 0.1cm; page-break-before: auto;">
+<font face="Arial, sans-serif"><font size="2">[9]
+Kernighan, Brian.W. &amp;
+Ritchie, Dennis.M., «&nbsp;Le langage C&nbsp;», 2nd
+edition,
+Masson, 1990</font></font></p>
+<h1 class="western"><a name="About_the_author_"></a>About the author<br>
+</h1>
+<font face="Arial, sans-serif"><font size="2">The author is an engineer
+in computer sciences located in France. He can be contacted <a href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have a look at his <a href="http://rachid.koucha.free.fr/contact/contact.html">WEB site</a>.<br>
+<br>
+</font></font><font face="Arial, sans-serif"><font size="2"><br>
+</font></font>
+<font face="Arial, sans-serif"><font size="2">
+<table style="background-color: silver; text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</font></font>
+<div style="text-align: right;"><small><a href="http://rachid.koucha.free.fr/index.html">Home page</a></small><br>
+<small>&nbsp; <a href="../technical_documents.html">Previous page<br>
+</a></small></div>
+<br>
+<br>
+
+</body></html>

@@ -1,0 +1,484 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+  
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>The nonnull GCC attribute and compiler optimizations</title>
+  
+
+  
+  
+  <meta name="description" content="This paper focuses on the nonnull GCC attribute.">
+
+  
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+  
+  <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script></head><body>
+<small><a href="../technical_documents.html">Go back to previous page</a><br>
+<a href="../index.html">Go back to home page</a></small><br>
+
+<br>
+
+<small><small><span style="text-decoration: underline;">Last update</span>:
+07-Aug-2012<br>
+<span style="text-decoration: underline;">Author</span>: R. Koucha</small></small><br>
+
+<h1 style="text-align: center;"><span style="font-style: italic;"></span>The
+GCC nonnull attribute and compiler optimizations<br>
+</h1>
+
+<br>
+
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<table style="text-align: left; width: 100%;" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fnonnull_gcc_attribute.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80" style="border: medium none ; overflow: hidden; width: 450px; height: 80px;" allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Fnonnull_gcc_attribute.html&amp;subject=nonnull%20GCC%20attribute"><img alt="s" src="../send_to_a_friend.gif" style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<h2>Introduction</h2>
+
+This paper focuses on the <span style="font-weight: bold;">nonnull</span>
+GCC attribute as described in the <a href="http://gcc.gnu.org/onlinedocs/gcc-4.2.1/gcc/Function-Attributes.html">manual
+of GCC</a>. This attribute specifies that some function parameters
+should
+be non-null pointers.&nbsp; When&nbsp; the compiler optimizations are
+activated, this can lead to unexpected results.<span style="font-weight: bold;"></span>
+<h2>Usage of nonnull attribute<br>
+</h2>
+
+The declaration:
+<pre class="smallexample">          extern void *my_memcpy (void *dest, const void *src, size_t len)<br>          	__attribute__((nonnull (1, 2)));<br>     </pre>
+
+<p class="noindent">causes the compiler to check that, in calls to <span style="font-style: italic;">my_memcpy()</span>, <span style="font-family: monospace;"></span><code></code>arguments <span style="font-style: italic;">dest</span> <var></var>and <span style="font-style: italic;">src </span><var></var>are non-null. If
+the compiler
+determines that a null pointer is passed in an argument slot marked
+as non-null, and the <span style="font-style: italic;">-Wnonnull</span>
+<samp><span class="option"></span></samp>or <span style="font-style: italic;">-Wall</span> option is enabled, a warning
+is issued. </p>
+
+<h2>Examples<br>
+</h2>
+
+Here is a C source file called <span style="font-style: italic;">example.c</span>
+using the nonnull GCC attribute :<br>
+
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><tt style="font-family: monospace;">#include &lt;stdio.h&gt;<br>
+      <br>
+      <br>
+extern int func(void *ptr)<br>
+&nbsp; __attribute__((nonnull(1)));<br>
+      <br>
+      <br>
+int func(void *ptr)<br>
+{<br>
+      <br>
+&nbsp; if (!ptr)<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; printf("NULL\n");<br>
+&nbsp;&nbsp;&nbsp; return -1;<br>
+&nbsp; }<br>
+      <br>
+&nbsp; printf("!NULL\n");<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      <br>
+      <br>
+int main(int ac, char *av[])<br>
+{<br>
+      <br>
+&nbsp; func(NULL);<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      </tt></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+In the <span style="font-style: italic;">main()</span> function, the
+function <span style="font-style: italic;">func()</span> is passed <span style="font-style: italic;">NULL</span>.<br>
+
+<br>
+
+Without any special option passed on the GCC command line, the compiler
+does not warn:<br>
+
+<br>
+
+<span style="font-family: monospace;">$ gcc example.c</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">$ ./a.out</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">NULL<br>
+<br>
+</span>With the -Wall option, the compiler displays a warning:<span style="font-family: monospace;"><br>
+<br>
+<span style="font-family: monospace;">$ gcc example.c -Wall</span><br style="font-family: monospace;">
+example.c: In function ‘main’:</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">example.c:26:3: warning: null
+argument where non-null required (argument 1) [-Wnonnull]</span><br>
+
+<span style="font-family: monospace;">$ ./a.out</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">NULL</span><br>
+
+<br>
+
+When NULL is passed implicitely, the compiler does not warn:<br>
+
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><tt style="font-family: monospace;">#include &lt;stdio.h&gt;<br>
+      <br>
+      <br>
+extern int func(void *ptr)<br>
+&nbsp; __attribute__((nonnull(1)));<br>
+      <br>
+      <br>
+int func(void *ptr)<br>
+{<br>
+      <br>
+&nbsp; if (!ptr)<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; printf("NULL\n");<br>
+&nbsp;&nbsp;&nbsp; return -1;<br>
+&nbsp; }<br>
+      <br>
+&nbsp; printf("!NULL\n");<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      <br>
+      <br>
+int main(int ac, char *av[])<br>
+{<br>
+void *p = NULL;<br>
+      <br>
+&nbsp; func(p);<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      </tt></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<br>
+
+<span style="font-family: monospace;">$ gcc example.c -Wall</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">$ ./a.out</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">NULL</span><br>
+
+<br>
+
+<h2>Compiler optimizations</h2>
+
+The GCC manual specifies that "The compiler may also choose to make
+optimizations based
+on the knowledge that certain function arguments will not be null".
+This can be pointed out with the following example :<br>
+
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><tt style="font-family: monospace;">#include &lt;stdio.h&gt;<br>
+      <br>
+      <br>
+extern int func(void *ptr)<br>
+&nbsp; __attribute__((nonnull(1)));<br>
+      <br>
+      <br>
+int func(void *ptr)<br>
+{<br>
+      <br>
+&nbsp; if (!ptr)<br>
+&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; printf("NULL\n");<br>
+&nbsp;&nbsp;&nbsp; return -1;<br>
+&nbsp; }<br>
+      <br>
+&nbsp; printf("!NULL\n");<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      <br>
+      <br>
+int main(int ac, char *av[])<br>
+{<br>
+void *p = NULL;<br>
+      <br>
+&nbsp; func(p);<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      </tt></td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<span style="font-family: monospace;">$ gcc example.c -Wall -O2</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">$ ./a.out<br>
+!NULL<br>
+</span><span style="font-family: monospace;"></span><br>
+
+The display of "!NULL" instead of "NULL" shows that the optimizations
+of the compiler
+removed the code which checks the value of <span style="font-style: italic;">ptr</span> argument.&nbsp; In other words,
+the <span style="font-style: italic;">func()</span> function has been
+changed as if it was written like this:<br>
+
+<br>
+
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><tt style="font-family: monospace;"><br>
+int func(void *ptr)<br>
+{<br>
+      <br><span style="text-decoration: line-through; color: red;">
+&nbsp; if (!ptr)</span><br style="text-decoration: line-through; color: red;"><span style="text-decoration: line-through; color: red;">
+&nbsp; {</span><br style="text-decoration: line-through; color: red;"><span style="text-decoration: line-through; color: red;">
+&nbsp;&nbsp;&nbsp; printf("NULL\n");</span><br style="text-decoration: line-through; color: red;"><span style="text-decoration: line-through; color: red;">
+&nbsp;&nbsp;&nbsp; return -1;</span><br style="text-decoration: line-through; color: red;"><span style="text-decoration: line-through; color: red;">
+&nbsp; }</span><br style="text-decoration: line-through; color: red;">
+      <br>
+&nbsp; printf("!NULL\n");<br>
+      <br>
+&nbsp; return 0;<br>
+}<br>
+      <br>
+      <br>
+</tt></td></tr></tbody>
+</table>
+<br>
+The following shows the assembly code of <span style="font-style: italic;">func()</span> without and with optimization:<br>
+<br>
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; text-align: center;"><span style="font-style: italic;">func()</span> without optimization (<span style="font-family: monospace;">-Wall</span>)<span style="font-family: monospace;"><br>
+      </span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">00000000004004f4 &lt;func&gt;:</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+4004f4:&nbsp;&nbsp;&nbsp;
+55&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; push&nbsp;&nbsp; %rbp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+4004f5:&nbsp;&nbsp;&nbsp; 48 89
+e5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp; %rsp,%rbp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+4004f8:&nbsp;&nbsp;&nbsp; 48 83 ec
+10&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; sub&nbsp;&nbsp;&nbsp; $0x10,%rsp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+4004fc:&nbsp;&nbsp;&nbsp; 48 89 7d
+f8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; mov&nbsp;&nbsp;&nbsp; %rdi,-0x8(%rbp)</span><br style="font-family: monospace;">
+      <span style="font-family: monospace; font-weight: bold; color: red;">&nbsp;
+400500:&nbsp;&nbsp;&nbsp; 48 83 7d f8
+00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+cmpq&nbsp;&nbsp; $0x0,-0x8(%rbp)&nbsp; if (!ptr)</span><br style="font-family: monospace; font-weight: bold; color: red;">
+      <span style="font-family: monospace; font-weight: bold; color: red;">&nbsp;
+400505:&nbsp;&nbsp;&nbsp; 75
+11&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; jne&nbsp;&nbsp;&nbsp; 400518 &lt;func+0x24&gt;</span><br style="font-family: monospace; font-weight: bold; color: red;">
+      <span style="font-family: monospace;">&nbsp;
+400507:&nbsp;&nbsp;&nbsp; bf 4c 06 40
+00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp;&nbsp; $0x40064c,%edi</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+40050c:&nbsp;&nbsp;&nbsp; e8 df fe ff
+ff&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; callq&nbsp;
+4003f0 &lt;puts@plt&gt; printf("NULL\n")</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400511:&nbsp;&nbsp;&nbsp; b8 ff ff ff
+ff&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp;&nbsp; $0xffffffff,%eax</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400516:&nbsp;&nbsp;&nbsp; eb
+0f&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; jmp&nbsp;&nbsp;&nbsp; 400527 &lt;func+0x33&gt;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400518:&nbsp;&nbsp;&nbsp; bf 51 06 40
+00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp;&nbsp; $0x400651,%edi</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+40051d:&nbsp;&nbsp;&nbsp; e8 ce fe ff
+ff&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; callq&nbsp;
+4003f0 &lt;puts@plt&gt;&nbsp; printf("!NULL\n");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400522:&nbsp;&nbsp;&nbsp; b8 00 00 00
+00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp;&nbsp; $0x0,%eax</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400527:&nbsp;&nbsp;&nbsp;
+c9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; leaveq </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400528:&nbsp;&nbsp;&nbsp;
+c3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; retq&nbsp;&nbsp; </span><br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+
+<table style="text-align: left;" border="1" cellpadding="2" cellspacing="2">
+
+  <tbody>
+    <tr>
+      
+      <td style="vertical-align: top; text-align: center;"><span style="font-style: italic;">func()</span> with optimization (<span style="font-family: monospace;">-Wall -O2</span>)</td>
+    </tr>
+    <tr>
+      
+      <td style="vertical-align: top;"><span style="font-family: monospace;">0000000000400510 &lt;func&gt;:</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400510:&nbsp;&nbsp;&nbsp; 48 83 ec
+08&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; sub&nbsp;&nbsp;&nbsp; $0x8,%rsp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400514:&nbsp;&nbsp;&nbsp; bf 1c 06 40
+00&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+mov&nbsp;&nbsp;&nbsp; $0x40061c,%edi</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400519:&nbsp;&nbsp;&nbsp; e8 d2 fe ff
+ff&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; callq&nbsp;
+4003f0 &lt;puts@plt&gt;&nbsp; printf("NULL\n");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+40051e:&nbsp;&nbsp;&nbsp; 31
+c0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; xor&nbsp;&nbsp;&nbsp; %eax,%eax</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400520:&nbsp;&nbsp;&nbsp; 48 83 c4
+08&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; add&nbsp;&nbsp;&nbsp; $0x8,%rsp</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;
+400524:&nbsp;&nbsp;&nbsp;
+c3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; retq&nbsp;&nbsp; </span><br style="font-family: monospace;">
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<br>
+
+<h2>About the
+author</h2>
+
+The author is an engineer in computer sciences located in France. He
+can be contacted <a href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have
+a look at his <a href="http://rachid.koucha.free.fr/">WEB
+home page</a>.<br>
+
+<br>
+
+<br>
+
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br>
+
+<div style="text-align: right;"><small><a href="../technical_documents.html">Go back to previous page</a></small><br>
+<small><a href="../index.html">Go back to home page</a></small><br>
+</div>
+
+<br>
+
+<br>
+
+</body></html>

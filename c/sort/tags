@@ -1,0 +1,15 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CFLAGS	Makefile	/^CFLAGS = -g -O2$/;"	m
+OBJS	Makefile	/^OBJS = qsort qsort_struct$/;"	m
+cmp_node	qsort_struct.c	/^static int cmp_node(const void *p1, const void *p2)$/;"	f	file:	signature:(const void *p1, const void *p2)
+cmpstringp	qsort.c	/^cmpstringp(const void *p1, const void *p2)$/;"	f	file:	signature:(const void *p1, const void *p2)
+main	qsort.c	/^main(int argc, char *argv[])$/;"	f	signature:(int argc, char *argv[])
+main	qsort_struct.c	/^int main(int argc, char *argv[])$/;"	f	signature:(int argc, char *argv[])
+node	qsort_struct.c	/^struct node{$/;"	s	file:
+node::str	qsort_struct.c	/^	char * str;$/;"	m	struct:node	file:	access:public
+str	qsort_struct.c	/^	char * str;$/;"	m	struct:node	file:	access:public

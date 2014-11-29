@@ -1,0 +1,2 @@
+obj-m += syscall.o
+obj-m += remove.o

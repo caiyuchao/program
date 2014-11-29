@@ -1,0 +1,314 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>inet_ntoa</title>
+  <meta name="description"
+ content="This paper focuses on the Linux GLIBC service inet_ntoa() and its reentrance limitations in multithreaded environment.">
+  <script type="text/javascript"
+ src="https://apis.google.com/js/plusone.js"></script>
+  <script type="text/javascript"
+ src="https://apis.google.com/js/plusone.js"></script>
+</head>
+<body>
+<small><a href="../technical_documents.html">Go back to previous page</a><br>
+<a href="../index.html">Go back to home page</a></small><br>
+<br>
+<small><small><span style="text-decoration: underline;">Last update</span>:
+01-Jun-2010<br>
+<span style="text-decoration: underline;">Author</span>: R. Koucha</small></small><br>
+<h1 style="text-align: center;"><span style="font-style: italic;"></span>Is
+inet_ntoa()
+reentrant
+?<br>
+</h1>
+<br>
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<table style="text-align: left; width: 100%;" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; height: 50%; width: 50%;"><br>
+      </td>
+      <td style="vertical-align: top;"><iframe
+ src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Finet_ntoa.html&amp;layout=standard&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=80"
+ style="border: medium none ; overflow: hidden; width: 450px; height: 80px;"
+ allowtransparency="true" frameborder="0" scrolling="no"></iframe> <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><g:plusone size="medium"></g:plusone>
+      <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><a
+ href="mailto:?body=http%3A%2F%2Frachid.koucha.free.fr%2Ftech_corner%2Finet_ntoa.html&amp;subject=Is%20inet_ntoa%28%29%20reentrant%20?"><img
+ alt="s" src="../send_to_a_friend.gif"
+ style="border: 0px solid ; width: 30px; height: 21px;"></a></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<h2>Introduction</h2>
+This paper focuses on the Linux GLIBC service <span
+ style="font-style: italic;">inet_ntoa()</span> which translates an
+internet address into ASCII. This service is widely used in network
+applications but it must be used with care...<br>
+<h2>Recap</h2>
+The GLIBC service <span style="font-style: italic;">inet_ntoa()</span>
+function converts the Internet host address <span
+ style="text-decoration: underline;">in</span> given in network byte
+order to a string in standard numbers-and-dots
+notation. The prototype of this service is:<br>
+<br>
+<div style="text-align: left; font-family: monospace;">char
+*inet_ntoa(struct in_addr in);</div>
+<h2>Limitation</h2>
+The manual adds the following interesting information: "<span
+ style="font-style: italic;">The string is returned in a statically
+allocated buffer, which subsequent calls will overwrite</span>".<br>
+<br>
+This means that the following code is wrong:<br>
+<br>
+<span style="font-family: monospace;">char *p1, *p2;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">p1 = inet_ntoa(ip1);</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">p2 = inet_ntoa(ip2);</span><br>
+<br>
+because <span style="font-style: italic;">p1</span> points on the
+statically allocated buffer into which is stored the translation of <span
+ style="font-style: italic;">ip1</span> but the second call modifies
+this buffer to put the translation of <span style="font-style: italic;">ip2</span>.
+So,
+this
+results
+in
+the
+fact
+that
+both
+<span style="font-style: italic;">p1</span>
+and <span style="font-style: italic;">p2</span> point on the
+translation of <span style="font-style: italic;">ip2</span> (i.e. the
+translation of <span style="font-style: italic;">ip1</span> is lost !).<br>
+<br>
+So, a fix for the previous code consists to copy the result of the
+service into a local buffer:<br>
+<br>
+<span style="font-family: monospace;">// XXX.XXX.XXX.XXX\0 = 1- bytes</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">char p1[16], p2[16];</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">strcpy(p1, inet_ntoa(ip1));</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">strcpy(p2, inet_ntoa(ip2));</span><br>
+<br>
+In a mono-threaded process, the previous code works fine. But what
+about the multi-threaded environment ? The manual does not give any
+tips about it.<br>
+<br>
+<h2>Multi-threaded environment</h2>
+At first sight, the previous code snippet does not work in a
+multi-threaded environment as a <span style="font-style: italic;">strcpy()</span>
+call is not atomic. While running the <span style="font-style: italic;">strcpy()</span>
+service, the running thread can be preempted by another thread running <span
+ style="font-style: italic;">inet_ntoa()</span>. So, the static buffer
+of <span style="font-style: italic;">inet_ntoa()</span> call may be
+corrupted.<br>
+<br>
+When we look at the source of inet_ntoa() in the GLIBC 2.9, we get the
+following:<br>
+<br>
+<tt>/* The interface of this function is completely stupid, it
+requires a<br>
+&nbsp;&nbsp; static buffer.&nbsp; We relax this a bit in that we allow
+one buffer for<br>
+&nbsp;&nbsp; each thread.&nbsp; */<br>
+static <span style="font-weight: bold; color: rgb(255, 0, 0);">__thread</span>
+char buffer[18];<br>
+<br>
+<br>
+char *<br>
+inet_ntoa (struct in_addr in)<br>
+{<br>
+&nbsp; unsigned char *bytes = (unsigned char *) &amp;in;<br>
+&nbsp; __snprintf (buffer, sizeof (buffer), "%d.%d.%d.%d",<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bytes[0], bytes[1],
+bytes[2], bytes[3]);<br>
+<br>
+&nbsp; return buffer;<br>
+}</tt><br>
+<br>
+The directive <span style="font-style: italic;">__thread</span> tells
+the linker to allocate one buffer per thread (i.e. Thread Local
+Storage) as explained <a
+ href="http://gcc.gnu.org/onlinedocs/gcc-3.3.1/gcc/Thread-Local.html">here</a>.
+So,
+this
+proves
+that
+<span style="font-style: italic;">inet_ntoa()</span>
+is MT-safe.<br>
+<br>
+<h2>Enhanced version of inet_ntoa()</h2>
+<br>
+Some operating systems like BSD or AIX offer a full reentrant and
+MT-safe version of <span style="font-style: italic;">inet_ntoa()</span>.
+But
+this
+is
+not
+available
+under
+the
+GLIBC.
+So,
+here is an
+implementation of this new function which would be called <span
+ style="font-style: italic;">inet_ntoa_r()</span>:<br>
+<br>
+<span style="font-family: monospace;">int inet_ntoa_r(</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+struct
+in_addr&nbsp;
+in,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+char&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*s,</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+unsigned
+int&nbsp;&nbsp;&nbsp;
+slen</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+)</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">{</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">unsigned char *bytes = (unsigned
+char *)&amp;(in.s_addr);</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; if (slen &lt; 16 || !s)</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; errno = EINVAL;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return
+-1;&nbsp;&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; }</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; snprintf(s, slen,
+"%u.%u.%u.%u", bytes[0], bytes[1], bytes[2],
+bytes[3]);</span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; return 0;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">}</span><br
+ style="font-family: monospace;">
+<br>
+<h2>New standard service</h2>
+Actually, <span style="font-style: italic;">inet_ntoa()</span> is now
+deprecated and should be replaced by the full reetrant and MT-safe <span
+ style="font-style: italic;">inet_ntop()</span> call:<br>
+<br>
+<span style="font-family: monospace;">const char *inet_ntop(int af,
+const void *src, char *dst, socklen_t size);</span><br>
+<br>
+This&nbsp; function converts the network address structure <span
+ style="text-decoration: underline;">src</span> in the <span
+ style="text-decoration: underline;">af</span> address family into a
+character string. The resulting string is copied to the buffer pointed
+to by <span style="text-decoration: underline;">dst</span>, which must
+be a non-NULL pointer.&nbsp; The caller specifies the number of bytes
+available in this buffer in the argument <span
+ style="text-decoration: underline;">size</span>.<br>
+<span style="font-style: italic;">inet_ntop()</span> extends the <span
+ style="font-style: italic;">inet_ntoa()</span> function to support
+multiple address families. The&nbsp; following address families are
+currently supported:<br>
+<br>
+<ul>
+  <li>AF_INET: <span style="text-decoration: underline;">src</span>&nbsp;
+points
+to
+a
+
+
+
+
+    <span style="text-decoration: underline;">struct in_addr</span>
+(in network byte order) which is converted to an IPv4 network address
+in the dotted-decimal format, "ddd.ddd.ddd.ddd".&nbsp; The buffer <span
+ style="text-decoration: underline;">dst</span> must be at least <span
+ style="font-style: italic;">INET_ADDRSTRLEN</span> bytes long.</li>
+  <li>AF_INET6: <span style="text-decoration: underline;">src</span>
+points to a <span style="font-style: italic;">struct in6_addr</span>
+(in network byte order) which is converted to a representation of this
+address in the most appropriate IPv6 network address format for this
+address. The buffer <span style="text-decoration: underline;">dst</span>
+must be at least <span style="font-style: italic;">INET6_ADDRSTRLEN</span>
+bytes long.<br>
+  </li>
+</ul>
+<h2>About the
+author</h2>
+The author is an engineer in computer sciences located in France. He
+can be contacted <a
+ href="http://rachid.koucha.free.fr/contact/contact.html">here</a> or
+you can have
+a look at his <a href="http://rachid.koucha.free.fr/">WEB
+home page</a>.<br>
+<br>
+<br>
+<table style="text-align: left; margin-left: auto; margin-right: auto;">
+  <tbody>
+    <tr>
+      <td>
+      <script type="text/javascript"><!--
+google_ad_client = "pub-9113501896220746";
+/* 728x90, date de création 29/03/08 */
+google_ad_slot = "7632855209";
+google_ad_width = 728;
+google_ad_height = 90;
+//--></script>
+      <script type="text/javascript"
+ src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<div style="text-align: right;"><small><a
+ href="../technical_documents.html">Go back to previous page</a></small><br>
+<small><a href="../index.html">Go back to home page</a></small><br>
+</div>
+<br>
+<br>
+</body>
+</html>
