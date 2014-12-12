@@ -19,6 +19,7 @@ int main(int argc, const char *argv[])
 	}
 	ifname[0] = '\0';
 	printf("ifname:%s\n", ifname);
+	printf("strlen(NULL)%d\n", strlen(""));
 
 	return 0;
 }

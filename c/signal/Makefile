@@ -1,3 +1,5 @@
-OBJS = str.e a.e
+OBJS = alarm
+
+CFLAGS = -g 
 
 include ../include/example.mk
