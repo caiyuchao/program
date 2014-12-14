@@ -35,4 +35,5 @@ unlockmultiprocess:unlockmultiprocess.c
 	gcc -o unlockmultiprocess unlockmultiprocess.c -lpthread
 
 
-
+clean:
+	rm -f affinitytwothread affinityunlockcacheprocess lockcachemultiprocess lockmultiprocess twothreadprocess uniprocess unlockcachemultiprocess unlockmultiprocess
