@@ -5,7 +5,7 @@ int main(int argc, const char *argv[])
 	char *br_ports[1024];
 	char ifname[18];
 
-	int i;
+	unsigned int i;
 	for(i=0; i<1024; i++){
 		br_ports[i] = NULL;
 	}
@@ -20,6 +20,9 @@ int main(int argc, const char *argv[])
 	ifname[0] = '\0';
 	printf("ifname:%s\n", ifname);
 	printf("strlen(NULL)%d\n", strlen(""));
+	i = 0x00646c72;
+    printf("H%x Wo%s\n", 57616, &i);
+    printf("%d %d\n", 2 );
 
 	return 0;
 }
