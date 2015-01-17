@@ -1,0 +1,3 @@
+# -*- Makefile -*-
+nf_tcp_proxy-objs := nf_ip_tcp_proxy.o ipt_web_filter.o mi_netlink.o
+obj-m += nf_tcp_proxy.o

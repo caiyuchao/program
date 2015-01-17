@@ -1,12 +1,12 @@
 # kbuild trick to avoid linker error. Can be omitted if a module is built.
-obj-m := khello.o
+obj-m := http_error.o
 #khello-objs := khello.o
 
 
 # List of programs to build
-hostprogs-y := hello
+hostprogs-y := he
 
 # Tell kbuild to always build the programs
 always := $(hostprogs-y)
 
-HOSTCFLAGS_hello.o += -I$(objtree)/usr/include
+HOSTCFLAGS_he.o += -I$(objtree)/usr/include
