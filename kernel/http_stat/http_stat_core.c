@@ -1,10 +1,5 @@
 /*
  * This is a module which is used to replace http .
- *
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  * 
  * Yu Bo <yubo@yubo.org>
  * 2015-02-16
@@ -13,6 +8,7 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/skbuff.h>
 #include <linux/gfp.h>
 #include <linux/ctype.h>
@@ -40,40 +36,6 @@
 #include <net/netfilter/nf_nat_helper.h>
 
 #include "http_stat_ctl.h"
-
-#define __HTTP_ERROR_DISABLE_TS__
-#define __HTTP_ERROR_DEBUG__
-
-#define HTTP_STAT_F_SKIP		0x00000001  /* http stat flags */
-#define HTTP_STAT_F_MODI		0x00000002	/* Modified */
-#define HTTP_GET_MIN_LEN		18
-#define HTTP_SESSION_HASH_SIZE	1024
-#define HTTP_SESSION_STEP_SIZE	256
-#define HTTP_SESSION_HASH_MASK	(HTTP_SESSION_HASH_SIZE - 1)
-#define GC_TIMER_INTERVAL		msecs_to_jiffies(1000)	/* 1s */
-#define HTTP_SESSION_TIMEOUT	msecs_to_jiffies(5000)	/* 5s */
-#define HTTP_SESS_TABLE_LOCK()	spin_lock_bh(&http_sess_table->lock)
-#define HTTP_SESS_TABLE_UNLOCK() spin_unlock_bh(&http_sess_table->lock)
-
-#ifdef __HTTP_ERROR_DEBUG__
-#define DEBUG_PRINT(fmt, a...) printk(fmt, ##a)
-#define DUMP_SKB(skb, in, out) dump_skb(skb, in, out)
-#else
-#define DEBUG_PRINT(fmt, a...) do { } while(0)
-#define DUMP_SKB(skb, in, out) do { } while(0)
-#endif
-
-#ifdef __PERF_DEBUG__
-#define PERF_DEBUG(fmt, a...) \
-    do { \
-        struct timeval tv;\
-        printk(fmt, ##a); \
-        do_gettimeofday(&tv);\
-        printk(" timeval(%dsec, %dusec)\n", tv.tv_sec, tv.tv_usec); \
-    }while(0)
-#else
-#define PERF_DEBUG(fmt, a...) do { } while(0)
-#endif
 
 struct http_session_table {
 	spinlock_t  lock;
@@ -110,9 +72,8 @@ static void dump_skb(const struct sk_buff *skb, const struct net_device *in,
 	int i, llen, dlen;
 	const unsigned char *pos;
 	const int line_len = 16;
-	char buff[1024];
+	char buff[1024-32];
 	char *p;
-
 
 	iph = ip_hdr(skb);
 
@@ -300,12 +261,6 @@ struct http_session* http_session_del(struct http_session_key *key)
 	return http_sess;
 }
 
-/* Packet is received from loopback */
-static inline bool nf_is_loopback_packet(const struct sk_buff *skb)
-{
-	return skb->dev && skb->dev->flags & IFF_LOOPBACK;
-}
-
 static struct config * search_stat(char *request) 
 {
 	int ret;
@@ -315,11 +270,8 @@ static struct config * search_stat(char *request)
 	if(ret < 12)
 		return NULL;
 
-	
-
-	//if(!strncmp(data, "http/1.1 200 ", strlen("http/1.1 200 "))){
 	// http://tools.ietf.org/html/rfc2616
-	// http/(0.9)|(1.0)|(1.1)
+	// HTTP/(0.9)|(1.0)|(1.1) 404
 	if(buff[0] != *(uint32_t *)"HTTP"){
 		return NULL;
 	}
@@ -343,7 +295,7 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 	struct http_session_key key;
 	struct http_session *session;
 	int dir, dlen = 0;
-	const char * data = NULL;
+	char * data = NULL;
 	struct config *stat;
 	
 	ct = nf_ct_get(skb, &ctinfo);
@@ -359,12 +311,12 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 		return NF_ACCEPT;
 
 	/* Relocate data pointer */
+	//th = (struct tcphdr *) ((char*)iph + iph->ihl*4);
 	th = skb_header_pointer(skb, iph->ihl*4,
 				sizeof(_tcph), &_tcph);
 	if (th == NULL)
 		return NF_ACCEPT;
 
-	//th = (struct tcphdr *) ((char*)iph + iph->ihl*4);
 
 	dir = CTINFO2DIR(ctinfo);
 
@@ -570,7 +522,6 @@ static void __exit http_stat_exit(void)
 	struct http_session *http_sess;
 	struct hlist_head *head;
 
-	//http_stat_sysfs_exit();
 	nf_unregister_hooks(ipv4_http_stat_ops, ARRAY_SIZE(ipv4_http_stat_ops));
 	
 	ret = del_timer_sync(&gc_timer);
@@ -588,9 +539,6 @@ static void __exit http_stat_exit(void)
 	HTTP_SESS_TABLE_UNLOCK();
 	kfree(http_sess_table);
 	http_stat_ctl_exit();
-	//mi_netlink_exit();
-	// clean match
-	//fini_webfilter_match();
 }
 
 module_init(http_stat_init);

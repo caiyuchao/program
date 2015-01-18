@@ -5,6 +5,7 @@
  */
 #include <linux/module.h>   /* Needed by all modules */
 #include <linux/kernel.h>   /* Needed for KERN_ALERT */
+#include <linux/version.h>
 #include <linux/proc_fs.h>   /* Needed for procfs */
 #include <linux/fs.h>
 #include <linux/buffer_head.h>
@@ -13,7 +14,7 @@
 
 #include "http_stat_ctl.h"
 
-static char * read_file(const char *filename);
+static char * read_file(char *filename);
 static int reload_confdir(char *confdir);
 ssize_t action_read(struct file *filp, char __user *user_buf,
 		size_t count, loff_t *ppos);
@@ -232,7 +233,7 @@ static void config_refresh(void)
 
 }
 
-struct config* config_create(const char *filename)
+struct config* config_create(char *filename)
 {
 	struct config* conf;
 	char buff[4], *p;
@@ -310,7 +311,7 @@ static int readdir_callback(void * __buf, const char * name, int namlen, loff_t 
 	printk("readdir_callback enter \n");
 	if(d_type == DT_REG){
 		if(simple_strtoul(name, NULL, 10))
-			config_create(name);
+			config_create((char *)name);
 	}
 	return 0;
 }
@@ -355,7 +356,7 @@ static char * buff_resize(void *fp, uint32_t resize){
 
 }
 
-static char * read_file(const char *filename)
+static char * read_file(char *filename)
 {
 	int ret;
 	struct file *fp;
