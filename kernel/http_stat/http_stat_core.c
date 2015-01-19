@@ -113,7 +113,7 @@ static void dump_skb(const struct sk_buff *skb, const struct net_device *in,
 		}
 		printk(KERN_DEBUG "%s\n", buff);
 		p = buff;
-		if(dlen >= HTTP_GET_MIN_LEN) {
+		if(dlen >= HTTP_MIN_LEN && skb->data_len == 0) {
 			dlen = dlen > line_len * 4 ? line_len * 4 : dlen;
 			pos = (char *)th + th->doff * 4;
 			while (dlen) {
@@ -261,35 +261,25 @@ struct http_session* http_session_del(struct http_session_key *key)
 	return http_sess;
 }
 
-static struct config * search_stat(char *request) 
+static struct config * search_stat(char *response) 
 {
-	int i;
-	uint32_t buff[4];
-	char *p, *req;
-	req = request;
-	p = (char *)buff;
-	for(i = 0; i < 12; i++){
-		if(*req == '\0'){
-			DEBUG_PRINT("request less than 12 bytes, return NULL\n");
-			return NULL;
-		}
-		*p++ = *req++;
-	}
-	*p = '\0';
-	DEBUG_PRINT("request[%s]\n", (char *)buff);
+	uint32_t *resp;
+	resp = (uint32_t *)response;
+	
+	DEBUG_PRINT("request[%s]\n", response);
 
 	// http://tools.ietf.org/html/rfc2616
 	// HTTP/(0.9)|(1.0)|(1.1) 404
-	if(buff[0] != *(uint32_t *)"HTTP"){
+	if(resp[0] != *(uint32_t *)"HTTP"){
 		DEBUG_PRINT("not match ^HTTP\n");
 		return NULL;
 	}
 	
-	if(buff[1] == *(uint32_t *)"/0.9" || buff[1] == *(uint32_t *)"/1.0"
-			|| buff[1] == *(uint32_t *)"/1.1"){
-		return config_search(buff[2]);
+	if(resp[1] == *(uint32_t *)"/0.9" || resp[1] == *(uint32_t *)"/1.0"
+			|| resp[1] == *(uint32_t *)"/1.1"){
+		return config_search(resp[2]);
 	}
-	DEBUG_PRINT("not match ^HTTP/x.x\n");
+	DEBUG_PRINT("not match ^HTTP/x.x \n");
 	return NULL;
 }
 
@@ -307,6 +297,7 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 	int dir, dlen = 0;
 	char * data = NULL;
 	struct config *stat;
+	char *resp, _resp[13];
 	
 	ct = nf_ct_get(skb, &ctinfo);
 	if (ct == NULL){
@@ -377,12 +368,20 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 					goto put_session;
 				}
 
-				if(dlen < 12){
+				if(dlen < HTTP_MIN_LEN){
 					/* after SYN/ACK , recv ACK */
 					goto put_session;
 				}
 
-				if((stat = search_stat(data))){
+				// if skb->data_len > 0
+				resp = skb_header_pointer(skb, iph->ihl*4 + th->doff*4, sizeof(_resp), _resp);
+				if(resp == NULL){
+					DEBUG_PRINT(KERN_DEBUG" can't get response \n");
+					goto put_session;
+				}
+				resp[12] = '\0';
+
+				if((stat = search_stat(resp))){
 					DEBUG_PRINT(KERN_DEBUG "hit HTTP/1.1%4s, modify this skb\n", (char *)&stat->code);
 					
 					if(!nf_nat_mangle_tcp_packet(skb, ct, ctinfo, 
@@ -394,7 +393,7 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 					session->flags |= HTTP_STAT_F_MODI;
 					goto put_session;
 				}else{
-					DEBUG_PRINT(KERN_DEBUG "[P]not hit and clean this session\n");
+					DEBUG_PRINT(KERN_DEBUG "not hit and clean this session data->len[%d]\n", skb->data_len);
 					goto del_seesion;
 				}
 //			}
@@ -402,9 +401,10 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 		}	
 	}else{
 		// 1.2.1.3:2233 -> 1.2.1.4:80
-		if ( th->dest == htons(80) && 
-				!(ct->status & IPS_DYING) && 
-				(ct->status & IPS_NAT_MASK) == IPS_SRC_NAT) {
+		if ( th->dest == htons(80) 
+	//			&& (ct->status & IPS_NAT_MASK) == IPS_SRC_NAT // local in no need this
+				&& !(ct->status & IPS_DYING))  
+		{
 			key.client_ip = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u3.ip;
 			key.client_port = ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.tcp.port;
 			key.res = 0;

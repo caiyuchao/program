@@ -12,7 +12,7 @@
 
 #define HTTP_STAT_F_SKIP		0x00000001  /* http stat flags */
 #define HTTP_STAT_F_MODI		0x00000002	/* Modified */
-#define HTTP_GET_MIN_LEN		18
+#define HTTP_MIN_LEN			18
 #define HTTP_SESSION_HASH_SIZE	1024
 #define HTTP_SESSION_STEP_SIZE	256
 #define HTTP_SESSION_HASH_MASK	(HTTP_SESSION_HASH_SIZE - 1)
