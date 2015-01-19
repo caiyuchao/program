@@ -13,7 +13,8 @@ clean distclean:
 	rm -f he *.order *.symvers .*.cmd
 
 start:
-	insmod ./http_stat.ko
+	sudo insmod ./http_stat.ko
+	sudo echo `pwd`/conf > /proc/http_stat/confdir
 
 stop:
-	rmmod http_stat
+	sudo rmmod http_stat

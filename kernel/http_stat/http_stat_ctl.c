@@ -167,14 +167,8 @@ void __config_del(struct config *conf)
 
 void __config_free(struct config *conf)
 {
-	char *p;
 	if(conf->content){
-		p = conf->content;
-		printk("free filename[%s] content[%s]\n", conf->filename, conf->content);
-		for(p = conf->content; *p; p++){
-			printk("%c[%d]", *p, *p);
-		}
-
+		DEBUG_PRINT("free filename[%s] content[%s]\n", conf->filename, conf->content);
 		kfree(conf->content);
 	}
 	kfree(conf);
@@ -210,7 +204,7 @@ static void config_refresh(void)
 	struct hlist_head *head;
 	struct hlist_node *pos, *n;
 
-	printk("config_refresh enter\n");
+	DEBUG_PRINT("config_refresh enter\n");
 	CONFIG_TABLE_LOCK();
 	for (i=0; i<CONFIG_HASH_SIZE; i++) {
 		head = &conf_table->head[i];
@@ -220,7 +214,7 @@ static void config_refresh(void)
 			}
 			conf->content = read_file(conf->filename);
 			if(conf->content == NULL){
-				printk(KERN_INFO "%s:%d: zalloc failed filename:%s content\n",
+				printk(KERN_ERR "%s:%d: zalloc failed filename:%s content\n",
 						__func__, __LINE__, conf->filename);
 				__config_del(conf);
 				__config_free(conf);
@@ -240,10 +234,10 @@ struct config* config_create(char *filename)
 	int i;
 
 
-	printk("config_create enter\n");
+	DEBUG_PRINT("config_create enter\n");
 	conf = kzalloc(sizeof(struct config), GFP_ATOMIC);
 	if (conf == NULL) {
-		printk(KERN_INFO "%s:%d: zalloc failed filename:%s\n",
+		printk(KERN_ERR "%s:%d: zalloc failed filename:%s\n",
 				__func__, __LINE__, filename);
 		return NULL;
 	}
@@ -260,7 +254,7 @@ struct config* config_create(char *filename)
 	}
 
 	if(*p >= '0' && *p <= '9'){
-		printk("filename:%s error\n", filename);
+		printk(KERN_INFO "filename:%s error\n", filename);
 		goto err_out;
 	}
 	conf->code = *(uint32_t *)buff;
@@ -308,7 +302,7 @@ struct config* config_del(uint32_t key)
 static int readdir_callback(void * __buf, const char * name, int namlen, loff_t offset,
 		u64 ino, unsigned int d_type)
 {
-	printk("readdir_callback enter \n");
+	DEBUG_PRINT("readdir_callback enter \n");
 	if(d_type == DT_REG){
 		if(simple_strtoul(name, NULL, 10))
 			config_create((char *)name);
@@ -322,7 +316,7 @@ static int load_dir(char *dirname)
 	struct file* fp = NULL;
 
 
-	printk("load_dir enter\n");
+	DEBUG_PRINT("load_dir enter\n");
 	if(strlen(dirname) > CONFIG_PATH_SIZE)
 		return 1;
 	strncpy(conf_table->dirname, dirname, CONFIG_PATH_SIZE);
@@ -365,7 +359,7 @@ static char * read_file(char *filename)
 	char *buff;
 	char filepath[CONFIG_PATH_SIZE];
 
-	printk("read_file(%s) enter\n", filename);
+	DEBUG_PRINT("read_file(%s) enter\n", filename);
 	snprintf(filepath, CONFIG_PATH_SIZE, "%s/%s", conf_table->dirname, filename);
 
 	if((buff = kmalloc(size, GFP_ATOMIC)) == NULL){
@@ -379,7 +373,7 @@ static char * read_file(char *filename)
 		while((ret = file_read(fp, offset, buff, 1024))){
 			offset += ret;
 			buff[offset] = '\0';
-			printk("%s", buff);
+			DEBUG_PRINT("%s:%s", filepath, buff);
 			if(size - offset < 1024){
 				size += PAGE_SIZE;
 				if((buff = buff_resize(buff, size)) == NULL){
@@ -391,7 +385,7 @@ static char * read_file(char *filename)
 		file_close(fp);
 		return buff;
 	}else{
-		printk("file_open faild\n");
+		printk(KERN_ALERT "file_open faild\n");
 	}
 	return NULL;
 }
@@ -403,7 +397,7 @@ static int reload_confdir(char *confdir)
 	struct hlist_head *head;
 	struct hlist_node *pos, *n;
 
-	printk("reload_confdir enter\n");
+	DEBUG_PRINT("reload_confdir enter\n");
 	CONFIG_TABLE_LOCK();
 	for (i=0; i<CONFIG_HASH_SIZE; i++) {
 		head = &conf_table->head[i];
@@ -434,7 +428,7 @@ int http_stat_ctl_init(void)
 		INIT_HLIST_HEAD(&conf_table->head[i]);
 	}
 
-	printk("Hello world, page_size %lu\n", PAGE_SIZE);
+	DEBUG_PRINT("Hello world, page_size %lu\n", PAGE_SIZE);
 
 	proc_dir = proc_mkdir(PROC_DIRNAME, NULL);
 	if (!proc_dir) {
@@ -482,7 +476,7 @@ void http_stat_ctl_exit(void)
 	}
 	CONFIG_TABLE_UNLOCK();
 	kfree(conf_table);
-	printk("Goodbye world\n");
+	DEBUG_PRINT("Goodbye world\n");
 }
 
 #ifdef __HTTP_STAT_CTL_MODULE__

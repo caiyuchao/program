@@ -111,7 +111,7 @@ static void dump_skb(const struct sk_buff *skb, const struct net_device *in,
 			if((ct->status & IPS_NAT_MASK) == IPS_DST_NAT)
 				p += snprintf(p, sizeof(buff) - (p - buff), " [DNAT] ");
 		}
-		printk(KERN_DEBUG "%s", buff);
+		printk(KERN_DEBUG "%s\n", buff);
 		p = buff;
 		if(dlen >= HTTP_GET_MIN_LEN) {
 			dlen = dlen > line_len * 4 ? line_len * 4 : dlen;
@@ -263,16 +263,25 @@ struct http_session* http_session_del(struct http_session_key *key)
 
 static struct config * search_stat(char *request) 
 {
-	int ret;
-	uint32_t buff[3];
-
-	ret = snprintf((char *)buff, 12, "%s", request);
-	if(ret < 12)
-		return NULL;
+	int i;
+	uint32_t buff[4];
+	char *p, *req;
+	req = request;
+	p = (char *)buff;
+	for(i = 0; i < 12; i++){
+		if(*req == '\0'){
+			DEBUG_PRINT("request less than 12 bytes, return NULL\n");
+			return NULL;
+		}
+		*p++ = *req++;
+	}
+	*p = '\0';
+	DEBUG_PRINT("request[%s]\n", (char *)buff);
 
 	// http://tools.ietf.org/html/rfc2616
 	// HTTP/(0.9)|(1.0)|(1.1) 404
 	if(buff[0] != *(uint32_t *)"HTTP"){
+		DEBUG_PRINT("not match ^HTTP\n");
 		return NULL;
 	}
 	
@@ -280,6 +289,7 @@ static struct config * search_stat(char *request)
 			|| buff[1] == *(uint32_t *)"/1.1"){
 		return config_search(buff[2]);
 	}
+	DEBUG_PRINT("not match ^HTTP/x.x\n");
 	return NULL;
 }
 
@@ -330,9 +340,10 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 				key.res = 0;
 				session = http_session_create(&key);
 				if (session == NULL){
-					DEBUG_PRINT(KERN_DEBUG "[S.]%s,no seession found!!!\n", __FUNCTION__);
+					DEBUG_PRINT(KERN_DEBUG "create seession fail!!!, NF_ACCEPT\n");
 					goto out;
 				}				
+				DEBUG_PRINT(KERN_DEBUG "create seession success!!!\n");
 				goto put_session;
 			}
 
@@ -341,12 +352,12 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 			key.res = 0;
 			session = http_session_search(&key);
 			if (session == NULL){
-				DEBUG_PRINT(KERN_DEBUG "[P]%s,no seession found, there is something wrong!!!\n", __FUNCTION__);
+				DEBUG_PRINT(KERN_DEBUG "seession found, NF_ACCEPT\n");
 				goto out;
 			}
-			
+			DEBUG_PRINT(KERN_DEBUG "seession founded\n");
 
-			if(th->psh){
+//			if(th->psh){
 				if(session->flags & HTTP_STAT_F_SKIP){
 					DEBUG_PRINT(KERN_DEBUG "[HTTP_STAT_F_SKIP]skip this skb\n");
 					goto put_session;
@@ -366,9 +377,13 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 					goto put_session;
 				}
 
-				//if(!strncmp(data, "HTTP/1.1 200 ", strlen("HTTP/1.1 200 "))){
+				if(dlen < 12){
+					/* after SYN/ACK , recv ACK */
+					goto put_session;
+				}
+
 				if((stat = search_stat(data))){
-					DEBUG_PRINT(KERN_DEBUG "hit HTTP/1.1 %u, modify this skb\n", stat->code);
+					DEBUG_PRINT(KERN_DEBUG "hit HTTP/1.1%4s, modify this skb\n", (char *)&stat->code);
 					
 					if(!nf_nat_mangle_tcp_packet(skb, ct, ctinfo, 
 												0, dlen, stat->content, strlen(stat->content))){
@@ -382,7 +397,7 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 					DEBUG_PRINT(KERN_DEBUG "[P]not hit and clean this session\n");
 					goto del_seesion;
 				}
-			}
+//			}
 			goto put_session;
 		}	
 	}else{
@@ -440,6 +455,13 @@ static struct nf_hook_ops ipv4_http_stat_ops[] __read_mostly = {
 		.owner          = THIS_MODULE,
 		.pf             = NFPROTO_IPV4,
 		.hooknum        = NF_INET_POST_ROUTING, //todo why not locatout?
+		.priority       = NF_IP_PRI_CONNTRACK_CONFIRM,
+	},
+	{
+		.hook           = ipv4_http_stat_post_hook,
+		.owner          = THIS_MODULE,
+		.pf             = NFPROTO_IPV4,
+		.hooknum        = NF_INET_LOCAL_IN, //todo why not locatout?
 		.priority       = NF_IP_PRI_CONNTRACK_CONFIRM,
 	},
 };
