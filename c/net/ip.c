@@ -28,21 +28,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef uint32_t __be32;
+
+static in_network(__be32 ip, __be32 network, __be32 netmask){
+	if((ip & netmask) == (network & netmask))
+		return 1;
+	else
+		return 0;
+}
 int main(int argc, char *argv[])
 {
-	struct in_addr addr;
+	struct in_addr a, a1, n;
+	char *ip = "192.168.31.1";
+	char *netmask = "255.255.254.0";
 
 	if (argc != 2) {
 		fprintf(stderr, "%s <dotted-address>\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	if (inet_aton(argv[1], &addr) == 0) {
+	//dest ip
+	if (inet_aton(argv[1], &a1) == 0) {
 		perror("inet_aton");
 		exit(EXIT_FAILURE);
 	}
 
-	printf("%s\n", inet_ntoa(addr));
+	if (inet_aton(ip, &a) == 0) {
+		perror("inet_aton");
+		exit(EXIT_FAILURE);
+	}
+
+	if (inet_aton(netmask, &n) == 0) {
+		perror("inet_aton");
+		exit(EXIT_FAILURE);
+	}
+
+	printf("%08x %08x %08x\n", a1.s_addr, a.s_addr, n.s_addr);
+	printf("%d\n", in_network(a1.s_addr, a.s_addr, n.s_addr));
 	exit(EXIT_SUCCESS);
 }
 
