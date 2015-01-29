@@ -10,4 +10,4 @@ cscope.*
 *.mod.c
 *.order
 *.symvers
-doc/
+kernel/http_stat/include
