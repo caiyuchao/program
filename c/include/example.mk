@@ -9,7 +9,7 @@ all: $(OBJS) $(EXAMPLES)
 	$(CC) $< $(CFLAGS) -c -o $@
 
 %.s: %.c
-	$(CC) $< $(CFLAGS) -S $@
+	$(CC) $< $(CFLAGS) -S -o $@
 
 %.e: %.c
 	$(CC) $< $(CFLAGS) -E -o $@

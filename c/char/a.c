@@ -24,5 +24,10 @@ int main(int argc, const char *argv[])
     printf("H%x Wo%s\n", 57616, &i);
     printf("%d %d\n", 2 );
 
+	sprintf(ifname, "hello world");
+	printf("%s\n", ifname);
+
+	sprintf(ifname, "hello world");
+	printf("%s\n", ifname);
 	return 0;
 }

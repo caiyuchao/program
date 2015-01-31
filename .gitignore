@@ -3,4 +3,11 @@
 *.d
 *.so
 *.a
-
+tags
+cscope.*
+.*
+*.ko
+*.mod.c
+*.order
+*.symvers
+kernel/http_stat/include

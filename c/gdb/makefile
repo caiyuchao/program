@@ -1,7 +1,10 @@
-all: a a.debug a.out core
+all: a a.debug trace
 
-a.out: a.c
-	gcc -g -o a.out a.c
+a: a.c
+	gcc -g -o $@ $<
+
+trace: trace.c
+	gcc -g -o $@ $<
 
 a.debug: a.out
 	strip a.out --only-keep-debug -o  a.debug

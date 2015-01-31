@@ -10,4 +10,4 @@ modules:
 clean distclean:
 	rm -f *.o *.mod.c .*.*.cmd *.ko *.ko.unsigned
 	rm -rf .tmp_versions
-	rm -f he *.order *.symvers .*.cmd
+	rm -f procfs *.order *.symvers .*.cmd

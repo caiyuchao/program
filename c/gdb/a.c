@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 void foo(char *p)
 {
@@ -8,6 +9,7 @@ void foo(char *p)
 int main(int argc, char ** argv)
 {
 	char *p = "hello world";
+	char *q = strdup("hello world");
 	foo(p);
     return 0;
 
