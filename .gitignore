@@ -11,3 +11,4 @@ cscope.*
 *.order
 *.symvers
 kernel/http_stat/include
+*.pyc
