@@ -67,6 +67,8 @@ flags = [
 '.',
 '-I',
 './include',
+'-I',
+'../include',
 '-isystem',
 '/usr/include',
 '-isystem',

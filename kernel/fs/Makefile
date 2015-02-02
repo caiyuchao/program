@@ -10,15 +10,14 @@ modules:
 clean distclean:
 	rm -f *.o *.mod.c .*.*.cmd *.ko *.ko.unsigned
 	rm -rf .tmp_versions
-	rm -f procfs *.order *.symvers .*.cmd
+	rm -f hello *.order *.symvers .*.cmd
 
 start:
-	insmod ./procfs.ko
+	insmod ./khello.ko
 
 stop:
-	rmmod procfs
+	rmmod khello
 
 restart:
-	rmmod procfs
-	insmod ./procfs.ko
-
+	insmod ./khello.ko
+	rmmod khello
