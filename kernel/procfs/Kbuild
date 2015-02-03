@@ -1,1 +1,3 @@
 obj-m := procfs.o 
+obj-m += procfs_opt.o 
+obj-m += procfs_seq.o 
