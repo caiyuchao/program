@@ -29,5 +29,8 @@ int main(int argc, const char *argv[])
 
 	sprintf(ifname, "hello world");
 	printf("%s\n", ifname);
+	
+	printf("null=%s\n", NULL);
+//	printf("strlen(null)=%d\n", strlen(NULL));
 	return 0;
 }

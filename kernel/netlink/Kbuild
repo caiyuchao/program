@@ -1,0 +1,11 @@
+# kbuild trick to avoid linker error. Can be omitted if a module is built.
+obj-m := sample_nl.o
+
+# List of programs to build
+hostprogs-y := server client
+
+# Tell kbuild to always build the programs
+always := $(hostprogs-y)
+
+HOSTCFLAGS_client.o += -lnl -g -I$(objtree)/usr/include
+HOSTCFLAGS_server.o += -g -I$(objtree)/usr/include
