@@ -91,7 +91,7 @@ static int readdir_callback(void * __buf, const char * name, int namlen, loff_t 
 	if(d_type == DT_REG){
 		p = buff;
 		p += snprintf(p, sizeof(buff) - (p - buff), "filename[%d]:", namlen);
-		//p += snprintf(p, _MAX(sizeof(buff) - (p - buff), namlen + 1), "%s", name);
+		p += snprintf(p, _MAX(sizeof(buff) - (p - buff), namlen + 1), "%s", name);
 		//p += snprintf(p, sizeof(buff) - (p - buff), " inode:0%o d_type:0x%x", ino, d_type);
 		printk("%s\n", buff);	
 	}
