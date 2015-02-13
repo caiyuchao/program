@@ -10,4 +10,4 @@ modules:
 clean distclean:
 	rm -f *.o *.mod.c .*.*.cmd *.ko *.ko.unsigned
 	rm -rf .tmp_versions
-	rm -f hello *.order *.symvers .*.cmd server client server_nl
+	rm -f hello *.order *.symvers .*.cmd

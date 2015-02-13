@@ -1,8 +1,11 @@
 /*
  * sample netlink module
  */
+#define KMSG_COMPONENT "sampleNetlink"
+#define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
 
 #include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/version.h>
 #include <linux/types.h>
 #include <linux/skbuff.h>
@@ -17,7 +20,12 @@
 
 #define MODULE_NAME "SampleNetlink"
 
-static DEFINE_SPINLOCK(sample_lock);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+#define NLA_PUT_U32 nla_put_u32
+#define NLA_PUT_STRING nla_put_string
+#endif
+
+static struct timer_list sample_timer;
 struct sample_nla _sn = {
 	.info = {.x = 1, .y = 2},
 	.data = {'h','e','l','l','o','\0'},
@@ -46,8 +54,6 @@ static const struct nla_policy sample_info_policy[SAMPLE_INFO_ATTR_MAX + 1] = {
 	[SAMPLE_INFO_ATTR_Y] = {.type = NLA_U32},
 };
 
-static void sample_nl_notify(struct genl_multicast_group *nl_grp,
-	struct sample_nla *sn);
 
 static int sample_parse_info(struct sample_info *si, struct nlattr *nla){
 	struct nlattr *attrs[SAMPLE_INFO_ATTR_MAX + 1];
@@ -94,9 +100,11 @@ static int sample_nl_fill_echo(struct sk_buff *skb, struct sample_nla *sn){
 	NLA_PUT_STRING(skb, SAMPLE_ECHO_ATTR_DATA, sn->data);
 	return 0;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,36)
 nla_put_failure:
 	nla_nest_cancel(skb, nl_info);
 	return -EMSGSIZE;
+#endif
 }
 
 int sample_echo(struct sk_buff *skb, struct genl_info *info)
@@ -119,9 +127,6 @@ int sample_echo(struct sk_buff *skb, struct genl_info *info)
 		goto out;
 
 	printk("%s(%d) kernel recv echo: x[%u], y[%u], data[%s]\n", __func__, __LINE__, sn.info.x, sn.info.y, sn.data);
-
-	// notify
-	sample_nl_notify(&grp, &sn);
 
 	//reply
 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
@@ -153,8 +158,13 @@ int sample_echo_dump(struct sk_buff *skb, struct netlink_callback *cb)
 	void *hdr;
 
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid, cb->nlh->nlmsg_seq,
+			&family, 0, SAMPLE_NL_CMD_ECHO);
+#else
 	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).pid, cb->nlh->nlmsg_seq,
 			&family, 0, SAMPLE_NL_CMD_ECHO);
+#endif
 			//&family, NLM_F_MULTI, SAMPLE_NL_CMD_ECHO);
 	if(!hdr)
 		return -EMSGSIZE;
@@ -203,26 +213,49 @@ static void sample_nl_notify(struct genl_multicast_group *nl_grp,
 	if (genlmsg_end(skb, hdr) < 0)
 		goto fail_fill;
 
+	rcu_read_lock();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+	ret = genlmsg_multicast_allns(&family, skb, 0, 0, GFP_ATOMIC);
+#else
 	ret = genlmsg_multicast_allns(skb, 0, nl_grp->id, GFP_KERNEL);
+#endif
+	rcu_read_unlock();
 
 	if (ret && ret != -ESRCH) {
-		printk(KERN_DEBUG "%s: Error notifying group (%d)\n",
+		printk("%s: Error notifying group (%d)\n",
 			__func__, ret);
 		nlmsg_free(skb);
 	}
 	return;
 
 fail_fill:
-	printk(KERN_DEBUG "%s: Failed to fill nl_attr.\n", 	__func__);
+	printk("%s: Failed to fill nl_attr.\n", 	__func__);
 	nlmsg_free(skb);
 	return;
 }
+
+static void sample_timer_callback(unsigned long data)
+{
+	sample_nl_notify(&grp, &_sn);
+	mod_timer(&sample_timer, jiffies + msecs_to_jiffies(2000));
+	return;
+}
+
 
 
 static int __init sample_nl_init(void)
 {
 	int ret = 0;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+	/* register the new family and all opertations but the first one */
+	ret = genl_register_family_with_ops_groups(&family, &ops, &grp);
+	if (ret) {
+		printk(KERN_CRIT "%s: Could not register netlink family (%d)\n",
+				__func__, ret);
+		return ret;
+	}
+#else
 	/* register the new family and all opertations but the first one */
 	ret = genl_register_family(&family);
 	if (ret) {
@@ -246,18 +279,29 @@ static int __init sample_nl_init(void)
 		genl_unregister_family(&family);
 		return ret;
 	}
+#endif
+	setup_timer(&sample_timer, sample_timer_callback, 0);
+	mod_timer(&sample_timer, jiffies + msecs_to_jiffies(2000));
 
-	printk(KERN_DEBUG "Module %s initialized\n", MODULE_NAME);
+	printk("Module %s initialized\n", MODULE_NAME);
 
 	return 0;
 }
 
 static void __exit sample_nl_exit(void)
 {
+	int ret;
+	ret = del_timer_sync(&sample_timer);
+	if (ret)
+		printk("Timer is still in use...\n");
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+	genl_unregister_family(&family);
+#else
 	genl_unregister_mc_group(&family, &grp);
 	genl_unregister_ops(&family, &ops);
 	genl_unregister_family(&family);
-	printk(KERN_DEBUG "Module %s exit\n", MODULE_NAME);
+#endif
+	printk("Module %s exit\n", MODULE_NAME);
 }
 
 module_init(sample_nl_init);

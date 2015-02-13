@@ -145,7 +145,7 @@ static int sample_echo_cb(struct nl_msg *msg, void *arg)
 		return -1;
 	}
 
-	strncpy(sn.data, nla_get_string(attrs_echo[SAMPLE_ECHO_ATTR_DATA]), sizeof(buff));
+	strncpy(sn.data, nla_get_string(attrs_echo[SAMPLE_ECHO_ATTR_DATA]), sizeof(sn.data));
 
 	if(nla_parse_nested(attrs_info, SAMPLE_INFO_ATTR_MAX, 
 				attrs_echo[SAMPLE_ECHO_ATTR_INFO], sample_info_policy))

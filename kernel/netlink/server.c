@@ -1,5 +1,5 @@
 /*
- * Yu Bo<yubo@yubo.org> 
+ * Yu Bo<yubo@yubo.org>
  * 2015-02-03
  */
 
@@ -277,7 +277,7 @@ static int wait_packets(int sd)
 	long errcnt = 0;
 	uint32_t info_x, info_y;
 	char data[1024];
-	
+
 	flags = fcntl(sd, F_GETFL);
 	fcntl(sd, F_SETFL, flags | O_NONBLOCK);
 
