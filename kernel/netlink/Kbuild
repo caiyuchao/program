@@ -7,6 +7,7 @@ hostprogs-y := server client server_nl
 # Tell kbuild to always build the programs
 always := $(hostprogs-y)
 
-HOSTCFLAGS_client.o += -lnl -g -I$(objtree)/usr/include
-HOSTCFLAGS_server_nl.o += -lnl -g -I$(objtree)/usr/include
+HOST_LOADLIBES += -lnl
+HOSTCFLAGS_client.o +=  -g -I$(objtree)/usr/include -I/usr/include
+HOSTCFLAGS_server_nl.o +=  -g -I$(objtree)/usr/include
 HOSTCFLAGS_server.o += -g -I$(objtree)/usr/include

@@ -20,7 +20,7 @@
 
 #define MODULE_NAME "SampleNetlink"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,36)
 #define NLA_PUT_U32 nla_put_u32
 #define NLA_PUT_STRING nla_put_string
 #endif
@@ -39,14 +39,14 @@ struct genl_family family = {
 	.maxattr = SAMPLE_NL_CMD_MAX,
 };
 
-struct genl_multicast_group grp = {
-	.name	= SAMPLE_NL_GRP_NAME,
+struct genl_multicast_group grp[] = {
+	{.name	= SAMPLE_NL_GRP_NAME},
 };
 
 /* Policy used for attributes in nested attribute SAMPLE_ECHO_ATTR */
 static const struct nla_policy sample_echo_policy[SAMPLE_ECHO_ATTR_MAX + 1] = {
 	[SAMPLE_ECHO_ATTR_INFO] = {.type = NLA_NESTED},
-	[SAMPLE_ECHO_ATTR_DATA] = {.type = NLA_NUL_STRING, .len = 1024},
+	[SAMPLE_ECHO_ATTR_DATA] = {.type = NLA_NUL_STRING, .len = 2048},
 };
 
 static const struct nla_policy sample_info_policy[SAMPLE_INFO_ATTR_MAX + 1] = {
@@ -181,16 +181,17 @@ nla_put_failure:
 	return -EMSGSIZE;
 }
 
-struct genl_ops ops = {
+struct genl_ops ops[] = {
+	{
 	.cmd	= SAMPLE_NL_CMD_ECHO,
 	.flags	= GENL_ADMIN_PERM, // just root
 	.policy	= sample_echo_policy,
 	.doit	= sample_echo,
 	.dumpit	= sample_echo_dump,
+	},
 };
 
-static void sample_nl_notify(struct genl_multicast_group *nl_grp,
-	struct sample_nla *sn)
+static void sample_nl_notify(struct sample_nla *sn)
 {
 	int ret;
 	void	*hdr;
@@ -217,7 +218,7 @@ static void sample_nl_notify(struct genl_multicast_group *nl_grp,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
 	ret = genlmsg_multicast_allns(&family, skb, 0, 0, GFP_ATOMIC);
 #else
-	ret = genlmsg_multicast_allns(skb, 0, nl_grp->id, GFP_KERNEL);
+	ret = genlmsg_multicast_allns(skb, 0, grp[0].id, GFP_KERNEL);
 #endif
 	rcu_read_unlock();
 
@@ -236,7 +237,7 @@ fail_fill:
 
 static void sample_timer_callback(unsigned long data)
 {
-	sample_nl_notify(&grp, &_sn);
+	sample_nl_notify(&_sn);
 	mod_timer(&sample_timer, jiffies + msecs_to_jiffies(2000));
 	return;
 }
@@ -247,9 +248,9 @@ static int __init sample_nl_init(void)
 {
 	int ret = 0;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,36)
 	/* register the new family and all opertations but the first one */
-	ret = genl_register_family_with_ops_groups(&family, &ops, &grp);
+	ret = genl_register_family_with_ops_groups(&family, ops, grp);
 	if (ret) {
 		printk(KERN_CRIT "%s: Could not register netlink family (%d)\n",
 				__func__, ret);
@@ -263,7 +264,7 @@ static int __init sample_nl_init(void)
 				__func__, ret);
 		return ret;
 	}
-	ret = genl_register_ops(&family, &ops);
+	ret = genl_register_ops(&family, &ops[0]);
 	if (ret) {
 		printk(KERN_CRIT "%s: Could not register netlink ops, ret:%d\n",
 				__func__, ret);
@@ -271,11 +272,11 @@ static int __init sample_nl_init(void)
 		return ret;
 	}
 
-	ret = genl_register_mc_group(&family, &grp);
+	ret = genl_register_mc_group(&family, &grp[0]);
 	if (ret) {
 		printk(KERN_CRIT "Module %s: group error (%d)\n",
 				MODULE_NAME, ret);
-		genl_unregister_ops(&family, &ops);
+		genl_unregister_ops(&family, &ops[0]);
 		genl_unregister_family(&family);
 		return ret;
 	}
@@ -294,11 +295,11 @@ static void __exit sample_nl_exit(void)
 	ret = del_timer_sync(&sample_timer);
 	if (ret)
 		printk("Timer is still in use...\n");
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,36)
 	genl_unregister_family(&family);
 #else
-	genl_unregister_mc_group(&family, &grp);
-	genl_unregister_ops(&family, &ops);
+	genl_unregister_mc_group(&family, &grp[0]);
+	genl_unregister_ops(&family, &ops[0]);
 	genl_unregister_family(&family);
 #endif
 	printk("Module %s exit\n", MODULE_NAME);

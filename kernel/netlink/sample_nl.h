@@ -13,7 +13,7 @@ struct sample_info {
 
 struct sample_nla {
 	struct sample_info info;
-	char data[1024];
+	char data[2048];
 };
 
 /* support command */

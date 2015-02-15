@@ -30,7 +30,7 @@ static struct nl_handle *sock = NULL;
 static int family;
 
 
-char buff[1024];
+char buff[2048];
 
 /* Policy used for attributes in nested attribute SAMPLE_ECHO_ATTR */
 struct nla_policy sample_echo_policy[SAMPLE_ECHO_ATTR_MAX + 1] = {
@@ -55,11 +55,6 @@ static struct nl_msg *sample_nl_message(int cmd, int flags)
 			cmd, SAMPLE_NL_VERSION);
 
 	return msg;
-}
-
-static int sample_nl_noop_cb(struct nl_msg *msg, void *arg)
-{
-	return NL_OK;
 }
 
 static int sample_nl_send_message(struct nl_msg *msg, nl_recvmsg_msg_cb_t func, void *arg)
