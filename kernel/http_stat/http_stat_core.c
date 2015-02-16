@@ -1,11 +1,14 @@
 /*
  * This is a module which is used to replace http .
  *
- * Copyright (C) 2000
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
+ * 
+ * Yu Bo <yubo@yubo.org>
+ * 2015-02-16
+ * 
  */
 
 #include <linux/module.h>
@@ -36,24 +39,22 @@
 #include <net/netfilter/nf_conntrack_core.h>
 #include <net/netfilter/nf_nat_helper.h>
 
-
+#include "http_stat_ctl.h"
 
 #define __HTTP_ERROR_DISABLE_TS__
-
-
-#define HTTP_GET_MIN_LEN	18
-
-/*
- * http stat flags
- */
-#define HTTP_STAT_F_SKIP	0x00000001
-#define HTTP_STAT_F_MODI	0x00000002	/* Modified */
-
-
-
-
-
 #define __HTTP_ERROR_DEBUG__
+
+#define HTTP_STAT_F_SKIP		0x00000001  /* http stat flags */
+#define HTTP_STAT_F_MODI		0x00000002	/* Modified */
+#define HTTP_GET_MIN_LEN		18
+#define HTTP_SESSION_HASH_SIZE	1024
+#define HTTP_SESSION_STEP_SIZE	256
+#define HTTP_SESSION_HASH_MASK	(HTTP_SESSION_HASH_SIZE - 1)
+#define GC_TIMER_INTERVAL		msecs_to_jiffies(1000)	/* 1s */
+#define HTTP_SESSION_TIMEOUT	msecs_to_jiffies(5000)	/* 5s */
+#define HTTP_SESS_TABLE_LOCK()	spin_lock_bh(&http_sess_table->lock)
+#define HTTP_SESS_TABLE_UNLOCK() spin_unlock_bh(&http_sess_table->lock)
+
 #ifdef __HTTP_ERROR_DEBUG__
 #define DEBUG_PRINT(fmt, a...) printk(fmt, ##a)
 #define DUMP_SKB(skb, in, out) dump_skb(skb, in, out)
@@ -74,31 +75,6 @@
 #define PERF_DEBUG(fmt, a...) do { } while(0)
 #endif
 
-#define XT_SYNPROXY_OPT_MSS             0x01
-#define XT_SYNPROXY_OPT_WSCALE          0x02
-#define XT_SYNPROXY_OPT_SACK_PERM       0x04
-#define XT_SYNPROXY_OPT_TIMESTAMP       0x08
-#define XT_SYNPROXY_OPT_ECN             0x10
-
-struct synproxy_options {
-	u8	options;
-	u8	wscale;
-	u16	mss;
-	u32	tsval;
-	u32	tsecr;
-};
-
-
-#define HTTP_SESSION_HASH_SIZE	1024
-#define HTTP_SESSION_STEP_SIZE	256
-#define HTTP_SESSION_HASH_MASK	(HTTP_SESSION_HASH_SIZE - 1)
-#define GC_TIMER_INTERVAL	msecs_to_jiffies(1000)	/* 1s */
-#define HTTP_SESSION_TIMEOUT	msecs_to_jiffies(5000)	/* 5s */
-
-
-int gc_timer_hash_index = 0;
-static struct timer_list gc_timer;
-
 struct http_session_table {
 	spinlock_t  lock;
 	struct hlist_head  head[HTTP_SESSION_HASH_SIZE];
@@ -113,18 +89,14 @@ struct http_session_key {
 struct http_session {
 	struct hlist_node hnode;
 	atomic_t __refcnt;
-
 	struct http_session_key key;
-
 	uint32_t flags;
-
-//	struct synproxy_options syn_opt;
-//	struct sk_buff *skb_http_get;
-//	struct sk_buff_head skb_list;
 	uint32_t proxy_tsval;
 	uint32_t jiff;			/*last access jiffies*/
 }____cacheline_aligned_in_smp;
 
+static int gc_timer_hash_index = 0;
+static struct timer_list gc_timer;
 static struct http_session_table *http_sess_table;
 
 static void dump_skb(const struct sk_buff *skb, const struct net_device *in,
@@ -262,8 +234,6 @@ void __http_session_free(struct http_session *http_sess)
 	kfree(http_sess);
 }
 
-#define HTTP_SESS_TABLE_LOCK()	spin_lock_bh(&http_sess_table->lock)
-#define HTTP_SESS_TABLE_UNLOCK() spin_unlock_bh(&http_sess_table->lock)
 
 void put_http_session(struct http_session *http_sess)
 {
@@ -336,6 +306,30 @@ static inline bool nf_is_loopback_packet(const struct sk_buff *skb)
 	return skb->dev && skb->dev->flags & IFF_LOOPBACK;
 }
 
+static struct config * search_stat(char *request) 
+{
+	int ret;
+	uint32_t buff[3];
+
+	ret = snprintf((char *)buff, 12, "%s", request);
+	if(ret < 12)
+		return NULL;
+
+	
+
+	//if(!strncmp(data, "http/1.1 200 ", strlen("http/1.1 200 "))){
+	// http://tools.ietf.org/html/rfc2616
+	// http/(0.9)|(1.0)|(1.1)
+	if(buff[0] != *(uint32_t *)"HTTP"){
+		return NULL;
+	}
+	
+	if(buff[1] == *(uint32_t *)"/0.9" || buff[1] == *(uint32_t *)"/1.0"
+			|| buff[1] == *(uint32_t *)"/1.1"){
+		return config_search(buff[2]);
+	}
+	return NULL;
+}
 
 static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 	struct sk_buff *skb, const struct net_device *in,
@@ -350,17 +344,8 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 	struct http_session *session;
 	int dir, dlen = 0;
 	const char * data = NULL;
+	struct config *stat;
 	
-	char *buff = 	"HTTP/1.1 40  OK\n"
-					"Server: nginx/1.0.15\n"
-					"Date: Mon, 26 Jan 2015 04:03:33 GMT\n"
-					"Content-Type: text/html\n"
-					"Content-Length: 13\n"
-					"Last-Modified: Sat, 24 Jan 2015 00:04:04 GMT\n"
-					"Connection: keep-alive\n"
-					"Accept-Ranges: bytes\n\n"
-					"012345678901234567890hello world\n";
-
 	ct = nf_ct_get(skb, &ctinfo);
 	if (ct == NULL){
 		return NF_ACCEPT;
@@ -429,12 +414,12 @@ static unsigned int ipv4_http_stat_post_hook(unsigned int hooknum,
 					goto put_session;
 				}
 
-				if(!strncmp(data, "HTTP/1.1 200 ", strlen("HTTP/1.1 200 "))){
-				
-					DEBUG_PRINT(KERN_DEBUG "hit HTTP/1.1 200, modify this skb\n");
+				//if(!strncmp(data, "HTTP/1.1 200 ", strlen("HTTP/1.1 200 "))){
+				if((stat = search_stat(data))){
+					DEBUG_PRINT(KERN_DEBUG "hit HTTP/1.1 %u, modify this skb\n", stat->code);
 					
 					if(!nf_nat_mangle_tcp_packet(skb, ct, ctinfo, 
-												0, dlen, buff, strlen(buff))){
+												0, dlen, stat->content, strlen(stat->content))){
 						DEBUG_PRINT(KERN_DEBUG "nf_nat_mangle_tcp_packet fail!!\n");
 						ret = NF_DROP;
 						goto put_session;
@@ -541,6 +526,10 @@ static int __init http_stat_init(void)
 	int i = 0;
 	int err = 0;
 
+	if((err = http_stat_ctl_init())){
+		goto err_ctl_init;
+	}
+
 	http_sess_table = kzalloc(sizeof(struct http_session_table), GFP_ATOMIC);
 	if (NULL == http_sess_table) {
 		err = -ENOMEM;
@@ -568,6 +557,7 @@ static int __init http_stat_init(void)
 err_hook:
 	kfree(http_sess_table);
 err_malloc:
+err_ctl_init:
 	return err;
 }
 
@@ -597,6 +587,7 @@ static void __exit http_stat_exit(void)
 	}
 	HTTP_SESS_TABLE_UNLOCK();
 	kfree(http_sess_table);
+	http_stat_ctl_exit();
 	//mi_netlink_exit();
 	// clean match
 	//fini_webfilter_match();

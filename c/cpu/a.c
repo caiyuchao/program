@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-void foo(){
+static void foo(void){
 	int i;
 	uint32_t a = 0x01020304;
 	char *x = (char *)&a;
@@ -14,9 +14,21 @@ void foo(){
 		printf("error\n");
 }
 
+static void bar(void){
+	char *str = "HTTP/0.9/1.0/1.1 200";
+	char http[] = "HTTP";
+	printf("0x%08x 0x%08x 0x%08x 0x%08x\n", 
+			*(uint32_t *)str, 
+			*((uint32_t *)str+1),
+			*((uint32_t *)str+2),
+			*((uint32_t *)str+3));
+	printf("HTTP 0x%08x\n", *(uint32_t *)"HTTP"); 
+}
+
 int main(int argc, const char *argv[])
 {
 	foo();
+	bar();
 	
 	return 0;
 }
