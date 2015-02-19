@@ -1,0 +1,24 @@
+Version 1.1.1 - 10/27/05
+
+- overlay in FA machine: display the string being consumed
+
+Version 1.1 - 10/01/05
+
+Improvement:
+
+- format of file has changed to XML (incompatible with version 1.0 but will support compatibility in the future)
+- image can now be saved to file (JPG, PNG or other format supported by Java)
+- "do nothing" at startup is no longer used on plateform other than MacOS
+- uses XJLib 1.2
+
+Bug fixes:
+
+- fixed a bug where alert and modal dialog would not stay in front on Windows/Linux
+- fixed a bug where the application would hang at startup when opening the last used document
+- fixed a bug where the preferences would be saved in a generic name
+- removed a dependency in GLink with machine.Tool
+- fixed some English strings
+
+Version 1.0 - 12/13/04
+
+- First release
