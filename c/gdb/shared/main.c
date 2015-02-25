@@ -1,7 +1,15 @@
 #include "crash.h"
 
+void foo(void){
+	crash();
+}
+
+void bar(void){
+	foo();
+}
+
 int main(int argc, char ** argv)
 {
-	crash();
+	foo();
     return 0;
 }

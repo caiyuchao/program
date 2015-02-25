@@ -1,9 +1,6 @@
-all: a a.debug trace
+all: a a.debug core
 
-a: a.c
-	gcc -g -o $@ $<
-
-trace: trace.c
+a.out: a.c
 	gcc -g -o $@ $<
 
 a.debug: a.out
@@ -13,7 +10,7 @@ a: a.out
 	strip --strip-all a.out -o a
 
 core: a
-	sh < ulimit -c unlimited; ./a
+	ulimit -c unlimited; ./a
 
 clean:
 	rm -f a a.debug a.out core
