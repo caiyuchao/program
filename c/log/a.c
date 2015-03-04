@@ -31,7 +31,7 @@ uint32_t debug_mask = 1 << DEBUG_A;
 uint32_t log_level = L_DEBUG;
 uint8_t use_syslog = 0;
 
-#define DPRINTF(format, ...) fprintf(stderr, "%s(%d): " format, __func__, __LINE__, ## __VA_ARGS__)
+#define DPRINTF(format, ...) fprintf(stderr, "%s:%d:%s(): " format, __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 #define D(level, format, ...) do { \
 		if (debug_mask & (1 << (DEBUG_ ## level))) \
 				DPRINTF(format, ##__VA_ARGS__); \
@@ -40,7 +40,7 @@ uint8_t use_syslog = 0;
 static void _log_message(int priority, const char *file, const char *func, int line, const char *format, ...)
 {
 	char buf[255];
-	snprintf(buf, sizeof(buf), "%s:%d: %s: %s", file, line, func, format);
+	snprintf(buf, sizeof(buf), "%s:%d:%s(): %s", file, line, func, format);
 	va_list vl;
 
 	if (priority > log_level)
@@ -60,8 +60,8 @@ static void _log_message(int priority, const char *file, const char *func, int l
 
 int main(int argc, const char *argv[])
 {
-	D(A, "hello world!\n");	
-	D(B, "hello world!\n");	
-	dlog("hello world!\n");
+	D(A, "1 hello world!\n");	
+	D(B, "2 hello world!\n");	
+	dlog("3 hello world!\n");
 	return 0;
 }
