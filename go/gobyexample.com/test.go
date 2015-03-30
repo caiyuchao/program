@@ -8,5 +8,5 @@ type Cat struct {
 }
 
 func main() {
-	fmt.Println(Cat{})
+	fmt.Println(float64(float64(2.2) / float64(0.0)))
 }
