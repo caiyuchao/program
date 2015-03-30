@@ -17,9 +17,8 @@ func main() {
 	// the values as they arrive every 500ms.
 	ticker := time.NewTicker(time.Millisecond * 500)
 	go func() {
-		for t := range ticker.C {
+		for _ := range ticker.C {
 			time.Sleep(time.Millisecond * 400)
-			fmt.Println("Tick at", t)
 		}
 	}()
 
