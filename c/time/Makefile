@@ -1,4 +1,4 @@
-OBJS = gettimeofday ctime
+OBJS = gettimeofday ctime clock_gettime
 
 CFLAGS = -g -O2
 

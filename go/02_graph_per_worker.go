@@ -7,17 +7,17 @@ import (
 )
 
 type req struct {
-	cb   chan string
-	data string
+	handle chan string
+	data   string
 }
 
 var (
-	request_chan chan req
+	request_chan chan *req
 	update_chan  chan string
 )
 
-func foo(r req) {
-	r.cb <- strings.Join([]string{"ok", r.data}, ":")
+func foo(r *req) {
+	r.handle <- strings.Join([]string{"ok", r.data}, ":")
 }
 
 func worker() {
@@ -34,7 +34,7 @@ func worker() {
 
 func main() {
 
-	request_chan = make(chan req)
+	request_chan = make(chan *req)
 	update_chan = make(chan string)
 
 	go worker()
@@ -55,16 +55,17 @@ func main() {
 		for range t2.C {
 			resp := make(chan string)
 			request := req{
-				cb:   resp,
-				data: "hello",
+				handle: resp,
+				data:   "hello",
 			}
 			//			fmt.Println("send request_chan", request,
-			//				"cb", request.cb,
+			//				"handle", request.handle,
 			//				"data", request.data)
-			request_chan <- request
+			request_chan <- &request
 			r := <-resp
 			fmt.Println("received response", r)
 		}
 	}()
+
 	time.Sleep(time.Millisecond * 5000)
 }
