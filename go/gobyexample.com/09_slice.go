@@ -66,4 +66,13 @@ func main() {
 		}
 	}
 	fmt.Println("2d: ", twoD)
+
+	am := make([]map[string]int, 3)
+	for i := 0; i < 3; i++ {
+		am[i] = make(map[string]int)
+		am[i]["hello"] = i
+		am[i]["world"] = i * i
+	}
+	fmt.Println("am", am)
+
 } // Go has various value types including strings,

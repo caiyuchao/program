@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	//	"strings"
-	"time"
+	//"time"
 )
 
 const (
@@ -20,20 +20,25 @@ func hashKey(key string) uint32 {
 	return crc32.ChecksumIEEE([]byte(key))
 }
 
-func foo(time int64) {
+func foo(now int64) {
 	key := "hello"
-	write_offset := int64(hashKey(key))%cache_time - time%cache_time
-	if write_offset < 0 {
-		write_offset += cache_time
-	}
-	write_time := time + write_offset
-	fmt.Println("now", time, "write_time", write_time, "offset", write_offset)
+	ts := now - ((now + int64(hashKey(key))) % cache_time) + cache_time
+
+	/*
+		write_offset := int64(hashKey(key))%cache_time - time%cache_time
+		if write_offset < 0 {
+			write_offset += cache_time
+		}
+		write_time := time + write_offset
+	*/
+	fmt.Println("now", now, "write_time", ts, "offset", ts-now)
 }
 
 func main() {
-	time := time.Now().Unix()
+	//now := time.Now().Unix()
+	var now int64 = 1428394120
 	for i := 0; i < 180; i++ {
-		foo(time + int64(i)*10)
+		foo(now + int64(i)*10)
 	}
 
 }

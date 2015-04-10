@@ -12,3 +12,4 @@ cscope.*
 *.symvers
 kernel/http_stat/include
 *.pyc
+*.pid
