@@ -1,4 +1,4 @@
-OBJS = ip
+OBJS = ip reuseaddr
 
 CFLAGS = -g
 

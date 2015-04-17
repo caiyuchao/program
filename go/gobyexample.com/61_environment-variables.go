@@ -5,8 +5,11 @@
 
 package main
 
-import "os"
-import "strings"
+import (
+	"os"
+	"strconv"
+)
+
 import "fmt"
 
 func main() {
@@ -16,16 +19,25 @@ func main() {
 	// an empty string if the key isn't present in the
 	// environment.
 	os.Setenv("FOO", "1")
+	os.Setenv("fd", "1")
 	fmt.Println("FOO:", os.Getenv("FOO"))
 	fmt.Println("BAR:", os.Getenv("BAR"))
+	fd, err := strconv.Atoi(os.Getenv("fd"))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(fd)
+	}
 
 	// Use `os.Environ` to list all key/value pairs in the
 	// environment. This returns a slice of strings in the
 	// form `KEY=value`. You can `strings.Split` them to
 	// get the key and value. Here we print all the keys.
-	fmt.Println()
-	for _, e := range os.Environ() {
-		pair := strings.Split(e, "=")
-		fmt.Println(pair)
-	}
+	/*
+		fmt.Println()
+		for _, e := range os.Environ() {
+			pair := strings.Split(e, "=")
+			fmt.Println(pair)
+		}
+	*/
 }

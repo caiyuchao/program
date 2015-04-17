@@ -13,3 +13,4 @@ cscope.*
 kernel/http_stat/include
 *.pyc
 *.pid
+*.log
