@@ -84,6 +84,7 @@ func Fgetpid(file string) int {
 }
 
 func create_pidfile(pidfile string) error {
+	os.Remove(pidfile)
 	if f, e := os.OpenFile(pidfile, os.O_RDWR|os.O_CREATE,
 		0644); e == nil {
 		f.WriteString(strconv.Itoa(pid))
@@ -194,9 +195,11 @@ func main() {
 	}
 
 	pid = Fgetpid("15.pid")
-	if err := syscall.Kill(pid, 0); err == nil {
-		log.Println(os.Args[0], pid, " alraedy running")
-		os.Exit(1)
+	if pid > 1 {
+		if err := syscall.Kill(pid, 0); err == nil {
+			log.Println(os.Args[0], pid, " alraedy running")
+			os.Exit(1)
+		}
 	}
 
 	pid = os.Getpid()

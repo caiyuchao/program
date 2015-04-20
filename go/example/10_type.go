@@ -32,4 +32,11 @@ func main() {
 	fmt.Println("type:", reflect.TypeOf(f))
 	log.Println("type:", reflect.TypeOf(f))
 
+	{
+		b := true
+		if b {
+			fmt.Println("hello" + " world!")
+		}
+	}
+
 }

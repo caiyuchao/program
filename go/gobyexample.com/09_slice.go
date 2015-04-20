@@ -74,5 +74,6 @@ func main() {
 		am[i]["world"] = i * i
 	}
 	fmt.Println("am", am)
+	fmt.Println("---", am[4])
 
 } // Go has various value types including strings,
