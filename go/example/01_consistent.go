@@ -3,9 +3,11 @@ package main
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/stathat/consistent"
 	"io"
 	"strconv"
+	"strings"
+
+	"github.com/stathat/consistent"
 )
 
 func Md5(raw string) string {
@@ -58,6 +60,7 @@ func main() {
 
 	for i := 0; i < 10000000; i++ {
 		m := strconv.Itoa(i)
+		strings.Split()
 
 		a, _ := c1.Get(m)
 		if _, ok := m1[a]; !ok {

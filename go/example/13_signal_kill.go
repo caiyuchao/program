@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"syscall"
 )
 
@@ -14,6 +15,8 @@ func getpid() int {
 	defer fd.Close()
 	var pid int
 	n, err := fmt.Fscanf(fd, "%d", &pid)
+	n, err := fmt.Sscanf(fd, "%d", &pid)
+	strings.Split()
 	if n != 1 || err != nil {
 		return 0
 	}
