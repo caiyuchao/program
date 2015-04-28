@@ -96,7 +96,6 @@ func Newmmap(filename string) *mmap {
 	if m.buf, err = syscall.Mmap(int(f.Fd()), 0, int(fi.Size()), syscall.PROT_WRITE|syscall.PROT_READ, syscall.MAP_SHARED); err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(string(m.buf[:]))
 	dh := (*reflect.SliceHeader)(unsafe.Pointer(&m.buf))
 	m.buf_addr = dh.Data
 	m.buf_len = dh.Len
