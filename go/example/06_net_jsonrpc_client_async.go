@@ -35,15 +35,15 @@ func main() {
 	for i := 0; i < 100; i++ {
 		//go client.Call("Arith.Multiply", &args, &r[i])
 		done := make(chan *rpc.Call, 1)
-		call := client.Go("Arith.Multiply", &args, &r[i], done)
-		go func(call *rpc.Call, done chan *rpc.Call, i int) {
-			<-done
+		client.Go("Arith.Multiply", &args, &r[i], done)
+		go func(done chan *rpc.Call, i int) {
+			call := <-done
 			if call.Error == nil {
 				fmt.Println("No.", i, " return", r[i])
 			} else {
 				fmt.Println(call.Error)
 			}
-		}(call, done, i)
+		}(done, i)
 	}
 	time.Sleep(time.Millisecond * 2000)
 }
