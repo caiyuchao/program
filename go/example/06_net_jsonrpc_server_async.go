@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
@@ -28,7 +29,7 @@ func (t *Arith) Multiply(args *Args, reply *int) error {
 	s := seq
 	mutex.Unlock()
 	*reply = args.A*args.B + s
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)))
 	return nil
 }
 
