@@ -1,4 +1,4 @@
-OBJS = a
+OBJS = variable_length bytes
 
 CFLAGS = -g 
 

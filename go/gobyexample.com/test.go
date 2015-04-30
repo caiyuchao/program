@@ -7,6 +7,9 @@ import (
 type Cat struct {
 }
 
+var s []int
+
 func main() {
-	fmt.Println(float64(float64(2.2) / float64(0.0)))
+	s = append(s, 1)
+	fmt.Println(s)
 }
