@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/rpc"
 	"net/rpc/jsonrpc"
 	"time"
 )
@@ -30,11 +31,19 @@ func main() {
 	args := Args{7, 2}
 
 	var r [100]int
+
 	for i := 0; i < 100; i++ {
-		go client.Call("Arith.Multiply", &args, &r[i])
+		//go client.Call("Arith.Multiply", &args, &r[i])
+		done := make(chan *rpc.Call, 1)
+		call := client.Go("Arith.Multiply", &args, &r[i], done)
+		go func(call *rpc.Call, done chan *rpc.Call, i int) {
+			<-done
+			if call.Error == nil {
+				fmt.Println("No.", i, " return", r[i])
+			} else {
+				fmt.Println(call.Error)
+			}
+		}(call, done, i)
 	}
 	time.Sleep(time.Millisecond * 2000)
-	for i := 0; i < 100; i++ {
-		fmt.Println(r[i])
-	}
 }
