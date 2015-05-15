@@ -1,4 +1,4 @@
-OBJS = a
+OBJS = a b
 
 CFLAGS = -g 
 
