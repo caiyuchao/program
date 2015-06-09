@@ -1,4 +1,4 @@
-OBJS = a
+OBJS = net_dev ip_list
 
 CFLAGS = -g 
 
