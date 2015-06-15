@@ -1,0 +1,12 @@
+#!/bin/ksh
+
+cp ./test/ibpsdb.h $HOME/src/include/pub/ibpsdb.h
+cp ./test/tabtplfunc.h $HOME/src/include/pub/tabtplfunc.h
+cp ./test/tabtplfunc.pc $HOME/src/libsrc/pub/dbase/tabtplfunc.pc
+
+cd $HOME/tmp/sandbox/dealdbdoc
+python dealdbdoc.py 5
+
+cd $HOME/src/include/pub
+mv ibpsdb.h.n ibpsdb.h
+

@@ -1,0 +1,67 @@
+#ifndef _ZZ_PUBLIB_H
+#define _ZZ_PUBLIB_H
+
+#include <stdio.h> 
+#include <string.h> 
+#include <stdarg.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+/**
+#ifndef DEBUG
+	#define NDEBUG
+	#warning "NDEBUG已定义,程序为release版本!"
+#endif
+**/
+#include <assert.h>
+
+
+typedef struct _otool_app_cfg_
+{
+    char db_user[30];
+    char db_pass[30];
+    char db_name[30];
+}APP_CONF; 
+
+extern APP_CONF cfg;
+
+typedef struct _command_cfg_
+{
+	int flag;
+	char table[31];
+	char deffile[255];
+	char outfile[255];
+}CMD_CONF; 
+
+extern CMD_CONF cmd_cfg;
+
+/*public function*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern char  *logfilename ;
+extern long  logfileline ;
+#define ErrLog  logfilename=__FILE__;logfileline=__LINE__;ErrMsgLog
+
+extern int  deal_cmd_para(int argc,char *argv[]);
+extern int  ReadConfig();
+extern void logit( char *format, ... );
+extern void UpperCase(char *buf);
+extern void LowerCase(char *buf);
+extern void ClowerCase(char *buf);
+
+extern void AllTrim( char *s );
+extern int  str_replace(char *source, unsigned int buflen, char *oldstr, char *newstr);
+extern int  getsubcount(char *source, char * spstr);
+extern int  getsubstr(char *source, int index, char *substr, char * spstr);
+extern FILE *fp_log ;
+extern char cLogFullName[128];
+
+#ifdef __cplusplus
+}
+#endif 
+
+
+#endif

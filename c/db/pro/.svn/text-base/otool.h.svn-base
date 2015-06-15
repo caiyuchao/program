@@ -1,0 +1,43 @@
+#ifndef _ZZ_OTOOL_H
+#define _ZZ_OTOOL_H
+#include <stdio.h> 
+/*
+#include <string.h> 
+#include <stdarg.h>
+#include <stdlib.h>
+#include <pthread.h>    
+#include <ctype.h>
+*/
+
+#ifndef DEBUG
+	#define NDEBUG
+
+#endif
+#include <assert.h>
+
+#define SQLCODE sqlca.sqlcode
+#define SQLREASON sqlca.sqlerrm.sqlerrmc
+#define SQLNUM sqlca.sqlerrd[2]
+typedef struct _oracle_tab_cols
+{
+	int  id;
+	char name[31];	
+	char type[31];
+	int  length;
+	int  prec;
+	int  scale;
+}TAB_COLS;
+
+
+/**/
+extern int  Init();
+extern int  list_table_col(char * tabname);
+extern int gen_code(char * tabname, char * def_file, int file_mode);
+extern int get_user_tables( char tabnames[200][31] );
+
+#define DB_ERR(prompt)\
+	logit("D:%s:%d:%s:(%d:%d:%s)",\
+		__FILE__,__LINE__,\
+		prompt,sqlca.sqlcode,sqlca.sqlerrd[1],sqlca.sqlerrm.sqlerrmc)
+
+#endif

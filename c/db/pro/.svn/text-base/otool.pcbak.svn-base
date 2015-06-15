@@ -1,0 +1,862 @@
+#include <stdio.h>
+#include <sqlca.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include "pub/pub.h"
+
+EXEC SQL INCLUDE "publib.h";
+EXEC SQL INCLUDE "otool.h";
+EXEC SQL INCLUDE SQLCA; 
+
+EXEC ORACLE OPTION (RELEASE_CURSOR = YES); 
+
+EXEC SQL BEGIN DECLARE SECTION; 
+    
+    sql_context ctx;
+
+EXEC SQL END DECLARE SECTION; 
+
+
+void sql_error(char *msg) 
+{ 
+    printf("\n%s,%d,%s\n", msg,sqlca.sqlcode,(char *)sqlca.sqlerrm.sqlerrmc); 
+    EXEC SQL ROLLBACK RELEASE; 
+    exit(-1); 
+} 
+
+int ReConnDB( sql_context ctx )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char p_connect[64];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(p_connect,0,64);
+    strcpy(p_connect,cfg.db_user);
+    strcat(p_connect,"/");
+    strcat(p_connect,cfg.db_pass);
+    if(strlen(cfg.db_name))
+    {
+        strcat(p_connect,"@");
+        strcat(p_connect,cfg.db_name);
+    }
+
+    p_connect[63] = '\0';
+
+    EXEC SQL CONNECT :p_connect;
+    if( sqlca.sqlcode )
+    {
+        printf( "connect database failured!rc=%d [%s]\n",
+			sqlca.sqlcode,p_connect);
+        exit(0);
+    }
+    else
+    {
+        printf("Connected success......\n");
+    }
+
+    return  (sqlca.sqlcode);
+}
+
+int Init()
+{
+    if (ReConnDB(ctx))
+	{
+		ErrLog("连接数据库失败!") ;
+		return -1;
+	}
+
+	return 0;
+}
+
+int get_user_tables( char tabnames[200][31])
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char tab_name[31];
+    EXEC SQL END DECLARE SECTION;
+
+	int      count=0;
+
+	logit("get_user_tables user:[%s]", cfg.db_user);
+
+    EXEC SQL DECLARE cur_get_alltab CURSOR FOR  
+		SELECT TABLE_NAME
+		  FROM USER_TABLES
+		 ORDER BY TABLE_NAME;
+    if( sqlca.sqlcode ) 
+    {		
+		DB_ERR("declare cursor error!");
+		return -1;
+    }
+
+    EXEC SQL OPEN cur_get_alltab; 
+    if( sqlca.sqlcode ) 
+    {
+		DB_ERR("open cursor error!");
+		return -1;
+    }
+
+    while(1) 
+    { 
+		memset(tab_name,0,sizeof(tab_name));
+        EXEC SQL FETCH cur_get_alltab INTO :tab_name; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		logit("fetch cur_get_alltab[%s] cursor ok.", tab_name);
+		AllTrim(tab_name);
+		
+		strcpy(tabnames[count], tab_name);
+		count++;
+    }  
+	
+    EXEC SQL CLOSE cur_get_alltab; 
+
+	return count;
+}
+
+
+int list_table_col(char * tabname) 
+{  
+	
+    EXEC SQL BEGIN DECLARE SECTION;
+		typedef struct _oracle_tab_cols
+		{
+			int  id;
+			char name[31];	
+			char type[31];
+			int  length;
+			int  prec;
+			int  scale;
+		}TAB_COLS;
+		TAB_COLS tab_cols;
+		
+        char tab_name[31];
+		struct
+		{
+			short ind01;
+			short ind02;
+			short ind03;
+			short ind04;
+			short ind05;
+			short ind06;
+		}data_ind;
+		
+    EXEC SQL END DECLARE SECTION;
+	
+	logit("list_table_col [%s]!", tabname);
+
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+    
+    EXEC SQL DECLARE cur_tab_cols CURSOR FOR  
+	SELECT column_id,column_name,data_type,data_length, data_precision,data_scale
+	  FROM USER_TAB_COLS 
+	 WHERE table_name = :tab_name
+ 	 ORDER BY column_id;
+
+    EXEC SQL OPEN cur_tab_cols; 
+    if( sqlca.sqlcode ) 
+    {
+		logit("open cursor error!");
+    }
+    while(1) 
+    { 
+		memset(&tab_cols,0,sizeof(tab_cols));
+		memset(&data_ind,0,sizeof(data_ind));
+        EXEC SQL FETCH cur_tab_cols INTO :tab_cols INDICATOR :data_ind; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		AllTrim(tab_cols.name);
+		AllTrim(tab_cols.type);
+/**
+        printf("%02d %-20s %-20s %02d  %02d  %02d  \n",
+			tab_cols.id,
+			tab_cols.name,
+			tab_cols.type,
+			tab_cols.length,
+			tab_cols.prec,
+			tab_cols.scale);  
+**/
+    }  
+	
+    EXEC SQL CLOSE cur_tab_cols; 
+/*    EXEC SQL ROLLBACK WORK RELEASE; 
+    EXEC SQL CONTEXT FREE :ctx;*/
+    return 0;    
+} 
+/*
+根据字段属性生成头文件
+*/
+
+int get_c_define(TAB_COLS tab_cols, char * define)
+{
+
+	char buf[512];
+	char name[31];
+	int  flag = 0;
+	
+	memset(buf, 0, sizeof(buf));
+	AllTrim(tab_cols.type);
+	strcpy(name, tab_cols.name);
+	LowerCase (name);
+	
+	if ( strcmp(tab_cols.type,"NUMBER")==0 )
+	{
+		if (tab_cols.scale==0){ 
+			sprintf(buf,"int    %s;   /* %s %d.%d */", name, tab_cols.type, tab_cols.prec, tab_cols.scale);
+		}
+		else{
+			sprintf(buf,"double %s;   /* %s %d.%d */", name, tab_cols.type, tab_cols.prec, tab_cols.scale);
+		}
+		flag = 1;
+	}
+	
+	if ( strcmp(tab_cols.type,"VARCHAR2")==0 || strcmp(tab_cols.type,"CHAR")==0 )
+	{
+		sprintf(buf,"char   %s[%d];   /* %s %d */", name, tab_cols.length+1, tab_cols.type, tab_cols.length);
+		flag = 1;
+	}
+	
+	if ( strcmp(tab_cols.type,"DATE")==0 )
+	{
+		sprintf(buf,"char   %s[20];   /* %s %d */", name, tab_cols.type, tab_cols.length);
+		flag = 1;
+	}
+
+	assert(flag==1);
+	sprintf(define,"%s", buf);
+	return 0;
+	
+}
+
+/*
+根据字段属性生成printf输出格式串
+*/
+
+int get_c_define_fmt(TAB_COLS tab_cols, char * define)
+{
+
+	char buf[512];
+	char name[31];
+	int  flag = 0;
+	
+	memset(buf, 0, sizeof(buf));
+	AllTrim(tab_cols.type);
+	strcpy(name, tab_cols.name);
+	LowerCase (name);
+	
+	if ( strcmp(tab_cols.type,"NUMBER")==0 )
+	{
+		if (tab_cols.scale==0){ 
+			sprintf(buf,"%%d");
+		}
+		else{
+			sprintf(buf,"%%%d.%df",tab_cols.prec, tab_cols.scale);
+		}
+		flag = 1;
+	}
+	
+	if ( strcmp(tab_cols.type,"VARCHAR2")==0 || strcmp(tab_cols.type,"CHAR")==0 )
+	{
+/**
+		sprintf(buf,"%%%ds",tab_cols.length+1);
+**/
+		sprintf(buf,"%%s");
+		flag = 1;
+	}
+	
+	if ( strcmp(tab_cols.type, "DATE" )==0 )
+	{
+		sprintf(buf,"%%s");
+		flag = 1;
+	}
+
+	assert(flag==1);
+	sprintf(define,"%s", buf);
+	return 0;
+	
+}
+
+/*
+
+得到表结构定义
+
+*/
+int get_table_define( char * tabname, TAB_COLS * cols)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+		TAB_COLS tab_cols;
+        char tab_name[31];
+		struct
+		{
+			short ind01;
+			short ind02;
+			short ind03;
+			short ind04;
+			short ind05;
+			short ind06;
+		}data_ind;
+		
+    EXEC SQL END DECLARE SECTION;
+
+	int      colcount=0;
+
+	
+	logit("gen_table_define[%s]", tabname);
+	
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+	
+    EXEC SQL DECLARE cur_tab_cols_def CURSOR FOR  
+	SELECT column_id,column_name,data_type,data_length, data_precision,data_scale
+	  FROM USER_TAB_COLS 
+	 WHERE table_name = :tab_name
+ 	 ORDER BY column_id;
+
+    EXEC SQL OPEN cur_tab_cols_def; 
+    if( sqlca.sqlcode ) 
+    {
+		logit("open cursor error!");
+		return -1;
+    }
+
+    while(1) 
+    { 
+		memset(&tab_cols,0,sizeof(tab_cols));
+		memset(&data_ind,0,sizeof(data_ind));
+        EXEC SQL FETCH cur_tab_cols_def INTO :tab_cols INDICATOR :data_ind; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		LowerCase (tab_cols.name);
+		AllTrim(tab_cols.name);
+		AllTrim(tab_cols.type);
+		
+		cols[colcount] = tab_cols;
+		colcount++;
+    }  
+	
+    EXEC SQL CLOSE cur_tab_cols_def; 
+  /*  EXEC SQL ROLLBACK WORK RELEASE; */
+
+	return colcount;
+}
+
+/*
+
+得到表索引定义
+
+*/
+int get_table_index( char * tabname, TAB_COLS * cols)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+		TAB_COLS tab_cols;
+		char col_name[31];
+        char tab_name[31];
+    EXEC SQL END DECLARE SECTION;
+
+	int      colcount=0;
+
+	logit("gen_table_index[%s]", tabname);
+
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+    
+    EXEC SQL DECLARE IndexCur CURSOR FOR  
+	SELECT COLUMN_NAME
+	  FROM SYS.ALL_IND_COLUMNS
+	 WHERE INDEX_NAME in (SELECT INDEX_NAME
+								FROM SYS.ALL_INDEXES
+							   WHERE TABLE_NAME = :tab_name
+								 AND INDEX_TYPE = 'NORMAL')
+	;
+    if( sqlca.sqlcode ) 
+    {		
+		DB_ERR("declare cursor error!");
+		return -1;
+    }
+
+	logit("gen_table_index[%s]3", tabname);
+
+    EXEC SQL OPEN IndexCur; 
+    if( sqlca.sqlcode ) 
+    {
+		DB_ERR("open cursor error!");
+		return -1;
+    }
+	logit("open gen_table_index[%s] cursor ok.", tabname);
+
+    while(1) 
+    { 
+		memset(&tab_cols,0,sizeof(tab_cols));
+		memset(col_name,0,sizeof(col_name));
+        EXEC SQL FETCH IndexCur INTO :col_name; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		logit("fetch gen_table_index[%s] cursor ok.", tabname);
+		AllTrim(col_name);
+		strcpy(tab_cols.name, col_name);
+		LowerCase (tab_cols.name);
+		
+		cols[colcount] = tab_cols;
+		colcount++;
+    }  
+	
+    EXEC SQL CLOSE IndexCur; 
+/*    EXEC SQL ROLLBACK WORK RELEASE; */
+	logit("colcount [%d] gen_table_index[%s] ", colcount, tabname);
+
+	return colcount;
+}
+
+/*
+
+得到表主键定义
+
+*/
+int get_table_pk( char * tabname, TAB_COLS * cols)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+		TAB_COLS tab_cols;
+		char col_name[31];
+        char tab_name[31];
+		
+    EXEC SQL END DECLARE SECTION;
+
+	int      colcount=0;
+
+	logit("gen_table_pk[%s]", tabname);
+
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+	logit("gen_table_pk[%s]2", tabname);
+    
+    EXEC SQL DECLARE cur_tab_pk_def CURSOR FOR  
+	SELECT COLUMN_NAME
+	  FROM user_cons_columns
+	 WHERE constraint_name = (SELECT constraint_name
+								FROM user_constraints
+							   WHERE table_name = :tab_name
+								 AND constraint_type = 'P')
+	 ORDER BY position;
+    if( sqlca.sqlcode ) 
+    {		
+		DB_ERR("declare cursor error!");
+		return -1;
+    }
+
+	logit("gen_table_pk[%s]3", tabname);
+
+    EXEC SQL OPEN cur_tab_pk_def; 
+    if( sqlca.sqlcode ) 
+    {
+		DB_ERR("open cursor error!");
+		return -1;
+    }
+	logit("open gen_table_pk[%s] cursor ok.", tabname);
+
+    while(1) 
+    { 
+		memset(&tab_cols,0,sizeof(tab_cols));
+		memset(col_name,0,sizeof(col_name));
+        EXEC SQL FETCH cur_tab_pk_def INTO :col_name; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		logit("fetch gen_table_pk[%s] cursor ok.", tabname);
+		AllTrim(col_name);
+		strcpy(tab_cols.name, col_name);
+		LowerCase (tab_cols.name);
+		
+		cols[colcount] = tab_cols;
+		colcount++;
+    }  
+	
+    EXEC SQL CLOSE cur_tab_pk_def; 
+/*    EXEC SQL ROLLBACK WORK RELEASE; */
+
+	return colcount;
+}
+
+/*
+
+得到表外键定义
+
+*/
+int get_table_fk( char * tabname, TAB_COLS * cols)
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+		TAB_COLS tab_cols;
+		char col_name[31];
+        char tab_name[31];
+		
+    EXEC SQL END DECLARE SECTION;
+
+	int      colcount=0;
+
+	logit("gen_table_pk[%s]", tabname);
+
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+	logit("gen_table_pk[%s]2", tabname);
+    
+    EXEC SQL DECLARE cur_tab_fk_def CURSOR FOR  
+	SELECT COLUMN_NAME
+	  FROM user_cons_columns
+	 WHERE constraint_name = (SELECT constraint_name
+								FROM user_constraints
+							   WHERE table_name = :tab_name
+								 AND constraint_type = 'U')
+	 ORDER BY position;
+    if( sqlca.sqlcode ) 
+    {		
+		DB_ERR("declare cursor error!");
+		return -1;
+    }
+
+	logit("gen_table_pk[%s]3", tabname);
+
+    EXEC SQL OPEN cur_tab_fk_def; 
+    if( sqlca.sqlcode ) 
+    {
+		DB_ERR("open cursor error!");
+		return -1;
+    }
+	logit("open gen_table_pk[%s] cursor ok.", tabname);
+
+    while(1) 
+    { 
+		memset(&tab_cols,0,sizeof(tab_cols));
+		memset(col_name,0,sizeof(col_name));
+        EXEC SQL FETCH cur_tab_fk_def INTO :col_name; 
+        if( sqlca.sqlcode == 1403) 
+        { 
+            break; 
+        } 
+		logit("fetch gen_table_pk[%s] cursor ok.", tabname);
+		AllTrim(col_name);
+		strcpy(tab_cols.name, col_name);
+		LowerCase (tab_cols.name);
+		
+		cols[colcount] = tab_cols;
+		colcount++;
+    }  
+	
+    EXEC SQL CLOSE cur_tab_fk_def; 
+/*    EXEC SQL ROLLBACK WORK RELEASE; */
+
+	return colcount;
+}
+
+/*
+
+根据模板文件生成代码
+
+*/
+int gen_code(char * tabname, char * def_file, int file_mode) 
+{  
+	
+    char tab_name[31];
+	
+	int      colcount=0;
+	TAB_COLS cols[200];
+
+	int      pk_count = 0;
+	TAB_COLS pk_cols[200];
+
+	FILE    *fr;
+	FILE    *fw;
+	char    file_out[255];
+	char    line[4096];
+	char    subline[4096];
+	char    key[4096];
+	char    subkey[4096];
+	char    newsub[4096];
+	char    preline[4096];
+	char    spchar[1024];
+	char    aftline[4096];
+	char	newline[40960];
+	int     line_key_cnt = 0;
+	int     line_repeat_cnt = 0;
+	int     pkline_repeat_cnt = 0;
+	char    tmp[2048];
+	int     i = 0; 
+	int     j = 0;
+	
+	logit("gen_code table[%s] def[%s]!", tabname, def_file);
+	memset(tab_name, 0, sizeof(tab_name));
+	strcpy(tab_name, tabname);
+	UpperCase (tab_name);
+	
+	/* 获得表结构 */
+	colcount = get_table_define (tabname, cols);
+	if ( colcount < 0)
+	{
+		logit("get_table_define error!");
+		return -1;		
+	}
+
+	/* 获得表主键 DEBUG
+	pk_count = get_table_pk (tabname, pk_cols);
+	*/
+	pk_count = get_table_index (tabname, pk_cols);
+	if ( pk_count <= 0)
+	{
+		logit("get_table_pk error!");
+		return -1;		
+	}
+
+	/* 填充表主键结构  */
+	for (i=0; i < pk_count; i++)
+	{
+		int ffound = 0;
+		for (j=0; j < colcount; j++)
+		{
+			if (strcmp(pk_cols[i].name, cols[j].name)==0)
+			{
+				pk_cols[i] = cols[j];
+				ffound = 1;
+				break;
+			}
+			if (ffound != 0) 
+				break;
+		}
+		
+	}
+
+	fr = fopen(def_file,"rt");
+	if (!fr)
+	{
+		logit("open file[%s] error", def_file);
+		return -1;
+	}
+	if (strlen(cmd_cfg.outfile) > 0)
+		sprintf(file_out,"%s", cmd_cfg.outfile);
+	else
+		sprintf(file_out,"%s%s","out.",def_file);
+	if ( file_mode == 0 )
+		fw = fopen(file_out,"wt");
+	else
+		fw = fopen(file_out,"at");
+	if (!fw)
+	{
+		logit("open file[%s] error", file_out);
+		return -1;
+	}
+
+	while(fgets(line,4096,fr) != NULL)
+	{
+		memset(newline, 0, sizeof(newline));
+		memset(subline, 0, sizeof(subline));
+/*
+		fprintf(stderr,"----<|%s|\n",line);
+*/
+		line_repeat_cnt = getsubcount (line,"#-#");
+		pkline_repeat_cnt = getsubcount (line,"#+#");
+		if (line_repeat_cnt > 0 && pkline_repeat_cnt > 0)
+		{
+			logit("不支持同一行内包括主键循环域和字段循环域");
+			fclose(fr);
+			fclose(fw);
+			return -1;
+		}
+		if (line_repeat_cnt > 0){
+			getsubstr(line,0,preline,"#-#");
+			getsubstr(line,1,subline,"#-#");
+			getsubstr(line,2,spchar,"#-#");
+			getsubstr(line,3,aftline,"#-#");
+			strcpy(newline,preline);
+
+			str_replace (spchar, 1024, "\\n","\n" );
+			str_replace (spchar, 1024, "\\r","\r" );
+			str_replace (spchar, 1024, "\\t","\t" );
+
+			int sub_key_cnt = getsubcount (subline,"$$");  
+			for (i=0; i<colcount; i++)
+			{
+				strcpy(newsub,subline);
+				for(j=0; j<sub_key_cnt; j++)
+				{
+					if (j%2==0)
+						continue;
+					memset(key, 0, sizeof(key));
+					getsubstr(newsub, 1, key, "$$");
+					/*fprintf(stderr,"	findkey[%d]|%s\n",j,key);*/
+					AllTrim (key);
+					UpperCase(key);
+					sprintf(subkey,"$$%s$$",key);
+					if (strcmp(subkey,"$$TNAME$$")==0)
+					{
+						LowerCase (tab_name);
+						str_replace (newsub, 4096, subkey, tab_name );
+						continue;
+					}
+					if (strcmp(subkey,"$$TNAME_U$$")==0)
+					{
+						UpperCase (tab_name);
+						str_replace (newsub, 4096, subkey, tab_name );
+						continue;
+					}
+					if (strcmp(subkey,"$$CNAME$$")==0)
+					{
+						LowerCase(cols[i].name);
+						str_replace (newsub, 4096, subkey, cols[i].name );
+						continue;
+					}
+					if (strcmp(subkey,"$$CNAME_U$$")==0)
+					{
+						UpperCase(cols[i].name);
+						str_replace (newsub, 4096, subkey, cols[i].name );
+						continue;
+					}
+					
+					if (strcmp(subkey,"$$COL_C_DEFINE$$")==0)
+					{
+						get_c_define (cols[i], tmp);
+						str_replace (newsub, 4096, subkey, tmp);
+						continue;
+					}
+					if (strcmp(subkey,"$$CTYPE_FMT$$")==0)
+					{
+						get_c_define_fmt (cols[i], tmp);
+						str_replace (newsub, 4096, subkey, tmp);
+						continue;
+					}
+						
+				}
+				strcat(newline, newsub);
+				if (i < colcount-1)
+				{
+					strcat(newline, spchar);
+				}
+			}
+
+			strcat(newline,aftline);
+		}
+		else if (pkline_repeat_cnt > 0){
+			getsubstr(line,0,preline,"#+#");
+			getsubstr(line,1,subline,"#+#");
+			getsubstr(line,2,spchar ,"#+#");
+			getsubstr(line,3,aftline,"#+#");
+			strcpy(newline,preline);
+
+			str_replace (spchar, 1024, "\\n","\n" );
+			str_replace (spchar, 1024, "\\r","\r" );
+			str_replace (spchar, 1024, "\\t","\t" );
+
+			int sub_key_cnt = getsubcount (subline,"$$");  
+			for (i=0; i<pk_count; i++)
+			{
+				strcpy(newsub,subline);
+				for(j=0; j<sub_key_cnt; j++)
+				{
+					if (j%2==0)
+						continue;
+					memset(key, 0, sizeof(key));
+					getsubstr(newsub, 1, key, "$$");
+					/*fprintf(stderr,"	findkey[%d]|%s\n",j,key);*/
+					AllTrim (key);
+					UpperCase(key);
+					sprintf(subkey,"$$%s$$",key);
+					if (strcmp(subkey,"$$TNAME$$")==0)
+					{
+						LowerCase (tab_name);
+						str_replace (newsub, 4096, subkey, tab_name );
+						continue;
+					}
+					if (strcmp(subkey,"$$TNAME_U$$")==0)
+					{
+						UpperCase (tab_name);
+						str_replace (newsub, 4096, subkey, tab_name );
+						continue;
+					}
+					if (strcmp(subkey,"$$PK_CNAME$$")==0)
+					{
+						LowerCase(pk_cols[i].name);
+						str_replace (newsub, 4096, subkey, pk_cols[i].name );
+						continue;
+					}
+					if (strcmp(subkey,"$$PK_CNAME_U$$")==0)
+					{
+						UpperCase(pk_cols[i].name);
+						str_replace (newsub, 4096, subkey, pk_cols[i].name );
+						continue;
+					}
+					
+					if (strcmp(subkey,"$$COL_C_DEFINE$$")==0)
+					{
+						get_c_define (pk_cols[i], tmp);
+						str_replace (newsub, 4096, subkey, tmp);
+						continue;
+					}
+					if (strcmp(subkey,"$$CTYPE_FMT$$")==0)
+					{
+						get_c_define_fmt (pk_cols[i], tmp);
+						str_replace (newsub, 4096, subkey, tmp);
+						continue;
+					}
+						
+				}
+				strcat(newline, newsub);
+				if (i < pk_count-1)
+				{
+					strcat(newline, spchar);
+				}
+			}
+
+			strcat(newline,aftline);
+		}
+		else
+			strcpy(newline,line);
+
+		/* fprintf(stderr,"-----|%s\n",newline); */
+
+		/* 处理非循环变量 */
+		line_key_cnt = getsubcount (newline,"$$");
+		for(j=0; j<line_key_cnt; j++)
+		{
+			if (j%2==0)
+				continue;
+			getsubstr(newline, 1, key, "$$");
+			AllTrim (key);
+			UpperCase(key);
+			sprintf(subkey,"$$%s$$",key);
+/**
+			fprintf(stderr,"    findkey|%s\n",subkey);
+**/
+			if (strcmp(subkey,"$$TNAME$$")==0)
+			{
+				LowerCase(tab_name);
+				str_replace (newline, 4096, subkey, tab_name );
+				continue;
+			}
+			if (strcmp(subkey,"$$TNAME_U$$")==0)
+			{
+				UpperCase(tab_name);
+				str_replace (newline, 4096, subkey, tab_name );
+				continue;
+			}
+		}
+
+		fprintf(stderr,"---->|%s|\n",newline);
+		fprintf(fw,"%s",newline);
+		memset(line, 0, sizeof(line));
+	}
+	fclose(fr);
+	fclose(fw);
+	logit("gen_code file[%s]",file_out);
+    return 0;    
+}
+

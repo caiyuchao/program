@@ -1,0 +1,498 @@
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <time.h>
+#include <stdio.h>
+#include "pub/pubdefine.h"
+#include "publib.h"
+
+APP_CONF cfg;
+CMD_CONF cmd_cfg;
+FILE *fp_log = NULL;
+char  cLogFullName[128];
+
+/*从配置文件一行内容中相应字段信息*/
+int GetField(char *source, int index, char *substr)
+{	
+	char *pstart,*pnext;	
+	char *spstr = "|";	
+	int i = 0;	
+	if((pstart = (char*)strstr(source, spstr)) == NULL)		
+		return -1; 	
+	substr[0] = '\0';		
+	pstart = source;	
+	while(pstart)	
+	{		
+		pnext = (char*)strstr(pstart, spstr);		
+		if (!pnext)		
+		{			
+			if (i == index)			
+			{				
+				strcpy(substr,pstart);			
+			}			
+			break;		
+		}		
+		if (i == index)		
+		{			
+			strncpy(substr,pstart,pnext-pstart);		
+		}		\
+		pstart = pnext +strlen(spstr);		
+		i++;	
+	}	
+	return 0;
+}
+
+void LTruncate(char *pString, char *szFill)
+{
+	int i, len;
+	char *pTemp;
+
+	len = strlen(pString);
+
+	pTemp = (char*)malloc(len+1);
+	strcpy(pTemp,pString);
+
+	for(i=0;i<len;i++)
+	{
+		if(!strchr(szFill, pTemp[i]))
+			break;
+	}
+
+	strcpy(pString, pTemp+i);
+	free(pTemp);
+}
+
+void RTruncate(char *pString, char *szFill)
+{
+	int i, len;
+	len = strlen(pString);
+
+	for(i=len; i>0; i--)
+	{
+		if(!strchr(szFill, pString[i-1]))
+			break;
+	}
+
+	pString[i] = 0;
+}
+
+
+/*读取*.INI文件a */
+int GetIniString(
+  const char * lpAppName,
+  const char * lpKeyName,
+  const char * lpDefault,
+  char * lpReturnedString,
+  unsigned int   nSize,
+  const char * lpFileName)
+{
+	char *token;
+	FILE *stream;
+	char szBuffer[1024];
+	char szAppSeps[]="[";
+	char szKeySeps[]="=";
+	unsigned int nLen=0;
+
+	int bSectionFound = 0;
+	int bKeyFound = 0;
+
+	if((stream = fopen( lpFileName, "rt" )) == NULL )
+	{
+		if(lpDefault!=NULL)
+		{
+			nLen = strlen(lpDefault);
+
+			if(nLen < nSize)
+			{
+				strcpy((char*)lpReturnedString, lpDefault);
+			}
+			else
+			{
+				strncpy((char*)lpReturnedString, lpDefault, nSize-1);
+				lpReturnedString[nSize-1] = 0;
+			}
+		}
+		return -2; /* 文件打开失败 */
+	}
+
+	while(!feof(stream))
+	{
+		fgets( szBuffer, 1024, stream );
+
+		LTruncate(szBuffer, " \t");/*去掉前导空格和TAB*/
+		if (strncmp(szBuffer,"#",1)==0 ) /* 跳过注释项目 */
+		{
+			continue;
+		}
+
+		if(!bSectionFound)
+		{
+			token = strtok(szBuffer, szAppSeps);
+
+			if(token == szBuffer)
+				continue; /* 继续寻找 */
+
+			LTruncate(token, " \t");
+			RTruncate(token, " ]\t\r\n");
+			if(strcasecmp(token, lpAppName))
+				continue;  /* 找下一个匹配Section */
+			else
+				bSectionFound = 1;
+		}
+		else
+		{
+			nLen = strlen(szBuffer);
+			token = strtok(szBuffer, szKeySeps);
+			if(strlen(token) == nLen)
+			{   /* 判断是否离开指定的Section */
+				token = strtok(szBuffer, szAppSeps);
+				if(token != szBuffer)
+					break;		/* 已离开，退出查找 */
+				else
+					continue;	/* 未离开，继续寻找 */
+			}
+
+			LTruncate(szBuffer, " \t");
+			RTruncate(szBuffer, " \t");
+
+			if(strcasecmp(szBuffer, lpKeyName))
+			{
+				continue;
+			}
+			else
+			{   /* 找到 */
+				bKeyFound = 1;
+
+				token = strtok(NULL, szKeySeps);
+
+				LTruncate(token, " \t");
+				RTruncate(token, " ;,\t\n\r");
+				nLen = strlen(token);
+
+				if(nLen <  nSize)
+				{
+					strcpy((char*)lpReturnedString, token);
+				}
+				else
+				{
+					nLen = nSize - 1;
+					strncpy((char*)lpReturnedString, token, nSize-1);
+					lpReturnedString[nSize-1] = 0;
+				}
+				break;
+			}
+		}
+	}
+
+	fclose(stream);
+	if(bSectionFound && bKeyFound)
+		return nLen;
+
+	if(lpDefault!=NULL)
+	{
+		nLen = strlen(lpDefault);
+
+		if(nLen < nSize)
+		{
+			strcpy((char*)lpReturnedString, lpDefault);
+		}
+		else
+		{
+			strncpy((char*)lpReturnedString, lpDefault, nSize-1);
+			lpReturnedString[nSize-1] = 0;
+		}
+	}
+	return -1;
+}
+
+int ReadConfig()
+{
+	
+	if ( ReadKey("CONFIG_FILE","DATABASE", "USERNAME", cfg.db_user) )
+	{
+		ErrLog("取参数失败!DATABASE, USERNAME") ;
+		return -1 ;
+	}
+
+	if ( ReadKey("CONFIG_FILE","DATABASE", "PASSWORD", cfg.db_pass) )
+	{
+		ErrLog("取参数失败!DATABASE, PASSWORD") ;
+		return -1 ;
+	}
+
+	if ( ReadKey("CONFIG_FILE","DATABASE", "DATANAME", cfg.db_name) )
+	{
+		ErrLog("取参数失败!DATABASE, DATANAME") ;
+		return -1 ;
+	}
+
+	fprintf(stderr,"=========读配置文件:.........\n");
+	fprintf(stderr,"DBUSER[%s]\n",cfg.db_user);
+	fprintf(stderr,"DBPASS[%s]\n",cfg.db_pass);
+	fprintf(stderr,"DBNAME[%s]\n",cfg.db_name);
+	fprintf(stderr,"=========成功读取配置文件====\n");
+	return 0;
+}
+
+int deal_cmd_para(int argc,char *argv[])
+{
+	int ch;
+	opterr = 0;
+	while((ch = getopt(argc,argv,"f:t:d:o:"))!= -1)
+	switch(ch)
+	{
+		case 'f':
+			cmd_cfg.flag = atoi(optarg);
+			printf("option -f[flag]:'%d'\n",cmd_cfg.flag);
+			break;
+		case 't':
+			strcpy(cmd_cfg.table,optarg);
+			printf("option -t[table]:'%s'\n",cmd_cfg.table);
+			break;
+		case 'd':
+			strcpy(cmd_cfg.deffile,optarg);
+			printf("option -d[deftile]:'%s'\n",cmd_cfg.deffile);
+			break;
+		case 'o':
+			strcpy(cmd_cfg.outfile,optarg);
+			printf("option -o[outfile]:'%s'\n",cmd_cfg.outfile);
+			break;
+		default:
+			printf("other option :%c\n",ch);
+	}
+/*	printf("optopt +%c\n",optopt);*/
+	return 0;
+}
+
+void logit( char *format, ... )
+{
+    time_t 		t_CurTime;
+    struct tm 	tmTmpBuf, *pTm;
+
+    va_list		aplist;
+    char		cFileName[ 128 ];
+    char		cMessage[ 1024 ];
+    char		cFullName[ 512 ];
+
+	assert(format);
+
+    va_start( aplist, format );
+    vsprintf( cMessage, format, aplist);    va_end( aplist );
+
+
+#ifdef DEBUG
+	fprintf( stderr,"%s\n", cMessage);
+#endif
+
+    t_CurTime = time( NULL );
+    pTm = (struct tm *)localtime_r( &t_CurTime, &tmTmpBuf );
+
+    if( !fp_log )
+    {
+
+        sprintf( cFileName, "ot_%04d%02d%02d.log", pTm->tm_year+1900, 
+        pTm->tm_mon+1, pTm->tm_mday );
+
+        sprintf(cFullName, "%s", cFileName );
+
+        if( (fp_log = fopen( cFullName, "a+")) == NULL ) 
+        {
+            printf( "F_FATAL:  Create Log %s FAILURE !\n", cFullName );
+            exit(0);
+        }
+
+        fprintf( fp_log,"%02d:%02d:%02d - %s\n", pTm->tm_hour, 
+        pTm->tm_min, pTm->tm_sec,cMessage );
+        fflush( fp_log );
+        return;
+    }
+
+    fprintf( fp_log, "%02d:%02d:%02d - %s\n", pTm->tm_hour, 
+    pTm->tm_min, pTm->tm_sec, cMessage );
+    fflush( fp_log );
+	return;
+}
+
+void UpperCase(char *buf)
+{
+    unsigned int i;
+    char *tmp;
+    tmp = buf;
+    for( i=0;i<strlen(buf);i++)
+    {
+
+        *tmp = toupper(*tmp);
+        tmp++;
+    }
+    return;
+
+}
+void LowerCase(char *buf)
+{
+    unsigned int i;
+    char *tmp;
+    tmp = buf;
+    for( i=0;i<strlen(buf);i++)
+    {
+
+        *tmp = tolower(*tmp);
+        tmp++;
+    }
+    return;
+
+}
+
+void ClowerCase(char *buf)
+{
+    unsigned int i;
+    char *tmp;
+    tmp = buf;
+    for( i=0;i<strlen(buf);i++)
+    {
+		if (i==0)
+			*tmp = toupper(*tmp);
+		else
+        	*tmp = tolower(*tmp);
+        tmp++;
+    }
+    return;
+
+}
+
+void AllTrim( char *s )
+{
+    char *t=s;
+    int len,j=0;
+
+    while( (*t==' ') && (*t!=0x00) ) t++;
+    while (*t!=0x00) 
+    s[j++] = *t++;
+    s[j] = 0x00;
+
+    len=strlen(s);
+    t=s+strlen(s)-1;
+
+    while( t>=s && *t==' ' )
+    *t-- = '\0';
+	return;
+}
+
+int str_replace(char *source, unsigned int buflen, char *oldstr, char *newstr)
+{
+	char *p, *pOld;
+	int len, offset = strlen(newstr) - strlen(oldstr);
+
+	if((pOld = (char*)strstr(source, oldstr)) == NULL)
+		return -1; /* specified old substring in the source no found */
+
+	/* Scan all old substrings to replace */
+	while(pOld)
+	{
+		if(offset > 0)
+		{
+			if(strlen(source) + offset > buflen)
+			return -2; /* No room for new string */
+		}
+		else if(offset == 0)
+		{
+			memcpy(pOld, newstr, strlen(newstr));
+			pOld = (char*)strstr(pOld + strlen(newstr), oldstr);
+			continue;
+		}
+		p = source;
+		while(*p)
+			p++;
+		len = p - pOld - strlen(oldstr);
+		if(offset != 0)
+		{
+			if(offset < 0)
+				p -= len;
+			p += offset;
+			/* Move the characters behind the oldstr including '' */
+			/* forward or backward depending on offset. */
+			len++;
+			while(len)
+			{
+				*p = *(p - offset);
+				if(offset > 0)
+					p--;
+				else
+					p++;
+				len--;
+			}
+		}
+		memcpy(pOld, newstr, strlen(newstr));
+		pOld = (char*)strstr(pOld + strlen(newstr), oldstr);
+	}
+	return 0;
+}
+
+int getsubstr(char *source, int index, char *substr, char * spstr)
+{
+	char *pstart,*pnext;
+	/*char *spstr = ",";*/
+	int i = 0;
+
+	if((pstart = (char*)strstr(source, spstr)) == NULL)
+	{
+		if (i == index)
+		{
+			strcpy(substr,source);
+			return 1;
+		}
+		return 0; 
+	}
+	substr[0] = '\0';
+	
+	pstart = source;
+	while(pstart)
+	{
+		pnext = (char*)strstr(pstart, spstr);
+		if (!pnext)
+		{
+			if (i == index)
+			{
+				strcpy(substr,pstart);
+				return 1;
+			}
+			break;
+		}
+		if (i == index)
+		{
+			strncpy(substr,pstart,pnext-pstart);
+			substr[pnext-pstart] = '\0';
+			return 1;
+		}
+		pstart = pnext +strlen(spstr);
+		i++;
+	}
+	return 0;
+}
+
+int getsubcount(char *source, char * spstr)
+{
+	char *pstart,*pnext;
+	/*char *spstr = ","; */
+	int i = 0;
+
+	if((pstart = (char*)strstr(source, spstr)) == NULL)
+	{
+		return 0; 
+	}
+
+	pstart = source;
+	while(pstart)
+	{
+		pnext = (char*)strstr(pstart, spstr);
+		if (!pnext)
+		{
+			break;
+		}
+		pstart = pnext +strlen(spstr);
+		i++;
+	}
+	return i;
+}
+
+

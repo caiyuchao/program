@@ -1,0 +1,80 @@
+#include <stdio.h> 
+#include <string.h> 
+#include <stdlib.h>
+#include "otool.h"
+#include "pub/pubdefine.h"
+#include "publib.h"
+
+
+int main(int argc, char ** argv) 
+{  
+    char cfgfile[255];
+	char tabnames[200][31];
+	int  tabcnt = 0;
+    
+	memset(&cmd_cfg, 0, sizeof(cmd_cfg));
+	cmd_cfg.flag = 1;
+	if(argc < 2)
+	{
+		fprintf(stderr,"用法: %s [选项]\n",argv[0]);
+		fprintf(stderr,"选项如下：\n");
+		fprintf(stderr,"       \t -f 1-2 生成模式 1:列出表结构 2:根据模板生成代码\n");
+		fprintf(stderr,"       \t -t 表名\n");
+		fprintf(stderr,"       \t -d 模板文件名\n");
+		fprintf(stderr,"       \t -o 结果文件名\n");
+		fprintf(stderr,"\n");
+		exit(1);
+	}
+	if (argc >=2)	
+	{		
+		deal_cmd_para(argc,argv);	
+	}
+
+	if (ReadConfig())
+	{
+		fprintf(stderr,"读取配置文件失败!%s\n",cfgfile);
+		exit(1);
+	}
+	
+	if (Init())
+	{
+		fprintf(stderr,"初始化失败\n");
+		exit(1);
+	}
+	
+	switch (cmd_cfg.flag)
+	{
+		case 1:
+			if (strcmp(cmd_cfg.table,"ALL")==0 || strlen(cmd_cfg.table) == 0)
+			{
+				tabcnt = get_user_tables(tabnames);
+				for (int i=0; i < tabcnt; i++)
+				{
+					list_table_col(tabnames[i]);	
+				}
+			}
+			else
+				list_table_col(cmd_cfg.table);
+			break;
+		case 2:
+			if (strlen(cmd_cfg.deffile) == 0)
+			{
+				fprintf(stderr,"未指定模板文件.");
+				exit(1);
+			}
+
+			if (strcmp(cmd_cfg.table,"ALL")==0 || strlen(cmd_cfg.table) == 0)
+			{
+				tabcnt = get_user_tables(tabnames);
+				for (int i=0; i < tabcnt; i++)
+				{
+					gen_code(tabnames[i], cmd_cfg.deffile, 1);
+				}
+			}
+			else
+				gen_code(cmd_cfg.table, cmd_cfg.deffile, 1);
+	}
+   
+}
+ 
+

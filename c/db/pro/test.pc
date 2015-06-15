@@ -1,0 +1,218 @@
+#include <stdio.h>
+#include <sqlca.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+
+
+
+EXEC SQL INCLUDE SQLCA;
+
+EXEC ORACLE OPTION (RELEASE_CURSOR = YES); /* 使proc在执行完后释放与嵌入sql有关的资源 */
+
+EXEC SQL BEGIN DECLARE SECTION;
+    sql_context ctx;
+EXEC SQL END DECLARE SECTION;
+
+int  for_update(){
+        EXEC SQL BEGIN DECLARE SECTION;
+        char a[10];
+        char b[10];
+        EXEC SQL END DECLARE SECTION;
+
+        EXEC SQL DECLARE sqlcur CURSOR FOR 
+              select * 
+                from tmp_test 
+               where b = '4567' for update wait 5;
+    if( SQLCODE )
+    {
+        printf( "声明游标失败" );
+        EXEC SQL rollback work;
+        return 1;
+    }
+
+
+    EXEC SQL open sqlcur;
+    EXEC SQL fetch sqlcur into :a,:b;
+        printf("[for update fetch]\ta:%s\tb:%s\n",a,b);
+    if( SQLCODE )
+    {
+        printf( "fetch游标失败" );
+        EXEC SQL rollback work;
+        EXEC SQL close sqlcur;
+        return 2;
+    }
+
+	EXEC SQL 
+			update tmp_test 
+			   set a = 'xxx' 
+			 where current of sqlcur;
+    if( SQLCODE )
+    {
+        printf( "修改失败" );
+        EXEC SQL rollback work;
+        EXEC SQL close sqlcur;
+        return 3;
+    }
+
+    EXEC SQL fetch sqlcur into :a,:b;
+    printf("[for update fetch]\ta:%s\tb:%s\n",a,b);
+    if( SQLCODE )
+    {
+        printf( "fetch游标失败" );
+        EXEC SQL rollback work;
+        EXEC SQL close sqlcur;
+        return 2;
+    }
+
+	EXEC SQL
+		update tmp_test
+		   set a = 'xxx'
+		 where current of sqlcur;
+    if( SQLCODE )
+    {
+        printf( "修改失败" );
+        EXEC SQL rollback work;
+        EXEC SQL close sqlcur;
+        return 3;
+    }
+        /*EXEC SQL rollback work; */
+    EXEC SQL commit work;
+    EXEC SQL close sqlcur;
+    return 0;
+
+}
+
+
+/* 字符串 */
+void demo_string(){
+        EXEC SQL BEGIN DECLARE SECTION;
+                char a[4];
+                char b[5];
+                char c[5];
+                /* 添加string 说明，into时不会填充空格 */
+                EXEC SQL VAR a IS STRING(5);
+                EXEC SQL VAR b IS STRING(5);
+                int  d;
+        EXEC SQL END DECLARE SECTION;
+
+        memset(a,0x00,sizeof(a));
+        memset(b,0x00,sizeof(b));
+
+        EXEC SQL select 'a','b ','c',123 INTO :a,:b,:c, :d from dual;
+        printf("[demo_string]\ta:[%s] b:[%s] c:[%s] d:[%d]\n",a, b, c, d);
+}
+
+/* 查询 */
+void demo_select(){
+
+        EXEC SQL BEGIN DECLARE SECTION;
+                char sql[1024];
+                char a[4];
+                char b[5];
+                char *v_b="4567";
+                EXEC SQL VAR a IS STRING(5);
+                EXEC SQL VAR b IS STRING(5);
+        EXEC SQL END DECLARE SECTION;
+
+        memset(a,0x00,sizeof(a));
+        memset(b,0x00,sizeof(b));
+        memset(sql,0x00,sizeof(sql));
+        strcpy(sql,"select * from tmp_test where 1=1 ");
+        strcat(sql," and b = '4567'");
+
+        EXEC SQL PREPARE sqlcmd FROM :sql;
+        EXEC SQL DECLARE sqlcur CURSOR FOR sqlcmd;
+        EXEC SQL OPEN sqlcur;
+        do{
+                EXEC SQL FETCH sqlcur INTO :a,:b ;
+                printf("[demo_select]\ta:[%s] b:[%s]\n",a, b);
+
+        }while(sqlca.sqlcode == 0);
+
+        if(sqlca.sqlcode < 0 || sqlca.sqlcode != 1403) {
+                printf("fetch fail, sqlcode=%ld, sqlserr=%s , sql=[%s]\n",sqlca.sqlcode, sqlca.sqlerrm.sqlerrmc , sql);
+        }
+        EXEC SQL CLOSE sqlcur;
+}
+
+
+/* 结构体的使用 */
+void demo_struct(){
+        /* 结构体需要加入EXEC部分 */
+        EXEC SQL BEGIN DECLARE SECTION ;
+                typedef struct tmp_test{
+                        char a[3+1];  /* 字段长度应定义成数据库长度+1,短了会被截断,最后一位被置换为'\0',长了会被空格符'\32'填充 */
+                        char b[4+1];
+                } ;
+                struct tmp_test tmp_test;
+                EXEC SQL VAR tmp_test.a IS STRING(4);
+                EXEC SQL VAR tmp_test.a IS STRING(5);
+        EXEC SQL END DECLARE SECTION ;
+
+        memset(&tmp_test,0x00,sizeof(tmp_test));
+        EXEC SQL select * INTO :tmp_test from tmp_test where rownum=1;
+        printf("[demo_struct]\ta:[%s] b:[%s]\n",tmp_test.a, tmp_test.b);
+
+}
+
+
+
+void sql_error(char *msg)
+{
+    printf("\n%s,%d,%s\n", msg,sqlca.sqlcode,(char *)sqlca.sqlerrm.sqlerrmc);
+        /* 断开连接 */
+    EXEC SQL ROLLBACK RELEASE;
+    exit(-1);
+}
+
+int ReConnDB( sql_context ctx )
+{
+    EXEC SQL BEGIN DECLARE SECTION;
+        char p_connect[64];
+    EXEC SQL END DECLARE SECTION;
+
+    memset(p_connect,0,64);
+    strcpy(p_connect,"arps/arps@hvps");
+    p_connect[63] = '\0';
+
+    EXEC SQL CONNECT :p_connect;
+    if( sqlca.sqlcode ){
+        printf( "connect database failured!rc=%d [%s]\n",
+                        sqlca.sqlcode,p_connect);
+        exit(0);
+    }else{
+        printf("Connected success......\n");
+    }
+    return  (sqlca.sqlcode);
+}
+
+int Init(){
+    if (ReConnDB(ctx)){
+                printf("连接数据库失败!") ;
+                return -1;
+        }
+        return 0;
+}
+
+void main(){
+
+        Init();
+        demo_string();
+        demo_select();
+        for_update();
+        printf("-------- for update ---------\n");
+        demo_select();
+        demo_struct();
+
+    return;
+}
+
+
+
+/*
+create table tmp_test( a VARCHAR(3) ,b  VARCHAR(4) ); 
+insert into tmp_test (a,b) values ('12','4567');
+insert into tmp_test (a,b) values ('abc','defg');
+insert into tmp_test (a,b) values ('bbb','ccc');
+*/

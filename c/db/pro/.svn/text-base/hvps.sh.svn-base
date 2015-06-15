@@ -1,0 +1,33 @@
+./otool -f2 -t ALL -d define/db_stru.def.h  -o db_stru.2.h
+./otool -f2 -t ALL -d define/db_func.def.h  -o db_func.2.h
+./otool -f2 -t ALL -d define/db_func.def.pc -o db_func.2.pc
+
+
+echo "#ifndef _TABTPLFUNC_H" >  test/tabtplfunc.h
+echo "#define _TABTPLFUNC_H" >> test/tabtplfunc.h
+    echo "#include \"ibpsdb.h\"" >> test/tabtplfunc.h
+    echo "#ifdef __cplusplus" >> test/tabtplfunc.h
+    echo "extern \"C\" {" >> test/tabtplfunc.h
+    echo "#endif" >> test/tabtplfunc.h
+    cat  db_func.2.h >> test/tabtplfunc.h
+    echo "#ifdef __cplusplus" >> test/tabtplfunc.h
+    echo "}" >> test/tabtplfunc.h
+    echo "#endif" >> test/tabtplfunc.h
+echo "#endif" >> test/tabtplfunc.h
+
+
+echo "#ifndef _HVPSDB_H_" >  test/hvpsdb.h
+echo "#define _HVPSDB_H_" >> test/hvpsdb.h
+cat  db_stru.2.h >> test/hvpsdb.h
+echo "#endif" >> test/hvpsdb.h
+
+cat define/db_func.src.pc > test/tabtplfunc.pc
+cat db_func.2.pc  >> test/tabtplfunc.pc
+
+rm db_stru.2.h
+rm db_func.2.h
+rm db_func.2.pc
+
+
+
+

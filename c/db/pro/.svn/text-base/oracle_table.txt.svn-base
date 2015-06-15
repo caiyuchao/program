@@ -1,0 +1,209 @@
+获取数据表主键SQL（Oracle）
+SELECT   D.COLUMN_NAME   AS   COLNAME   FROM 
+USER_CONS_COLUMNS   D,USER_CONSTRAINTS   M   
+WHERE   M.CONSTRAINT_NAME=D.CONSTRAINT_NAME   
+AND   M.CONSTRAINT_TYPE='P'   
+AND   M.TABLE_NAME= :P_TableName
+
+ 
+
+ORACLE
+特殊
+    ORACLE只能连接特定数据库，不能自动扫描数据库对象。
+    ORACLE表必须用用户来区别，否则表可能重名。
+    ORACLE不能区别系统表或者是用户表，因此只能由管理员选择扫描某些特定用户的表。
+    
+取得数据库名的方法
+只能由用户指定数据库，不能自动扫描到特定数据库服务器上的所有数据库。
+取得表的方法
+存储数据库表的系统表/视图主要有：
+DBA_ALL_TABLES
+描述数据库中所有的对象以及相关的表。
+ALL_ALL_TABLES
+描述数据库中所有的用户可以访问的对象以及相关的表。
+USER_ALL_TABLES
+描述数据库中当前用户拥有的对象以及相关的表。
+
+DBA_TABLES
+描述数据库中所有相关的表。
+ALL_TABLES
+描述数据库中所有的用户可以访问的相关的表。
+USER_TABLES
+描述数据库中当前用户拥有的相关的表。
+
+因此，可以从ALL_TABLES中取得隶属于指定用户的表：
+SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE OWNER = 'DBAUDIT';
+取得隶属于指定表空间的表：
+SELECT TABLE_NAME FROM SYS.ALL_TABLES WHERE TABLESPACE_NAME = 'DBAUDIT';
+
+也可以不指定用户名，从而取得所有的表。
+SELECT TABLE_NAME FROM SYS.ALL_TABLES；
+取得列的方法
+存储数据库表的列属性的系统表/视图主要有：
+DBA_TAB_COLUMNS
+描述数据库中所有的表的列属性。
+ALL_TAB_COLUMNS
+描述数据库中所有的用户可以访问的表的列属性。
+USER_TAB_COLUMNS
+描述数据库中当前用户拥有的表的列属性。
+ALL_TAB_COLS
+描述数据库中所有的用户可以访问的表的列属性。
+
+因此，可以从ALL_TAB_COLUMNS中取得隶属于指定用户的表：
+SELECT COLUMN_NAME FROM SYS.ALL_TAB_COLUMNS WHERE TABLE_NAME = 'TASK' AND OWNER = 'DBAUDIT';
+取得视图的方法
+存储数据库视图的系统表/视图主要有：
+DBA_VIEWS
+描述数据库中所有的视图的属性。
+ALL_VIEWS
+描述数据库中所有的用户可以访问的视图的属性。
+USER_VIEWS
+描述数据库中所有的当前用户拥有视图的属性。
+
+因此，可以从ALL_VIEWS中取得隶属于指定用户的视图：
+SELECT VIEW_NAME FROM SYS.ALL_VIEWS WHERE OWNER = 'DBAUDIT';
+取得存储过程的方法
+存储系统对象的系统表/视图有：
+DBA_OBJECTS
+描述数据库中所有的对象。
+ALL_OBJECTS
+描述数据库中所有的可以访问的对象。
+USER_OBJECTS
+描述数据库中所有的当前用户拥有的对象。
+SYS_OBJECTS
+描述数据库中所有的系统对象。
+
+对象类型有：
+    CONSUMER GROUP
+    CONTEXT
+    DIRECTORY
+    FUNCTION
+    INDEX
+    INDEX PARTITION
+    INDEXTYPE
+    JAVA CLASS
+    JAVA DATA
+    JAVA RESOURCE
+    JAVA SOURCE
+    LIBRARY
+    LOB
+    MATERIALIZED VIEW
+    OPERATOR
+    PACKAGE
+    PACKAGE BODY
+    PROCEDURE
+    QUEUE
+    SEQUENCE
+    SYNONYM
+    TABLE
+    TABLE PARTITION
+    TRIGGER
+    TYPE
+    TYPE BODY
+    VIEW
+
+因此，取得存储过程可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PROCEDURE';
+取得隶属于某个用户的存储过程可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PROCEDURE' AND OWNER = ‘DBAUDIT’;
+
+同样，取得其他的对象也可以用这个方法，包括表，视图等。
+取得存储过程内容的方法
+对象类型为类型、类型体、过程、函数、包、包体，JAVA源代码的所有对象的源代码都存储在几个系统表/视图中：
+DBA_SOURCE
+存储所有数据库对象的源代码。
+ALL_SOURCE
+存储所有可以访问的数据库对象的源代码。
+USER_SOURCE
+存储所有当前用户拥有的数据库对象的源代码。
+
+因此，取得存储过程源代码的方法：
+    SELECT TEXT FROM SYS.ALL_SOURCE WHERE NAME = ‘XXX’ AND TYPE = ‘PROCEDURE’;
+取得函数的方法
+同上，取得函数可以用：
+    SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'FUNCTION';
+取得隶属于某个用户的函数可以用：
+    SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'FUNCTION' AND OWNER = 'DBAUDIT';
+
+取得函数内容可以用：
+    SELECT TEXT FROM SYS.ALL_SOURCE WHERE NAME = 'XXX' AND TYPE = 'FUNCTION';
+取得触发器的方法
+存储数据库触发器的系统表/视图主要有：
+DBA_TRIGGERS
+描述数据库中所有的触发器的属性。
+ALL_ TRIGGERS
+描述数据库中所有的用户可以访问的触发器的属性。
+USER_ TRIGGERS
+描述数据库中所有的当前用户拥有触发器的属性。
+
+因此，可以从ALL_ TRIGGERS中取得隶属于指定用户的触发器：
+    SELECT TRIGGER_NAME FROM SYS.ALL_TRIGGERS WHERE OWNER = 'DBAUDIT';
+
+取得触发器内容的方法：
+    SELECT TRIGGER_BODY FROM SYS.ALL_TRIGGERS WHERE TRIGGER_NAME = 'XXX';
+取得索引的方法
+存储数据库索引的系统表/视图主要有：
+DBA_INDEXES
+描述数据库中所有的索引的属性。
+ALL_ INDEXES
+描述数据库中所有的用户可以访问的索引的属性。
+USER_ INDEXES
+描述数据库中所有的当前用户拥有索引的属性。
+
+因此，可以从ALL_ INDEXES中取得隶属于指定用户的索引：
+    SELECT INDEX_NAME,TABLE_NAME FROM SYS.ALL_INDEXES WHERE OWNER = 'DBAUDIT';
+
+取得索引相关的列的方法：
+    SELECT COLUMN_NAME FROM SYS.ALL_IND_COLUMNS WHERE INDEX_NAME = 'XXX' AND TABLE_OWNER = 'DBAUDIT';
+用户
+存储数据库用户的系统表/视图主要有：
+DBA_USERS
+描述数据库中所有的用户的属性。
+ALL_USERS
+描述数据库中所有的用户的属性。
+USER_USERS
+描述数据库中当前用户的属性。
+
+因此，可以从ALL_USERS中取得用户：
+SELECT USER_ID, USERNAME FROM SYS.ALL_USERS;
+角色
+存储角色的表/视图有：
+DBA_ROLES
+描述数据库中所有角色。
+
+取得角色方法：
+SELECT ROLE FROM SYS.DBA_ROLES;
+表空间
+SELECT TABLESPACE_NAME FROM SYS.DBA_TABLESPACES;
+数据文件
+SELECT FILE_NAME, FILE_ID, TABLESPACE_NAME FROM SYS.DBA_DATA_FILES;
+数据库连接
+存储数据库连接的系统表/视图主要有：
+DBA_LINKS
+描述数据库中所有的连接的属性。
+ALL_LINKS
+描述数据库中所有的用户可访问的连接的属性。
+USER_LINKS
+描述数据库中当前用户的连接属性。
+
+因此，可以从DBA_DB_LINKS中取得连接：
+SELECT * FROM SYS.DBA_DB_LINKS;
+
+同义词
+SELECT * FROM SYS.ALL_SYNONYMS WHERE TABLE_OWNER = 'DBAUDIT';
+程序包
+取得程序包可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PACKAGE';
+取得隶属于某个用户的程序包可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PACKAGE' AND OWNER = 'DBAUDIT';
+
+取得程序包内容可以用：
+SELECT TEXT FROM SYS.ALL_SOURCE WHERE NAME = 'XXX' AND TYPE = 'PACKAGE';
+程序包体
+取得程序包体可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PACKAGE BODY';
+取得隶属于某个用户的程序包可以用：
+SELECT OBJECT_NAME FROM SYS.ALL_OBJECTS WHERE OBJECT_TYPE = 'PACKAGE BODY ' AND OWNER = 'DBAUDIT';
+
+取得程序包内容可以用：
+SELECT TEXT FROM SYS.ALL_SOURCE WHERE NAME = 'XXX' AND TYPE = 'PACKAGE BODY ';
