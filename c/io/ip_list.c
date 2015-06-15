@@ -28,7 +28,6 @@ int main(int argc, const char *argv[])
 		num = sscanf(line, "%[^/\n]/%d", network, &prefix);
 		if(num == 1){
 			D("num:%d, network:%s/32\n", num, network);
-
 		}else if(num == 2){
 			D("num:%d, network:%s/%d\n", num, network, prefix);
 		}

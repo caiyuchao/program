@@ -1,3 +1,3 @@
-OBJS = str.e a.e
+OBJS = a.e
 
 include ../include/example.mk
