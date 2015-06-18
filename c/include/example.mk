@@ -6,13 +6,13 @@ all: $(OBJS) $(EXAMPLES)
 	$(CC) $< -o $@ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $< $(CFLAGS) -c -o $@
+	$(CC) $< -c -o $@ $(CFLAGS)
 
 %.s: %.c
-	$(CC) $< $(CFLAGS) -S -o $@
+	$(CC) $< -S -o $@ $(CFLAGS)
 
 %.e: %.c
-	$(CC) $< $(CFLAGS) -E -o $@
+	$(CC) $< -E -o $@ $(CFLAGS)
 
 clean:
 	rm -rf $(EXAMPLES) $(OBJS)
