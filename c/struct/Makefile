@@ -1,4 +1,4 @@
-OBJS = cp
+OBJS = cp container
 
 CFLAGS = -g 
 
