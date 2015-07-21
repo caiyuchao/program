@@ -5,7 +5,12 @@
 	} while (0)
 
 #define _add(a) add.a
+
+#define foo(a) printf("hello "#a" %s\n", str_##a)
+
 _add_env(EVENT, 1 ?
 		"had associated successfully" : "had disassociated");
 
 _add(b)
+
+foo(world)
