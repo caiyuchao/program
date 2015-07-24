@@ -1,4 +1,4 @@
-OBJS = strncpy printf
+OBJS = strncpy printf atoi
 
 CFLAGS = -g 
 
