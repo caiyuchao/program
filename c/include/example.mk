@@ -1,18 +1,28 @@
 .PHONY: all clean
 
-all: $(OBJS) $(EXAMPLES)
+proj_deps := $(foreach n,$(objs),$(if $($(n:.o=-objs)),$($(n:.o=-objs)),$(n)))
 
-%: %.o
-	$(CC) $< -o $@ $(LDFLAGS)
+proj_objs := $(subst .o,,$(objs))
+
+all: $(proj_deps) $(proj_objs) $(OBJS) $(EXAMPLES) 
+
+$(proj_objs): $(proj_deps)
+
+%: 
+	$(CC) $(if $($(@)-objs), $($(@)-objs), $(@).o) -o $@ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $< -c -o $@ $(CFLAGS)
+	$(CC) $(CFLAGS) $< -c -o $@
 
 %.s: %.c
-	$(CC) $< -S -o $@ $(CFLAGS)
+	$(CC) $(CFLAGS) $< -S -o $@
 
 %.e: %.c
-	$(CC) $< -E -o $@ $(CFLAGS)
+	$(CC) $(CFLAGS) $< -E -o $@
 
 clean:
-	rm -rf $(EXAMPLES) $(OBJS)
+	rm -rf $(EXAMPLES) $(OBJS) $(proj_objs) $(proj_deps)
+
+test:
+	echo $(proj_deps) $(proj_objs) $(OBJS) $(EXAMPLES) 
+
