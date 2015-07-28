@@ -8,10 +8,12 @@ all: $(proj_deps) $(proj_objs) $(OBJS) $(EXAMPLES)
 
 $(proj_objs): $(proj_deps)
 
+$(OBJS): $(addsuffix .o,$(OBJS))
+
 %: 
 	$(CC) $(if $($(@)-objs), $($(@)-objs), $(@).o) -o $@ $(LDFLAGS)
 
-%.o: %.c
+.o.c:
 	$(CC) $(CFLAGS) $< -c -o $@
 
 %.s: %.c

@@ -1,4 +1,4 @@
-OBJS = cp container
+OBJS = cp container size
 
 CFLAGS = -g 
 
