@@ -4,5 +4,5 @@ CFLAGS = -g
 
 include ../include/example.mk
 
-test: m
+run:
 	mtrace ./m ./malloc_output.txt
