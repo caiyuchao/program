@@ -1,4 +1,4 @@
-OBJS = cp container size
+OBJS = cp container size union
 
 CFLAGS = -g 
 
