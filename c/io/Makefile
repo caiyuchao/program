@@ -1,5 +1,6 @@
-OBJS = net_dev ip_list
+OBJS = net_dev ip_list pty-example
 
-CFLAGS = -g 
+CFLAGS = -g
+LDFLAGS = -lutil
 
 include ../include/example.mk
