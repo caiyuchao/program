@@ -4,7 +4,7 @@ proj_deps := $(foreach n,$(objs),$(if $($(n:.o=-objs)),$($(n:.o=-objs)),$(n)))
 
 proj_objs := $(subst .o,,$(objs))
 
-all: $(proj_objs) $(OBJS) $(EXAMPLES) 
+all: $(proj_objs) $(OBJS) $(EXAMPLES) $(objs_e)
 
 $(proj_objs): $(proj_deps)
 
