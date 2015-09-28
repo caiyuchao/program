@@ -1,43 +1,5 @@
 /* 
- * curdir should like: 
- * rootfs/
- * ├── bin
- * │   ├── bash
- * │   └── ...
- * ├── dev
- * │   ├── pts
- * │   └── shm
- * ├── etc
- * │   ├── bash.bashrc
- * │   ├── group
- * │   └── ...
- * ├── home
- * ├── lib
- * │   └── x86_64-linux-gnu
- * │       ├── libacl.so.1
- * │       ├── libacl.so.1.1.0
- * │       └── ...
- * ├── lib64
- * │   └── ld-linux-x86-64.so.2
- * ├── mnt
- * ├── opt
- * ├── proc
- * ├── root
- * ├── run
- * ├── sbin
- * ├── sys
- * ├── tmp
- * ├── usr
- * │   └── bin
- * │       ├── env
- * │       ├── vi
- * │       └── ...
- * └── var
- * conf/
- * ├── hostname
- * ├── hosts
- * └── resolv.conf*
- * 
+ * curdir tree should like 06_rootfs.list
  * usage: sudo ./06_chroot
  * yubo@yubo.org
  * 2015-09-28
