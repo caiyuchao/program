@@ -1,5 +1,6 @@
-OBJS = a
+OBJS = a cpu_set
 
-CFLAGS = -g 
+CFLAGS = -g
+LDFLAGS = -lpthread
 
 include ../include/example.mk
