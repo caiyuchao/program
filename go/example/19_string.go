@@ -34,4 +34,17 @@ func main() {
 			fmt.Println(n, a, b, c)
 		}
 	}
+	{
+		var a string
+		b := make(map[string]string)
+
+		if a == "" {
+			fmt.Println("a is empty")
+		}
+		c := "hello world"
+		c, _ = b["foo"]
+		if c == "" {
+			fmt.Println("c is empty")
+		}
+	}
 }
