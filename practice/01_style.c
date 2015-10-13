@@ -1,15 +1,13 @@
 
-// not good
 for(theElementIndex = 0; theElementIndex < numberOfElements; theElementIndex++)
 	elementArray[theElementIndex] = theElementIndex;
-
+//better
 for (i = 0; i < nelems; i++)
 	elem[i] = i;
 
 
-//wrong
 str[i++] = str[i++] = ' ';
-//should
+//right
 str[i++] = ' ';
 str[i++] = ' ';
 
@@ -19,25 +17,25 @@ array[i++] = i;
 
 //wrong
 scanf("%d %d", &yr, &profit[yr]);
-//should
+//right
 scanf("%d", &yr);
 scanf("%d", &profit[yr]);
 
 //1-4
 if( !(c == 'y' || c == 'Y'))
 	return;
-//should
+//better
 if( c != 'y' && c != 'Y')
 	return;
 
 
 length = (length < BUFSIZE) ? length : BUFSIZE;
-//should
+//better
 if(lenth > BUFSIZE)
 	length = BUFSIZE;
 
 flag = flag ? 0 : 1;
-//should
+//better
 flag = !flag;
 
 quote = (*line == '"') ? 1 : 0;
@@ -45,7 +43,7 @@ if (val & 1)
 	bit = 1;
 else
 	bit = 0;
-//should
+//better
 quote = (*line == '"');
 bit = val & 1;
 
@@ -57,7 +55,7 @@ int read(int *ip){
 }
 ...
 insert(&graph[vert], read(&val), read(&ch));
-//must
+//right
 read(&val);
 read(&ch);
 insert(&graph[vert], val, ch);
@@ -65,7 +63,7 @@ insert(&graph[vert], val, ch);
 //1-6
 n = 1;
 printf("%d %d\n", n++, n++);
-//must
+//right
 n = 1;
 printf("%d ", n++);
 printf("%d\n", n++);
@@ -83,7 +81,7 @@ if (argc == 3)
 		printf("Can't open input file %s\n", argv[1]);
 else
 	printf("Usage: cp inputfile outputfile\n");
-//should
+//good
 if (argc != 3)
 	printf("Usage: cp inputfile outputfile\n");
 else if ((fin = fopen(argv[1], "r")) != NULL)
@@ -102,7 +100,7 @@ if (istty(stdin));
 else if (istty(stdout)) ;
 	else if (istty(stderr)) ;
 		else return (0);
-//should
+//better
 if (!istty(stdin) && !istty(stdout) & !istty(stderr)) 
 	return (0);
 
@@ -113,13 +111,13 @@ if (retval != SUCCESS)
 }
 /* All went well! */
 return SUCCESS;
-//should
+//better
 return retval;
 
 //1-7-2
 for (k = 0; k++ < 5; x += dx)
 	scanf("%lf", &dx);
-//should
+//better
 for (k = 0; k < 5; k++){
 	scanf("%lf", &dx);
 	x += dx;
@@ -133,7 +131,7 @@ while (count < total){
 		return (true);
 	}
 }
-//must, java? no...
+//right, java? no...
 for(int i = 0; i < total; i++){
 	if(strcmp(this.getName(i), nametable.userName()) == 0)
 		return true;
@@ -141,13 +139,13 @@ for(int i = 0; i < total; i++){
 
 //1-9
 #define ISDIGIT(c) ((c >= '0') && (c <= '9')) ? 1 : 0
-//should
+//right
 #define ISDIGIT(c) (((c) >= '0') && ((c) <= '9')) ? 1 : 0
 
 str = 0;
 name[i] = 0;
 x = 0;
-//should
+//better
 str = NULL;
 name[i] = '\0';
 x = 0.0;
