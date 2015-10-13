@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-	static int
-cmpstringp(const void *p1, const void *p2)
-{
+static int cmpstringp(const void *p1, const void *p2) {
 	/* The actual arguments to this function are "pointers to
 	   pointers to char", but strcmp(3) arguments are "pointers
 	   to char", hence the following cast plus dereference */
@@ -12,9 +10,7 @@ cmpstringp(const void *p1, const void *p2)
 	return strcmp(* (char * const *) p1, * (char * const *) p2);
 }
 
-	int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	int j;
 
 	if (argc < 2) {
