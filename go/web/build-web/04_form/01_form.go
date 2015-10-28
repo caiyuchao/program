@@ -45,6 +45,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//不存在token报错
 		}
+		fmt.Println("token:", token)
 		fmt.Println("username length:", len(r.Form["username"][0]))
 		fmt.Println("username:", template.HTMLEscapeString(r.Form.Get("username"))) //输出到服务器端
 		fmt.Println("password:", template.HTMLEscapeString(r.Form.Get("password")))
