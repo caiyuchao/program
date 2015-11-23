@@ -13,6 +13,7 @@ go run 34_log.go  -logtostderr=true -v=3 -vmodule=34_log=4
 
 import (
 	"flag"
+	"log"
 
 	"github.com/golang/glog"
 )
@@ -24,4 +25,7 @@ func main() {
 	glog.V(3).Infof("info %d", 3)
 	glog.V(4).Infof("info %d", 4)
 	glog.Flush()
+
+	log.SetFlags(log.Lshortfile)
+	log.Print("hello world\n")
 }

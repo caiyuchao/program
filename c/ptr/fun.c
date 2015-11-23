@@ -18,6 +18,8 @@ static void foo(int i, char *str){
 	printf("%d %s\n", i, str);
 }
 
+void ()
+
 int main(int argc, const char *argv[])
 {
 	handler = foo;
