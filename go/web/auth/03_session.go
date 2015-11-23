@@ -4,10 +4,12 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 )
 
 const (
+	sid = "_03_session"
 	tpl = `<html>
 <head>
 <title></title>
@@ -25,6 +27,17 @@ password: {{.Pwd}} <br />
 </body>
 </html>`
 )
+
+type Session interface {
+	sync.Mutex
+	Set(key, value interface{}) error //set session value
+	Get(key interface{}) interface{}  //get session value
+	Start(w http.ResponseWriter, r *http.Request) error
+	Delete(sid string) (Session, error)
+}
+
+func (s *Sessions) Set(key, value interface{}) error {
+}
 
 type Login struct {
 	Token  string
