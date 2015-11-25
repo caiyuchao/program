@@ -66,7 +66,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 	}
 
-	t, _ := template.New("02_cookie").Parse(tpl)
+	t, _ := template.New("03_cookie").Parse(tpl)
 	t.Execute(w, l)
 }
 

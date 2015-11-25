@@ -1,43 +1,23 @@
 package main
 
 import (
+	"bytes"
 	"html/template"
 	"log"
 	"net/http"
-	"sync"
+	"net/http/httptest"
+	"net/url"
+	"os"
 	"time"
 )
 
 const (
-	sid = "_03_session"
-	tpl = `<html>
-<head>
-<title></title>
-</head>
-<body>
-<form action="" method="post">
-cookie username: {{.Cname}}<br />
-method: {{.Method}} <br />
-username: {{.Usr}} <br />
-password: {{.Pwd}} <br />
-用户名:<input type="text" name="username"><br />
-密码:<input type="password" name="password"><br />
-<input type="submit" value="登陆">
-</form>
-</body>
-</html>`
+	tpl = `cookie username: {{.Cname}}
+method: {{.Method}}
+username: {{.Usr}}
+password: {{.Pwd}}
+`
 )
-
-type Session interface {
-	sync.Mutex
-	Set(key, value interface{}) error //set session value
-	Get(key interface{}) interface{}  //get session value
-	Start(w http.ResponseWriter, r *http.Request) error
-	Delete(sid string) (Session, error)
-}
-
-func (s *Sessions) Set(key, value interface{}) error {
-}
 
 type Login struct {
 	Token  string
@@ -79,19 +59,22 @@ func login(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &cookie)
 	}
 
-	t, _ := template.New("02_cookie").Parse(tpl)
-	t.Execute(w, l)
-}
-
-func handle_null(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("04_cookie").Parse(tpl)
+	t.Execute(os.Stdout, l)
 }
 
 func main() {
 	log.SetFlags(log.Llongfile)
-	http.HandleFunc("/", login)
-	http.HandleFunc("/favicon.ico", handle_null)
-	err := http.ListenAndServe(":9000", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
+
+	v := url.Values{}
+	v.Set("username", "test")
+	v.Add("password", "1234")
+	body := v.Encode()
+
+	r, _ := http.NewRequest("POST", "/", bytes.NewBufferString(body))
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//r.Header.Add("Content-Length", strconv.Itoa(len(en)))
+	w := httptest.NewRecorder()
+
+	login(w, r)
 }
