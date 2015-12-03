@@ -9,3 +9,7 @@ import "C"
 func Hw() {
 	C.hw()
 }
+
+func RuntimeNano() int64 {
+	return int64(C.runtimeNano())
+}
