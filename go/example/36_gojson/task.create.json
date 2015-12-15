@@ -1,0 +1,23 @@
+[
+{
+        "start": 1427204756,              
+        "end": 1427204756,               
+        "step": 60,
+        "metric": "dns,ping,traceroute",
+        "ip": "1.1.1.1",
+        "host":"www.baidu.com",
+        "area": "1",
+        "isp": "2"
+},
+{
+        "start": 1427204756,              
+        "end": 1427204756,               
+        "step": 60,
+        "metric": "dns,ping,traceroute",
+        "ip": "1.1.1.1",
+        "host":"www.baidu.com",
+        "area": "1",
+        "isp": "2"
+}
+
+]
