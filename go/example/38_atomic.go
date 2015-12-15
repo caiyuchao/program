@@ -23,7 +23,7 @@ func bar() {
 
 func main() {
 	p = unsafe.Pointer(&t{x: 1, y: 2})
-	fmt.Println(foo())
+	fmt.Println(foo(), p)
 	bar()
-	fmt.Println(foo())
+	fmt.Println(foo(), p)
 }
