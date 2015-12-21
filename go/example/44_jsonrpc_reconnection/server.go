@@ -11,11 +11,11 @@ const (
 	URL = ":12981"
 )
 
-type Se int
+type Serv int
 
 var seq int
 
-func (t *Se) Pi(args *int, reply *int) error {
+func (t *Serv) Call(args *int, reply *int) error {
 	*reply = seq
 	seq++
 	return nil
@@ -23,8 +23,8 @@ func (t *Se) Pi(args *int, reply *int) error {
 
 func main() {
 
-	se := new(Se)
-	rpc.Register(se)
+	s := new(Serv)
+	rpc.Register(s)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", URL)
 	if err != nil {

@@ -35,10 +35,11 @@ func main() {
 	defer client.Close()
 
 	for {
-		if err := client.Call("Se.Pi", nil, &r); err != nil {
+		if err := client.Call("Serv.Call", nil, &r); err != nil {
 			fmt.Println(err)
 			if err == rpc.ErrShutdown {
 				reconnection(&client)
+				//fmt.Println(err)
 			}
 		} else {
 			fmt.Println(r)
