@@ -21,5 +21,5 @@ in stages in the book.
 
 ### environment
 ```shell
-ln -s $(pwd) $GOPATH/src/gopl.io
+go get gopl.io/...
 ```
