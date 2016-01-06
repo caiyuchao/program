@@ -7,7 +7,7 @@
 
 void *PrintHello(void *args)
 {
-	int thread_arg;
+	intptr_t thread_arg;
 	pid_t p;
 	int status;
 	char *argv[] = {"hello"};
@@ -25,19 +25,20 @@ void *PrintHello(void *args)
 			return NULL;
 	}
 	//sleep(1);
-	thread_arg = (int)args;
-	printf("Hello from thread %d\n", thread_arg);
+	thread_arg = (intptr_t)args;
+	printf("Hello from thread %ld\n", thread_arg);
 	return NULL;
 }
 
 int main(void)
 {
-	int rc,t;
+	int rc;
+	intptr_t t;
 	pthread_t thread[NUM_THREADS];
 
 	for(t=0;;t++)
 	{
-		printf("Creating thread %d\n", t);
+		printf("Creating thread %ld\n", t);
 		//rc = pthread_create(&thread[t], NULL, PrintHello, (void *)t);
 		rc = pthread_create(&thread[0], NULL, PrintHello, (void *)t);
 		if (rc)

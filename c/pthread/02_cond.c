@@ -7,8 +7,9 @@ typedef struct data_control {
     pthread_cond_t cond;
 } control;
 
-void *thread_function(control *pctl) {
+void *thread_function(void *pctl_p) {
   int i;
+  control *pctl = (control *)pctl_p;
   for ( i=0; i<20; i++) {
 	pthread_mutex_lock(&(pctl->mutex));
   	printf("pthread_cond_wait start[%d]\n", i);
