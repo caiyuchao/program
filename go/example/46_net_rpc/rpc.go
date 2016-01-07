@@ -1,5 +1,5 @@
-/* go run main.go -s true  // server mode
- * go run main.go          // client mode
+/* go run rpc.go -s true  // server mode
+ * go run rpc.go          // client mode
  * yubo@yubo.org
  */
 package main
@@ -11,8 +11,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"net/rpc"
+	"time"
 )
 
 const (
@@ -66,15 +66,38 @@ func main() {
 		fs := new(FileServer)
 		rpc.Register(fs)
 
-		rpc.HandleHTTP()
+		//rpc.HandleHTTP()
 
 		l, e := net.Listen("tcp", URL)
 		if e != nil {
 			log.Fatal("listen error:", e)
 		}
-		http.Serve(l, nil)
+
+		//http.Serve(l, nil)
+		{
+			var tempDelay time.Duration
+			for {
+				conn, err := l.Accept()
+				if err != nil {
+					if tempDelay == 0 {
+						tempDelay = 5 * time.Millisecond
+					} else {
+						tempDelay *= 2
+					}
+					if max := 1 * time.Second; tempDelay > max {
+						tempDelay = max
+					}
+					time.Sleep(tempDelay)
+					continue
+				}
+				tempDelay = 0
+				go func() {
+					rpc.ServeConn(conn)
+				}()
+			}
+		}
 	} else {
-		client, err := rpc.DialHTTP("tcp", URL)
+		client, err := rpc.Dial("tcp", URL)
 		if err != nil {
 			log.Fatal("dialing:", err)
 		}
