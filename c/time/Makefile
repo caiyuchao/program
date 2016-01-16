@@ -1,4 +1,4 @@
-OBJS = gettimeofday ctime clock_gettime
+OBJS = gettimeofday ctime clock_gettime poll_sleep select_sleep epoll_sleep
 
 CFLAGS = -g -O2
 
