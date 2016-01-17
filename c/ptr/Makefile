@@ -1,4 +1,4 @@
-OBJS = fun sizeof
+OBJS = fun sizeof cc
 
 CFLAGS = -g 
 
