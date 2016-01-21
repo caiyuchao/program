@@ -36,3 +36,5 @@ func Sprint(x interface{}) string {
 	}
 }
 ```
+
+#### 12.2 reflect.Type and reflect.Value
