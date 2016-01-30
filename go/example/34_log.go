@@ -21,6 +21,7 @@ import (
 func main() {
 	flag.Parse()
 	glog.Info("hello")
+	glog.Info("world")
 	glog.V(2).Infof("info %d", 2)
 	glog.V(3).Infof("info %d", 3)
 	glog.V(4).Infof("info %d", 4)

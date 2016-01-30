@@ -1,5 +1,5 @@
-/* go run rpc.go -s true  // server mode
- * go run rpc.go          // client mode
+/* go run rpc.go -s  // server mode
+ * go run rpc.go     // client mode
  * yubo@yubo.org
  */
 package main
