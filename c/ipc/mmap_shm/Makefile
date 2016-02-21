@@ -1,4 +1,4 @@
-OBJS = proc_timeout
+OBJS = proc_timeout popen_timeout
 
 CFLAGS = -g
 LDFLAGS = -lpthread
