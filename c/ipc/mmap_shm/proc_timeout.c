@@ -141,6 +141,7 @@ int wait_timeout(pid_t pid, int timeout){
 	}
 
 	pthread_join(wt.thr_wait, NULL);
+	pthread_join(wt.thr_timeout, NULL);
 
 out:
 	return -wt.status;

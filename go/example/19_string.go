@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 )
@@ -46,5 +47,11 @@ func main() {
 		if c == "" {
 			fmt.Println("c is empty")
 		}
+	}
+	{
+		var buf bytes.Buffer
+		fmt.Fprintf(&buf, "%12s %12s\n", "h", "bbb")
+		fmt.Fprintf(&buf, "%12d %12d\n", 1234, 12345)
+		fmt.Print(buf.String())
 	}
 }
