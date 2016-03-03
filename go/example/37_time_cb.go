@@ -10,7 +10,10 @@ func cb(data interface{}) {
 }
 
 func main() {
-	time.Tick
-	time.AfterFunc(2*time.Second, cb)
-	time.Sleep(3 * time.Second)
+	t := time.NewTicker(time.Second).C
+
+	for {
+		<-t
+		fmt.Println("hello")
+	}
 }

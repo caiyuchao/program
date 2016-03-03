@@ -1,4 +1,4 @@
-OBJS = select_echod epoll_echod
+OBJS = select_echod epoll_echod udpd udp
 
 CFLAGS = -g -O0
 
