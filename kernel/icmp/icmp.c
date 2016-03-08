@@ -20,6 +20,11 @@
 #include <net/ip_vs.h>
 #include <linux/if_arp.h>
 
+#define TIMER_INTERVAL	msecs_to_jiffies(1000)	/* 1s */
+
+int timer_hash_index = 0;
+static struct timer_list timer;
+static __u16 seq = 0;
 
 static struct rtable * get_rt(__be32 ip, u32 rtos){
 	struct flowi fl = {
@@ -47,7 +52,7 @@ struct stoa_addr {
 	__u32 addr;
 };
 
-static void send_icmp(void)
+static void send_icmp_cb(unsigned long data)
 {
 	struct sk_buff *skb;
 	struct iphdr *iph;
@@ -56,19 +61,21 @@ static void send_icmp(void)
 	struct stoa_addr *stoa;
 	unsigned int icmp_offset;
 	struct rtable *rt;	/* Route to the other host */
+	int ret;
 
 
 	skb = alloc_skb(sizeof(*iph) + sizeof(*eth)+
 			sizeof(*icmph) + sizeof(*stoa), GFP_ATOMIC);
 	if (skb == NULL)
 		return ;
-	skb_reserve(skb, NET_IP_ALIGN);
+	skb_reserve(skb, NET_IP_ALIGN+sizeof(*eth));
 
 	// l2
-	eth = (struct ethhdr *)skb_put(skb, sizeof(*eth));
+	//eth = (struct ethhdr *)skb_put(skb, sizeof(*eth));
 
 	// l3
-	skb_set_network_header(skb, sizeof(*eth));
+	//skb_set_network_header(skb, sizeof(*eth));
+	skb_set_network_header(skb, 0);
 	iph = (struct iphdr *)skb_put(skb, sizeof(*iph));
 	iph->version    = 4;
 	iph->ihl        = sizeof(*iph) / 4;
@@ -89,8 +96,8 @@ static void send_icmp(void)
 	icmph = (struct icmphdr *)skb_put(skb, sizeof(*icmph));
 	icmph->type = ICMP_ECHO;
 	icmph->code = 0;
-	icmph->un.echo.id = 0x1234;
-	icmph->un.echo.sequence = 0;
+	icmph->un.echo.id = htons(123);
+	icmph->un.echo.sequence = htons(seq++);
 	icmp_offset = (unsigned char *)icmph - skb->data;
 
 
@@ -114,20 +121,26 @@ static void send_icmp(void)
 		goto error_out;
 	}
 
-	//ignore mtu checking
-	//skb_dst_drop(skb);
-	skb_dst_set(skb, &rt->u.dst);
-
-	// xmit
 	skb->local_df = 1;
 	skb->ipvs_property = 1;
 	skb_forward_csum(skb);
+
+	//ignore mtu checking
+	//skb_dst_drop(skb);
+	skb_dst_set(skb, &rt->u.dst);
+	//skb->rtable = rt;
+	//ret = ip_local_out(skb);
+	printk("rt->u.dst.dev:%s ret:%d\n", netdev_name(rt->u.dst.dev), ret);
+
+	// xmit
+
 	NF_HOOK(PF_INET, NF_INET_LOCAL_OUT, skb, NULL,
 			rt->u.dst.dev, dst_output);
 
 	//ip_rt_put(rt);
 
 error_out:
+	mod_timer(&timer, jiffies + TIMER_INTERVAL);
 	return;
 }
 
@@ -135,7 +148,8 @@ int init_module(void)
 {
 	printk("<1>Hello world 1.\n");
 
-	send_icmp();
+	setup_timer(&timer, send_icmp_cb, 0);
+	mod_timer(&timer, jiffies + TIMER_INTERVAL);
 
 	/* 
 	 * A non 0 return means init_module failed; module can't be loaded. 
@@ -145,6 +159,15 @@ int init_module(void)
 
 void cleanup_module(void)
 {
+	int ret;
+
+	ret = del_timer_sync(&timer);
+	if (ret)
+		printk("Timer is still in use...\n");
+
 	printk(KERN_ALERT "Goodbye world 1.\n");
 }
 
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("yubo <yubo@yubo.org>");
+MODULE_DESCRIPTION("send sample icmp");
